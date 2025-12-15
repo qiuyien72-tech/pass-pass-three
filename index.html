@@ -3,30 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>㊙️pass pass</title>
+    <title>正在開啟冰箱小管家...</title>
+    
+    <script>
+        // 設定您的 Google App Script 網址
+        var targetUrl = "https://script.google.com/macros/s/AKfycbzWJoLDC0OwZHDW-epYNRvYcxj9RWpbSoUXGAqGOC8/exec";
+
+        // 立即執行跳轉
+        window.location.href = targetUrl;
+    </script>
+    
+    <meta http-equiv="refresh" content="0;url=https://script.google.com/macros/s/AKfycbzWJoLDC0OwZHDW-epYNRvYcxj9RWpbSoUXGAqGOC8/exec">
+
     <style>
-        /* 讓相框佔滿整個視窗，不留白邊 */
-        body, html {
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f7f6;
             margin: 0;
-            padding: 0;
-            height: 100%;
-            overflow: hidden; 
+            color: #555;
+            text-align: center;
         }
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
         }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .content { display: flex; flex-direction: column; align-items: center; }
     </style>
 </head>
 <body>
-
-    <iframe 
-        src="https://script.google.com/macros/s/AKfycbwAndxFQK4NEXC-6XUf3jrRlKWh88Oe1v6Y5uxnsI6yNt3802lFiSqIKIBw1_FezXW2/exec"
-        allow="camera *; microphone *; geolocation *; clipboard-write *; clipboard-read *" 
-        title="㊙️pass pass">
-    </iframe>
-
+    <div class="content">
+        <div class="loader"></div>
+        <div>正在帶您進入冰箱小管家...</div>
+        <div style="font-size:12px; margin-top:10px; color:#aaa;">如果沒有自動跳轉，<a href="https://script.google.com/macros/s/AKfycbzWJoLDC0OwZHDW-epYNRvYcxj9RWpbSoUXGAqGOC8/exec">請點此進入</a></div>
+    </div>
 </body>
 </html>
