@@ -2,83 +2,225 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pass Pass 系統入口</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>㊙️pass pass</title>
     <style>
-        /* --- 頁面美化設定 --- */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f4f7f6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            background: white;
-            padding: 40px 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 400px;
-            width: 100%;
-        }
-        h1 { margin: 0 0 15px 0; color: #3498db; font-size: 28px; letter-spacing: 1px; }
-        p { color: #666; margin-bottom: 30px; font-size: 15px; line-height: 1.6; }
-        
-        /* --- 按鈕樣式 (最大化點擊區域) --- */
-        .btn-go {
-            display: block;
-            width: 100%;
-            padding: 18px 0;
-            background-color: #3498db;
-            color: white;
-            text-decoration: none;
-            font-size: 20px;
-            font-weight: bold;
-            border-radius: 50px;
-            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
-            transition: transform 0.1s, box-shadow 0.1s;
-        }
-        .btn-go:active { transform: scale(0.96); box-shadow: 0 2px 10px rgba(52, 152, 219, 0.3); }
+      body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
+      
+      /* 載入動畫 */
+      #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
+      .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom:10px; }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* --- 提示框 --- */
-        .tips {
-            margin-top: 30px;
-            font-size: 13px;
-            color: #7f8c8d;
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 12px;
-            text-align: left;
-            border-left: 4px solid #e74c3c;
-        }
+      /* 登入區 */
+      #loginSection { max-width: 320px; margin: 50px auto; background: white; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+      input, button { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
+      button { background: #3498db; color: white; border: none; font-weight: bold; cursor: pointer; }
+      button.secondary { background: white; color: #3498db; border: 2px dashed #3498db; }
+      
+      /* 主程式區 */
+      #appSection { display: none; max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; min-height: 80vh; }
+      .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+      .code-tag { background: #eee; padding: 4px 8px; border-radius: 4px; font-size: 14px; font-weight: bold; color: #555; }
+      .btn-row { display: flex; gap: 10px; }
+      .card { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 8px; display: flex; align-items: center; background: #fff; }
+      .card img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 10px; background: #f0f0f0; }
+      .tag { font-size: 12px; padding: 2px 6px; border-radius: 4px; color: white; display: inline-block; margin-top: 4px; }
+      .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1㊙️pass pass</h1>
-        <p>系統已準備就緒！<br>為避免多帳號衝突，請點擊下方按鈕。</p>
+    <div id="loader"><div class="spinner"></div><div id="loaderText">處理中...</div></div>
 
-        <a id="targetLink" 
-           href="https://script.google.com/macros/s/AKfycbxLHJCY-jw7iiZwaEphEeCMnzlC-Cp-23J9SZJDtvU3-Fy3_ukwmqilXCbeNgk03LR2/exec?authuser=0" 
-           class="btn-go"
-           target="_self">
-           🚀 進入系統
-        </a>
-
-        <div class="tips">
-            <b>💡 還是打不開？</b><br>
-            您的手機可能登入了多個 Google 帳號導致衝突。<br>
-            <br>
-            請嘗試：<br>
-            1. 使用 <b>無痕視窗</b> 開啟此頁面。<br>
-            2. 或點擊右上角「...」選擇 <b>使用 Chrome 開啟</b>。
-        </div>
+    <div id="loginSection">
+        <h2 style="color:#3498db; margin-top:0;">㊙️pass pass</h2>
+        <input type="text" id="codeIn" placeholder="輸入代碼" style="text-align:center; text-transform:uppercase;">
+        <button onclick="doLogin()">🚀 進入空間</button>
+        <button class="secondary" onclick="doRegister()">🎲 產生新代碼</button>
+        <p style="font-size:12px; color:#aaa; margin-top:10px;">請使用 Chrome / Safari 開啟以獲得最佳體驗</p>
     </div>
 
+    <div id="appSection">
+        <div class="header">
+            <div>我的冰箱 <span id="myCode" class="code-tag"></span></div>
+            <button style="width:auto; padding:5px 10px; margin:0; background:#e74c3c; font-size:12px;" onclick="doLogout()">登出</button>
+        </div>
+
+        <input type="text" id="inName" placeholder="名稱">
+        <input type="text" id="inLoc" placeholder="位置">
+        <input type="date" id="inDate">
+        <div class="btn-row">
+             <input type="file" id="fileIn" accept="image/*" style="display:none">
+             <button style="background:#f39c12;" onclick="document.getElementById('fileIn').click()">📷 拍照</button>
+             <button onclick="doAdd()">🚀 加入</button>
+        </div>
+        <div id="imgPreview" style="font-size:12px; color:#aaa; text-align:center; margin-bottom:10px;"></div>
+
+        <input type="text" id="search" placeholder="🔍 搜尋..." onkeyup="renderList()" style="background:#f9f9f9; border-radius:20px;">
+        <div id="list"></div>
+    </div>
+
+    <script>
+        // 👇👇👇 請在這裡貼上您剛剛複製的 Google 部署網址 👇👇👇
+        const API_URL = "https://script.google.com/macros/s/AKfycbyPMYw8zC6NyrBLQ9MI_28SxEyouIYDh7QEKpcdnPOS640T1AsYE82TBrsh6FauIZgi/exec";
+        
+        // 全域資料
+        let allData = [];
+        let currentCode = localStorage.getItem("pass_code") || "";
+
+        // 初始化
+        if(currentCode) {
+            showLoader("自動登入中...");
+            callApi("checkCode", {code: currentCode}, (res) => {
+                if(res.valid) enterApp();
+                else { localStorage.removeItem("pass_code"); showLogin(); }
+            });
+        }
+
+        // API 呼叫核心 (解決多帳號問題的關鍵)
+        function callApi(action, payload, callback) {
+            payload.action = action;
+            // 使用 fetch 發送 POST 請求，這是背景傳輸，不會跳頁
+            fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => { hideLoader(); callback(data); })
+            .catch(err => { 
+                hideLoader(); 
+                alert("連線錯誤，請檢查網路。\n如果持續失敗，請關閉 WIFI 使用 4G/5G 試試。"); 
+                console.error(err);
+            });
+        }
+
+        function doLogin() {
+            let code = document.getElementById("codeIn").value.toUpperCase().trim();
+            if(!code) return alert("請輸入代碼");
+            showLoader("驗證中...");
+            callApi("checkCode", {code: code}, (res) => {
+                if(res.valid) {
+                    currentCode = code;
+                    localStorage.setItem("pass_code", code);
+                    enterApp();
+                } else {
+                    alert("無效的代碼");
+                }
+            });
+        }
+
+        function doRegister() {
+            showLoader("註冊中...");
+            callApi("register", {}, (res) => {
+                currentCode = res.code;
+                localStorage.setItem("pass_code", currentCode);
+                alert("註冊成功！您的代碼是：" + currentCode);
+                enterApp();
+            });
+        }
+
+        function enterApp() {
+            document.getElementById("loginSection").style.display = "none";
+            document.getElementById("appSection").style.display = "block";
+            document.getElementById("myCode").innerText = currentCode;
+            refreshList();
+        }
+
+        function doLogout() {
+            localStorage.removeItem("pass_code");
+            location.reload();
+        }
+
+        function refreshList() {
+            showLoader("讀取資料...");
+            callApi("getList", {code: currentCode}, (res) => {
+                allData = res.data || [];
+                renderList();
+            });
+        }
+
+        function doAdd() {
+            let name = document.getElementById("inName").value;
+            let date = document.getElementById("inDate").value;
+            let loc = document.getElementById("inLoc").value;
+            let file = document.getElementById("fileIn").files[0];
+
+            if(!name || !date) return alert("請輸入名稱與日期");
+
+            showLoader("儲存中...");
+            
+            let payload = { code: currentCode, name: name, loc: loc, date: date, image: "" };
+            
+            if(file) {
+                let reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = function(e) {
+                    payload.image = e.target.result.split(",")[1]; // 去掉檔頭
+                    sendAdd(payload);
+                }
+            } else {
+                sendAdd(payload);
+            }
+        }
+
+        function sendAdd(payload) {
+            callApi("add", payload, (res) => {
+                document.getElementById("inName").value = "";
+                document.getElementById("inLoc").value = "";
+                document.getElementById("inDate").value = "";
+                document.getElementById("fileIn").value = "";
+                document.getElementById("imgPreview").innerText = "";
+                refreshList();
+            });
+        }
+
+        function deleteItem(id) {
+            if(!confirm("確定刪除？")) return;
+            showLoader("刪除中...");
+            callApi("delete", {id: id}, () => refreshList());
+        }
+
+        function renderList() {
+            let key = document.getElementById("search").value.toLowerCase();
+            let list = document.getElementById("list");
+            list.innerHTML = "";
+            
+            let today = new Date(); today.setHours(0,0,0,0);
+
+            allData.forEach(item => {
+                if(key && !item.name.toLowerCase().includes(key) && !item.location.toLowerCase().includes(key)) return;
+                
+                let d = new Date(item.date);
+                let diff = Math.ceil((d - today) / (86400000));
+                let tagClass = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
+                let tagText = diff < 0 ? `過期 ${Math.abs(diff)} 天` : `剩 ${diff} 天`;
+                let imgHtml = item.imgUrl ? `<img src="${item.imgUrl}">` : `<div style="width:60px;height:60px;background:#eee;margin-right:10px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#aaa;">無圖</div>`;
+
+                list.innerHTML += `
+                    <div class="card">
+                        ${imgHtml}
+                        <div style="flex:1">
+                            <div style="font-weight:bold">${item.name}</div>
+                            <div style="font-size:13px;color:#666">📍 ${item.location}</div>
+                            <div class="tag ${tagClass}">${tagText}</div>
+                            <div style="font-size:12px;color:#aaa">${item.date}</div>
+                        </div>
+                        <button style="width:auto;background:none;color:#aaa;padding:5px;" onclick="deleteItem(${item.rowId})">✕</button>
+                    </div>
+                `;
+            });
+        }
+
+        document.getElementById("fileIn").onchange = function() {
+            document.getElementById("imgPreview").innerText = "已選擇圖片: " + this.files[0].name;
+        }
+
+        function showLoader(txt) { 
+            document.getElementById("loader").style.display = "flex"; 
+            document.getElementById("loaderText").innerText = txt;
+        }
+        function hideLoader() { document.getElementById("loader").style.display = "none"; }
+    </script>
 </body>
 </html>
