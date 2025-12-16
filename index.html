@@ -9,12 +9,14 @@
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
       .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin-bottom:15px; }
       @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      
       #loginSection { max-width: 350px; margin: 40px auto; background: white; padding: 40px 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
       h2 { margin-top: 0; color: #2c3e50; }
-      input, button { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
+      input, button, select { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
       button { background: #3498db; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
       button:active { transform: scale(0.98); }
       button.secondary { background: white; color: #3498db; border: 2px dashed #3498db; }
+      
       #appSection { display: none; max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; min-height: 80vh; }
       .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
       .code-tag { background: #eee; padding: 4px 8px; border-radius: 4px; font-size: 14px; font-weight: bold; color: #555; }
@@ -23,9 +25,15 @@
       .card img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 10px; background: #f0f0f0; }
       .tag { font-size: 12px; padding: 2px 6px; border-radius: 4px; color: white; display: inline-block; margin-top: 4px; }
       .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
+
       .date-group { display: flex; gap: 5px; margin-bottom: 15px; }
       .date-group input { margin-bottom: 0; }
       .date-btn { width: auto; padding: 0 20px; margin-bottom: 0; background: #eee; color: #555; font-size: 20px; display: flex; align-items: center; justify-content: center; }
+
+      /* 搜尋與篩選區塊樣式 */
+      .search-area { display: flex; gap: 10px; margin-bottom: 15px; }
+      .search-area input { margin-bottom: 0; flex: 2; border-radius: 20px; border: 2px solid #3498db; background: #f0f8ff; }
+      .search-area select { margin-bottom: 0; flex: 1; border-radius: 20px; border: 2px solid #ddd; background: white; }
     </style>
 </head>
 <body>
@@ -33,7 +41,7 @@
     <div id="loader"><div class="spinner"></div><div id="loaderText">連線中...</div></div>
 
     <div id="loginSection">
-        <h2>㊙️pass pass</h2>
+        <h2㊙️pass pass</h2>
         <p style="color:#666; font-size:14px; margin-bottom:20px;">請直接輸入代碼登入</p>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase; letter-spacing:1px; font-weight:bold;">
         <button onclick="doLogin()">🚀 登入</button>
@@ -42,60 +50,68 @@
 
     <div id="appSection">
         <div class="header">
-            <div>我的庫存 <span id="myCode" class="code-tag"></span></div>
+            <div>我的庫岑 <span id="myCode" class="code-tag"></span></div>
             <button style="width:auto; padding:5px 12px; margin:0; background:#e74c3c; font-size:13px;" onclick="doLogout()">登出</button>
         </div>
+
         <input type="text" id="inName" placeholder="物品名稱">
-        <input type="text" id="inLoc" placeholder="放置位置">
+        <input type="text" id="inLoc" placeholder="放置位置 ">
+        
         <div class="date-group">
             <input type="text" id="inDate" placeholder="📅 到期日 (YYYY-MM-DD)" maxlength="10">
             <button class="date-btn" onclick="openDatePicker()">📅</button>
             <input type="date" id="hiddenPicker" style="position:absolute; visibility:hidden; width:0; height:0;" onchange="syncDate(this)">
         </div>
+
         <div class="btn-row">
              <input type="file" id="fileIn" accept="image/*" style="display:none">
              <button style="background:#f39c12;" onclick="document.getElementById('fileIn').click()">📷 拍照</button>
              <button onclick="doAdd()">🚀 加入清單</button>
         </div>
         <div id="imgPreview" style="font-size:12px; color:#aaa; text-align:center; margin-bottom:10px;"></div>
-        <input type="text" id="search" placeholder="🔍 搜尋..." onkeyup="renderList()" style="background:#f9f9f9; border-radius:20px; border:1px solid #eee;">
+
+        <hr style="border:0; border-top:1px solid #eee; margin: 20px 0;">
+
+        <div class="search-area">
+            <input type="text" id="search" placeholder="🔍 搜尋名稱..." onkeyup="renderList()">
+            
+            <select id="locFilter" onchange="renderList()">
+                <option value="">📂 所有地點</option>
+            </select>
+        </div>
         <div id="list"></div>
     </div>
 
     <script>
-        // 👇👇👇 這裡請貼上新的網址 (結尾是 /exec) 👇👇👇
+        // 👇👇👇 請確認網址是您最新的 Google 部署網址 (結尾是 /exec) 👇👇👇
         const API_URL = "https://script.google.com/macros/s/AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV/exec";
         
-        // --- 測試模式：這段會把真正的錯誤吐出來 ---
+        // CORS 防禦版 Fetch 函數
         function callApi(action, payload, callback) {
             payload.action = action;
-            // 使用 text/plain 避免 preflight 檢查
             fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify(payload)
             })
-            .then(res => res.text()) // 先讀成文字，不要直接 json
+            .then(res => res.text())
             .then(text => {
                 hideLoader();
                 try {
-                    // 嘗試解析 JSON
                     const data = JSON.parse(text);
                     callback(data);
                 } catch (e) {
-                    console.error("解析失敗，回傳內容:", text);
-                    // 如果回傳的是 HTML (例如 Google 登入頁)，就代表權限沒開
                     if (text.includes("<!DOCTYPE html>") || text.includes("Google")) {
-                        alert("❌ 權限錯誤！\nGoogle 把我們擋住了。\n請檢查部署設定是否為「任何人 (Anyone)」。");
+                        alert("❌ 權限錯誤！請檢查部署設定為「任何人」。");
                     } else {
-                        alert("❌ 系統錯誤: " + text.substring(0, 100));
+                        alert("❌ 系統錯誤: " + text.substring(0, 50));
                     }
                 }
             })
             .catch(err => { 
                 hideLoader();
                 console.error("Fetch Error:", err);
-                alert("❌ 網路連線失敗 (Fetch Error)\n請按 F12 看 Console 紅字錯誤。\n可能原因：網址貼錯、或 CORS 被擋。");
+                alert("❌ 網路連線失敗，請檢查網路。");
             });
         }
         
@@ -153,7 +169,27 @@
             showLoader("讀取資料...");
             callApi("getList", {code: currentCode}, (res) => {
                 allData = res.data || [];
+                updateLocFilter(); // 💡 更新地點篩選選單
                 renderList();
+            });
+        }
+
+        // 💡 自動掃描所有資料，抓出不重複的地點放入下拉選單
+        function updateLocFilter() {
+            let locSelect = document.getElementById("locFilter");
+            // 保留第一個「所有地點」選項，清空其他的
+            locSelect.innerHTML = '<option value="">📂 所有地點</option>';
+            
+            // 抓出所有地點並移除重複
+            let locations = [...new Set(allData.map(item => item.location))];
+            locations = locations.filter(l => l); // 移除空白的
+
+            // 建立選項
+            locations.forEach(loc => {
+                let option = document.createElement("option");
+                option.value = loc;
+                option.innerText = loc;
+                locSelect.appendChild(option);
             });
         }
 
@@ -190,7 +226,8 @@
         function sendAdd(payload) {
             callApi("add", payload, (res) => {
                 document.getElementById("inName").value = "";
-                document.getElementById("inLoc").value = "";
+                // 不清空位置，方便連續輸入
+                // document.getElementById("inLoc").value = ""; 
                 document.getElementById("inDate").value = "";
                 document.getElementById("fileIn").value = "";
                 document.getElementById("imgPreview").innerText = "";
@@ -205,12 +242,17 @@
         }
 
         function renderList() {
-            let key = document.getElementById("search").value.toLowerCase();
+            let searchKey = document.getElementById("search").value.toLowerCase();
+            let filterLoc = document.getElementById("locFilter").value; // 取得選單的值
             let list = document.getElementById("list");
             list.innerHTML = "";
             let today = new Date(); today.setHours(0,0,0,0);
+
             allData.forEach(item => {
-                if(key && !item.name.toLowerCase().includes(key) && !item.location.toLowerCase().includes(key)) return;
+                // 💡 雙重過濾：名稱要符合搜尋 且 地點要符合選單
+                if(searchKey && !item.name.toLowerCase().includes(searchKey)) return;
+                if(filterLoc && item.location !== filterLoc) return;
+                
                 let d = new Date(item.date);
                 let diff = Math.ceil((d - today) / (86400000));
                 let tagClass = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
