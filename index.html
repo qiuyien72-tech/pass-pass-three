@@ -30,10 +30,9 @@
       .date-group input { margin-bottom: 0; }
       .date-btn { width: auto; padding: 0 20px; margin-bottom: 0; background: #eee; color: #555; font-size: 20px; display: flex; align-items: center; justify-content: center; }
 
-      /* 搜尋與篩選區塊樣式 */
+      /* 搜尋區樣式 */
       .search-area { display: flex; gap: 10px; margin-bottom: 15px; }
-      .search-area input { margin-bottom: 0; flex: 2; border-radius: 20px; border: 2px solid #3498db; background: #f0f8ff; }
-      .search-area select { margin-bottom: 0; flex: 1; border-radius: 20px; border: 2px solid #ddd; background: white; }
+      .search-area input { margin-bottom: 0; flex: 1; border-radius: 20px; border: 2px solid #3498db; background: #f0f8ff; }
     </style>
 </head>
 <body>
@@ -50,12 +49,12 @@
 
     <div id="appSection">
         <div class="header">
-            <div>我的庫岑 <span id="myCode" class="code-tag"></span></div>
+            <div>我的庫存 <span id="myCode" class="code-tag"></span></div>
             <button style="width:auto; padding:5px 12px; margin:0; background:#e74c3c; font-size:13px;" onclick="doLogout()">登出</button>
         </div>
 
         <input type="text" id="inName" placeholder="物品名稱">
-        <input type="text" id="inLoc" placeholder="放置位置 ">
+        <input type="text" id="inLoc" placeholder="放置位置">
         
         <div class="date-group">
             <input type="text" id="inDate" placeholder="📅 到期日 (YYYY-MM-DD)" maxlength="10">
@@ -73,11 +72,7 @@
         <hr style="border:0; border-top:1px solid #eee; margin: 20px 0;">
 
         <div class="search-area">
-            <input type="text" id="search" placeholder="🔍 搜尋名稱..." onkeyup="renderList()">
-            
-            <select id="locFilter" onchange="renderList()">
-                <option value="">📂 所有地點</option>
-            </select>
+            <input type="text" id="search" placeholder="🔍 搜尋名稱或地點..." onkeyup="renderList()">
         </div>
         <div id="list"></div>
     </div>
@@ -86,7 +81,7 @@
         // 👇👇👇 請確認網址是您最新的 Google 部署網址 (結尾是 /exec) 👇👇👇
         const API_URL = "https://script.google.com/macros/s/AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV/exec";
         
-        // CORS 防禦版 Fetch 函數
+        // CORS 防禦版 Fetch
         function callApi(action, payload, callback) {
             payload.action = action;
             fetch(API_URL, {
@@ -169,27 +164,7 @@
             showLoader("讀取資料...");
             callApi("getList", {code: currentCode}, (res) => {
                 allData = res.data || [];
-                updateLocFilter(); // 💡 更新地點篩選選單
                 renderList();
-            });
-        }
-
-        // 💡 自動掃描所有資料，抓出不重複的地點放入下拉選單
-        function updateLocFilter() {
-            let locSelect = document.getElementById("locFilter");
-            // 保留第一個「所有地點」選項，清空其他的
-            locSelect.innerHTML = '<option value="">📂 所有地點</option>';
-            
-            // 抓出所有地點並移除重複
-            let locations = [...new Set(allData.map(item => item.location))];
-            locations = locations.filter(l => l); // 移除空白的
-
-            // 建立選項
-            locations.forEach(loc => {
-                let option = document.createElement("option");
-                option.value = loc;
-                option.innerText = loc;
-                locSelect.appendChild(option);
             });
         }
 
@@ -226,8 +201,7 @@
         function sendAdd(payload) {
             callApi("add", payload, (res) => {
                 document.getElementById("inName").value = "";
-                // 不清空位置，方便連續輸入
-                // document.getElementById("inLoc").value = ""; 
+                document.getElementById("inLoc").value = ""; 
                 document.getElementById("inDate").value = "";
                 document.getElementById("fileIn").value = "";
                 document.getElementById("imgPreview").innerText = "";
@@ -241,17 +215,20 @@
             callApi("delete", {id: id}, () => refreshList());
         }
 
+        // 💡 萬能搜尋邏輯：同時檢查「名稱」與「地點」
         function renderList() {
             let searchKey = document.getElementById("search").value.toLowerCase();
-            let filterLoc = document.getElementById("locFilter").value; // 取得選單的值
             let list = document.getElementById("list");
             list.innerHTML = "";
             let today = new Date(); today.setHours(0,0,0,0);
 
             allData.forEach(item => {
-                // 💡 雙重過濾：名稱要符合搜尋 且 地點要符合選單
-                if(searchKey && !item.name.toLowerCase().includes(searchKey)) return;
-                if(filterLoc && item.location !== filterLoc) return;
+                // 🔍 這裡做了修改：只要 名稱 或 地點 其中一個包含關鍵字，就顯示
+                if(searchKey) {
+                    let matchName = item.name.toLowerCase().includes(searchKey);
+                    let matchLoc = item.location.toLowerCase().includes(searchKey);
+                    if (!matchName && !matchLoc) return; // 如果都不符合，就跳過
+                }
                 
                 let d = new Date(item.date);
                 let diff = Math.ceil((d - today) / (86400000));
