@@ -9,14 +9,12 @@
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
       .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin-bottom:15px; }
       @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-      
       #loginSection { max-width: 350px; margin: 40px auto; background: white; padding: 40px 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
       h2 { margin-top: 0; color: #2c3e50; }
       input, button { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
       button { background: #3498db; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
       button:active { transform: scale(0.98); }
       button.secondary { background: white; color: #3498db; border: 2px dashed #3498db; }
-      
       #appSection { display: none; max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; min-height: 80vh; }
       .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
       .code-tag { background: #eee; padding: 4px 8px; border-radius: 4px; font-size: 14px; font-weight: bold; color: #555; }
@@ -25,8 +23,6 @@
       .card img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 10px; background: #f0f0f0; }
       .tag { font-size: 12px; padding: 2px 6px; border-radius: 4px; color: white; display: inline-block; margin-top: 4px; }
       .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
-
-      /* 日期輸入區的特殊樣式 */
       .date-group { display: flex; gap: 5px; margin-bottom: 15px; }
       .date-group input { margin-bottom: 0; }
       .date-btn { width: auto; padding: 0 20px; margin-bottom: 0; background: #eee; color: #555; font-size: 20px; display: flex; align-items: center; justify-content: center; }
@@ -34,7 +30,7 @@
 </head>
 <body>
 
-    <div id="loader"><div class="spinner"></div><div id="loaderText">系統連線中...</div></div>
+    <div id="loader"><div class="spinner"></div><div id="loaderText">連線中...</div></div>
 
     <div id="loginSection">
         <h2>㊙️pass pass</h2>
@@ -45,13 +41,12 @@
     </div>
 
     <div id="appSection">
-        <div class="header">我的庫存<div>span id="myCode" class="code-tag"a</span></div>
+        <div class="header">
+            <div>我的庫存 <span id="myCode" class="code-tag"></span></div>
             <button style="width:auto; padding:5px 12px; margin:0; background:#e74c3c; font-size:13px;" onclick="doLogout()">登出</button>
         </div>
-
         <input type="text" id="inName" placeholder="物品名稱">
         <input type="text" id="inLoc" placeholder="放置位置">
-
         <div class="date-group">
             <input type="text" id="inDate" placeholder="📅 到期日 (YYYY-MM-DD)" maxlength="10">
             <button class="date-btn" onclick="openDatePicker()">📅</button>
@@ -63,14 +58,46 @@
              <button onclick="doAdd()">🚀 加入清單</button>
         </div>
         <div id="imgPreview" style="font-size:12px; color:#aaa; text-align:center; margin-bottom:10px;"></div>
-
         <input type="text" id="search" placeholder="🔍 搜尋..." onkeyup="renderList()" style="background:#f9f9f9; border-radius:20px; border:1px solid #eee;">
         <div id="list"></div>
     </div>
 
     <script>
-        // 👇👇👇 請務必確認這裡是您最新的 Google 部署網址 (結尾是 /exec) 👇👇👇
-        const API_URL = "https://script.google.com/macros/s/AKfycbyVIuG29XE_-U2crSALlxzw4GXLS4d8z4qbMv04tIaeV-ITGaCL4lwADW6C3azXnJ0Y/exec";
+        // 👇👇👇 這裡請貼上新的網址 (結尾是 /exec) 👇👇👇
+        const API_URL = "https://script.google.com/macros/s/AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV/exec";
+        
+        // --- 測試模式：這段會把真正的錯誤吐出來 ---
+        function callApi(action, payload, callback) {
+            payload.action = action;
+            // 使用 text/plain 避免 preflight 檢查
+            fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.text()) // 先讀成文字，不要直接 json
+            .then(text => {
+                hideLoader();
+                try {
+                    // 嘗試解析 JSON
+                    const data = JSON.parse(text);
+                    callback(data);
+                } catch (e) {
+                    console.error("解析失敗，回傳內容:", text);
+                    // 如果回傳的是 HTML (例如 Google 登入頁)，就代表權限沒開
+                    if (text.includes("<!DOCTYPE html>") || text.includes("Google")) {
+                        alert("❌ 權限錯誤！\nGoogle 把我們擋住了。\n請檢查部署設定是否為「任何人 (Anyone)」。");
+                    } else {
+                        alert("❌ 系統錯誤: " + text.substring(0, 100));
+                    }
+                }
+            })
+            .catch(err => { 
+                hideLoader();
+                console.error("Fetch Error:", err);
+                alert("❌ 網路連線失敗 (Fetch Error)\n請按 F12 看 Console 紅字錯誤。\n可能原因：網址貼錯、或 CORS 被擋。");
+            });
+        }
         
         let allData = [];
         let currentCode = localStorage.getItem("pass_code") || "";
@@ -83,37 +110,8 @@
             });
         }
 
-        // --- 日期選擇器邏輯 ---
-        function openDatePicker() {
-            // 觸發隱藏的日曆
-            try {
-                document.getElementById("hiddenPicker").showPicker(); 
-            } catch (e) {
-                // 舊版瀏覽器備用方案
-                document.getElementById("hiddenPicker").click();
-            }
-        }
-
-        function syncDate(picker) {
-            // 把選到的日期填回文字框
-            document.getElementById("inDate").value = picker.value;
-        }
-
-        // --- API 呼叫 ---
-        function callApi(action, payload, callback) {
-            payload.action = action;
-            fetch(API_URL, {
-                method: "POST",
-                body: JSON.stringify(payload)
-            })
-            .then(res => res.json())
-            .then(data => { hideLoader(); callback(data); })
-            .catch(err => { 
-                hideLoader();
-                console.error(err);
-                alert("❌ 連線失敗，請檢查網路或部署網址。");
-            });
-        }
+        function openDatePicker() { try { document.getElementById("hiddenPicker").showPicker(); } catch (e) { document.getElementById("hiddenPicker").click(); } }
+        function syncDate(picker) { document.getElementById("inDate").value = picker.value; }
 
         function doLogin() {
             let code = document.getElementById("codeIn").value.toUpperCase().trim();
@@ -148,10 +146,7 @@
         }
 
         function doLogout() {
-            if(confirm("確定要登出嗎？")) {
-                localStorage.removeItem("pass_code");
-                location.reload();
-            }
+            if(confirm("確定要登出嗎？")) { localStorage.removeItem("pass_code"); location.reload(); }
         }
 
         function refreshList() {
@@ -164,31 +159,20 @@
 
         function doAdd() {
             let name = document.getElementById("inName").value;
-            let rawDate = document.getElementById("inDate").value.trim(); // 取得文字輸入
+            let rawDate = document.getElementById("inDate").value.trim();
             let loc = document.getElementById("inLoc").value;
             let file = document.getElementById("fileIn").files[0];
 
             if(!name || !rawDate) return alert("請輸入名稱與日期");
-
-            // 📅 智慧格式化日期 (支援輸入 20250101 或 2025/01/01)
-            let formattedDate = rawDate.replace(/\//g, "-"); // 把斜線換成橫線
+            let formattedDate = rawDate.replace(/\//g, "-");
             if (formattedDate.length === 8 && !formattedDate.includes("-")) {
-                // 如果輸入 20251212，自動補成 2025-12-12
                 formattedDate = formattedDate.slice(0, 4) + "-" + formattedDate.slice(4, 6) + "-" + formattedDate.slice(6);
             }
-
-            // 格式檢查 (必須是 YYYY-MM-DD)
-            let datePattern = /^\d{4}-\d{2}-\d{2}$/;
-            if (!datePattern.test(formattedDate)) {
-                return alert("⚠️ 日期格式錯誤！\n請輸入例如：2025-12-31");
-            }
-
-            // 🛑 年份防呆
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(formattedDate)) return alert("⚠️ 日期格式錯誤 (YYYY-MM-DD)");
             let checkDate = new Date(formattedDate);
             let year = checkDate.getFullYear();
-            if (isNaN(year)) return alert("這日期怪怪的，請檢查一下");
-            if (year > 2050) return alert("📅 日期太遙遠了吧！\n請輸入 2050 年以前的日期。");
-            if (year < 2000) return alert("📅 這東西還是別吃了吧...\n請輸入 2000 年以後的日期。");
+            if (year > 2050) return alert("📅 日期太遙遠");
+            if (year < 2000) return alert("📅 日期太久遠");
 
             showLoader("儲存中...");
             let payload = { code: currentCode, name: name, loc: loc, date: formattedDate, image: "" };
@@ -240,14 +224,8 @@
             if(this.files[0]) document.getElementById("imgPreview").innerText = "已選: " + this.files[0].name;
         }
 
-        function showLoader(txt) { 
-            document.getElementById("loader").style.display = "flex"; 
-            document.getElementById("loaderText").innerText = txt;
-        }
+        function showLoader(txt) { document.getElementById("loader").style.display = "flex"; document.getElementById("loaderText").innerText = txt; }
         function hideLoader() { document.getElementById("loader").style.display = "none"; }
     </script>
 </body>
 </html>
-
-
-
