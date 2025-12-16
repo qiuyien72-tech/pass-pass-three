@@ -42,7 +42,7 @@
             <div>我的庫存 <span id="myCode" class="code-tag"></span></div>
             <button style="width:auto; padding:5px 12px; margin:0; background:#e74c3c; font-size:13px;" onclick="doLogout()">登出</button>
         </div>
-        <input type="text" id="inName" placeholder="名稱">
+        <input type="text" id="inName" placeholder="物品名稱">
         <input type="text" id="inLoc" placeholder="放置位置">
         <input type="date" id="inDate">
         <div class="btn-row">
@@ -56,10 +56,9 @@
     </div>
 
     <script>
-        // 👇👇👇 這裡最重要！請貼上您剛剛驗證過 (會顯示✅文字) 的網址 👇👇👇
+        // 👇👇👇 請務必確認這裡是您最新的 Google 部署網址 (結尾是 /exec) 👇👇👇
         const API_URL = "https://script.google.com/macros/s/AKfycbyRG3c5o93qcClBT-o4cu1WokniGNWdi8Q7Id1siMNZ0tlaIfJqCkUtk1fmXzXzjC_I/exec";
         
-        // --- 程式邏輯區 ---
         let allData = [];
         let currentCode = localStorage.getItem("pass_code") || "";
 
@@ -73,28 +72,16 @@
 
         function callApi(action, payload, callback) {
             payload.action = action;
-            // 嘗試連線
             fetch(API_URL, {
                 method: "POST",
-                body: JSON.stringify(payload) // 使用純文字傳送，避免 CORS 預檢
+                body: JSON.stringify(payload)
             })
-            .then(res => {
-                // 如果回傳不是 JSON，代表可能是 Google 錯誤頁面 (HTML)
-                const contentType = res.headers.get("content-type");
-                if (contentType && contentType.indexOf("application/json") === -1) {
-                    throw new Error("回傳格式錯誤 (可能權限不足)");
-                }
-                return res.json();
-            })
+            .then(res => res.json())
             .then(data => { hideLoader(); callback(data); })
             .catch(err => { 
                 hideLoader();
                 console.error(err);
-                if(err.message.includes("格式錯誤")) {
-                     alert("❌ 連線被拒絕！\n請檢查 Google 部署是否設為「任何人 (Anyone)」。");
-                } else {
-                     alert("❌ 無法連線到伺服器\n請確認您的網路，或檢查 GitHub 裡的網址是否正確。");
-                }
+                alert("❌ 連線失敗，請檢查網路或部署網址。");
             });
         }
 
@@ -150,9 +137,18 @@
             let date = document.getElementById("inDate").value;
             let loc = document.getElementById("inLoc").value;
             let file = document.getElementById("fileIn").files[0];
+
             if(!name || !date) return alert("請輸入名稱與日期");
+
+            // 🛑 日期防呆機制
+            let checkDate = new Date(date);
+            let year = checkDate.getFullYear();
+            if (year > 2050) return alert("📅 日期太遙遠了吧！\n請輸入 2050 年以前的日期。");
+            if (year < 2000) return alert("📅 這東西還是別吃了吧...\n請輸入 2000 年以後的日期。");
+
             showLoader("儲存中...");
             let payload = { code: currentCode, name: name, loc: loc, date: date, image: "" };
+            
             if(file) {
                 let reader = new FileReader();
                 reader.readAsDataURL(file);
