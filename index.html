@@ -2,31 +2,83 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>㊙️pass pass入口</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pass Pass 系統入口</title>
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background-color: #f4f7f6; text-align: center; padding: 20px; }
-        .card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 400px; width: 100%; }
-        h2 { color: #2c3e50; margin-bottom: 10px; }
-        p { color: #666; font-size: 14px; margin-bottom: 30px; line-height: 1.6; }
-        .btn-go { display: block; width: 100%; padding: 15px 0; background-color: #3498db; color: white; text-decoration: none; font-size: 20px; font-weight: bold; border-radius: 10px; box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3); transition: transform 0.2s; }
-        .btn-go:active { transform: scale(0.98); }
-        .note { margin-top: 20px; font-size: 12px; color: #e74c3c; background: #fff0f0; padding: 10px; border-radius: 8px; text-align: left; }
+        /* --- 頁面美化設定 --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 { margin: 0 0 15px 0; color: #3498db; font-size: 28px; letter-spacing: 1px; }
+        p { color: #666; margin-bottom: 30px; font-size: 15px; line-height: 1.6; }
+        
+        /* --- 按鈕樣式 (最大化點擊區域) --- */
+        .btn-go {
+            display: block;
+            width: 100%;
+            padding: 18px 0;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 50px;
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .btn-go:active { transform: scale(0.96); box-shadow: 0 2px 10px rgba(52, 152, 219, 0.3); }
+
+        /* --- 提示框 --- */
+        .tips {
+            margin-top: 30px;
+            font-size: 13px;
+            color: #7f8c8d;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: left;
+            border-left: 4px solid #e74c3c;
+        }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>㊙️pass pass</h2>
-        <p>系統已準備就緒！<br>請點擊下方按鈕進入。</p>
 
-        <a href="https://script.google.com/macros/s/AKfycbxN812e53EAwSwdIipSqZAbIkviXCu4iZXpAXvpHuSLgfsPL4J3iNvD0YD5n_3paMYp/exec" class="btn-go">
+    <div class="container">
+        <h1㊙️pass pass</h1>
+        <p>系統已準備就緒！<br>為避免多帳號衝突，請點擊下方按鈕。</p>
+
+        <a id="targetLink" 
+           href="https://script.google.com/macros/s/AKfycbxLHJCY-jw7iiZwaEphEeCMnzlC-Cp-23J9SZJDtvU3-Fy3_ukwmqilXCbeNgk03LR2/exec?authuser=0" 
+           class="btn-go"
+           target="_self">
            🚀 進入系統
         </a>
 
-        <div class="note">
-            <b>💡 手機無法開啟？</b><br>
-            如果您使用 LINE 或 Facebook 開啟看到錯誤畫面，請點擊右上角 <b>「...」</b> 選擇 <b>「使用預設瀏覽器開啟」</b> (Chrome/Safari)。
+        <div class="tips">
+            <b>💡 還是打不開？</b><br>
+            您的手機可能登入了多個 Google 帳號導致衝突。<br>
+            <br>
+            請嘗試：<br>
+            1. 使用 <b>無痕視窗</b> 開啟此頁面。<br>
+            2. 或點擊右上角「...」選擇 <b>使用 Chrome 開啟</b>。
         </div>
     </div>
+
 </body>
 </html>
