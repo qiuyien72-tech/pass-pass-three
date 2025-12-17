@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>冰箱小管家 v7.3</title>
+    <title>冰箱小管家 v7.4</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
@@ -23,21 +23,21 @@
       .btn-row { display: flex; gap: 10px; }
       .card { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 8px; display: flex; align-items: center; background: #fff; }
       
-      /* 🔥 圖片可點擊放大 (保留 v6.6 功能) */
+      /* 🔥 v6.6 的圖片放大功能 */
       .card img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 10px; background: #f0f0f0; cursor: zoom-in; transition: transform 0.2s; }
       .card img:active { transform: scale(0.95); }
 
       .tag { font-size: 12px; padding: 2px 6px; border-radius: 4px; color: white; display: inline-block; margin-top: 4px; }
       .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
       
-      /* 🔥 日期輸入框樣式 (直接使用 type=date) */
+      /* 🔥 日期輸入框樣式 (直接使用 type=date，與您上傳的檔案一致) */
       .date-group { margin-bottom: 15px; }
       .date-group input { margin-bottom: 0; width: 100%; }
       
       .search-wrapper { position: relative; margin-bottom: 15px; }
       #search { border-radius: 30px !important; border: 2px solid #3498db !important; background-color: #f0f8ff !important; padding-left: 20px; margin-bottom: 0; color: #333; font-weight: bold; }
       
-      /* 🔥 燈箱樣式 (保留 v6.6 功能) */
+      /* 🔥 v6.6 的燈箱樣式 */
       #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; backdrop-filter: blur(5px); }
       #imageModal img { max-width: 95%; max-height: 80vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); object-fit: contain; }
       #modalClose { margin-top: 20px; color: white; background: rgba(255,255,255,0.2); border: 1px solid white; padding: 8px 20px; border-radius: 20px; cursor: pointer; }
@@ -98,7 +98,7 @@
         ];
         const API_URL = urlParts.join("");
 
-        // ✅ 圖片放大功能 (v6.6 功能)
+        // ✅ v6.6 的圖片放大功能
         function showLargeImg(url) {
             if(!url) return;
             document.getElementById("largeImgDisplay").src = url;
@@ -113,7 +113,7 @@
             try {
                 var savedCode = localStorage.getItem("pass_code");
                 if (savedCode) {
-                    // 🔥 快取功能：先顯示舊資料，體驗更順暢 (v6.6 功能)
+                    // 🔥 v6.6 的快取功能：先顯示舊資料
                     var cacheKey = "fridge_data_" + savedCode;
                     var cachedData = localStorage.getItem(cacheKey);
                     if(cachedData) {
@@ -209,13 +209,13 @@
         function doAdd() {
             var name = document.getElementById("inName").value;
             var loc = document.getElementById("inLoc").value;
-            var date = document.getElementById("inDate").value; // 直接抓原生日曆值
+            var date = document.getElementById("inDate").value; // 直接抓日曆的值 (YYYY-MM-DD)
             var file = document.getElementById("fileIn").files[0];
             var code = document.getElementById("myCode").innerText;
 
             if(!name || !date) return alert("請填寫名稱與日期");
             
-            // 🔥 簡單驗證年份 (保留您上傳檔案中的邏輯)
+            // 🔥 保留您上傳檔案中的簡單驗證邏輯
             var year = date.split('-')[0];
             if (year.length > 4 || parseInt(year) > 2099) {
               alert("日期太遙遠囉！");
@@ -276,7 +276,7 @@
                 var cls = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
                 var txt = diff < 0 ? "過期 "+Math.abs(diff)+" 天" : "剩 "+diff+" 天";
                 
-                // 🔥 圖片點擊放大 (保留 v6.6 功能)
+                // 🔥 v6.6 的圖片點擊放大
                 var img = item.imgUrl ? 
                     `<img src="${item.imgUrl}" onclick="showLargeImg('${item.imgUrl}')">` : 
                     `<div style="width:60px;height:60px;background:#eee;margin-right:10px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;">無圖</div>`;
