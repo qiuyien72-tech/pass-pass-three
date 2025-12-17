@@ -1,413 +1,297 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <base target="_top">
-    <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>冰箱小管家 v7.3</title>
     <style>
-      :root {
-        --bg-color: #fdfbf7; --card-bg: #ffffff;
-        --primary: #ffadad; --secondary: #a0c4ff;
-        --accent: #ffd6a5; --text: #4a4e69;
-        --danger: #ff6b6b; --safe: #caffbf;
-      }
-      body {
-        font-family: 'Varela Round', sans-serif;
-        background-color: var(--bg-color); color: var(--text);
-        margin: 0; padding: 20px;
-        display: flex; flex-direction: column; align-items: center; min-height: 100vh;
-      }
-      header { text-align: center; margin-bottom: 20px; }
-      h1 { margin: 0; color: var(--text); font-size: 1.8rem; }
-      p { color: #9a8c98; font-size: 0.9rem; margin-top: 5px; }
-      .container {
-        width: 100%; max-width: 500px;
-        background: var(--card-bg); border-radius: 20px;
-        box-shadow: 0 10px 25px rgba(226, 212, 212, 0.5);
-        padding: 30px; box-sizing: border-box; text-align: center;
-      }
-      .btn {
-        width: 100%; padding: 15px;
-        border: none; border-radius: 12px;
-        font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-bottom: 10px;
-        transition: transform 0.1s;
-      }
-      .btn:active { transform: scale(0.98); }
-      .btn-primary { background-color: var(--secondary); color: white; }
-      .btn-outline { background-color: white; border: 2px solid var(--secondary); color: var(--secondary); }
-      .btn-scan { background-color: var(--accent); color: white; } 
-      .btn-delete { background: none; border: none; font-size: 1.2rem; cursor: pointer; opacity: 0.5; padding: 5px; flex: 0; }
-      .btn-delete:hover { opacity: 1; color: var(--danger); }
+      body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
+      #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
+      .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin-bottom:15px; }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      #loginSection { max-width: 350px; margin: 40px auto; background: white; padding: 40px 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+      h2 { margin-top: 0; color: #2c3e50; }
       
-      input {
-        width: 100%; padding: 12px;
-        border: 2px solid #eee; border-radius: 12px;
-        font-size: 1rem; outline: none; box-sizing: border-box; margin-bottom: 10px;
-      }
-      input:focus { border-color: var(--secondary); }
+      input, button, select { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
       
-      .page-section { display: none; }
-      .active { display: block; }
-      .code-display {
-        font-size: 3rem; letter-spacing: 5px;
-        color: var(--text);
-        margin: 20px 0; font-weight: bold; border: 3px dashed var(--accent);
-        padding: 10px; border-radius: 10px; background: #fffdf5;
-      }
-      .food-list { max-height: 400px; overflow-y: auto; text-align: left; margin-top: 15px;}
-      .food-item {
-        display: flex; justify-content: space-between;
-        align-items: center;
-        padding: 12px; margin-bottom: 10px; background: #fff;
-        border: 1px solid #f0f0f0; border-radius: 12px;
-      }
-      .food-info { display: flex; flex-direction: column; }
-      .food-name { font-size: 1.1rem; font-weight: bold; }
-      .creator-tag { font-size: 0.8em; color: var(--secondary); background: #edf2fb; padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
-      .food-loc { font-size: 0.85rem; color: #888; }
-      .status-tag { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; color: white; text-align: center; }
-      .bg-ok { background: var(--safe); color: #555; }
-      .bg-soon { background: var(--accent); }
-      .bg-bad { background: var(--danger); }
-      .top-nav { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 2px dashed #eee; padding-bottom: 10px; font-size: 0.9rem;}
-      #scanOverlay {
-        position: fixed; top: 0;
-        left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.8); z-index: 999;
-        display: none; flex-direction: column; justify-content: center; align-items: center;
-      }
-      #reader { width: 300px; height: 300px; background: #000; }
-      .scan-close-btn {
-        margin-top: 20px; padding: 10px 30px;
-        background: white; border: none;
-        border-radius: 20px; font-weight: bold; cursor: pointer;
-      }
+      button { background: #3498db; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+      button:active { transform: scale(0.98); }
+      button.secondary { background: white; color: #3498db; border: 2px dashed #3498db; }
+      #appSection { display: none; max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; min-height: 80vh; }
+      .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+      .code-tag { background: #eee; padding: 4px 8px; border-radius: 4px; font-size: 14px; font-weight: bold; color: #555; }
+      .btn-row { display: flex; gap: 10px; }
+      .card { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 8px; display: flex; align-items: center; background: #fff; }
+      
+      /* 🔥 圖片可點擊放大 (保留 v6.6 功能) */
+      .card img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 10px; background: #f0f0f0; cursor: zoom-in; transition: transform 0.2s; }
+      .card img:active { transform: scale(0.95); }
 
-      /* 🔥 日期輸入區塊樣式 */
-      .date-group { display: flex; gap: 5px; margin-bottom: 10px; }
-      .date-group input { margin-bottom: 0; flex: 1; font-weight: bold; letter-spacing: 1px; }
-      .date-btn { 
-          width: auto; padding: 0 15px; margin-bottom: 0; 
-          background: #eee; color: #555; font-size: 1.2rem; 
-          display: flex; align-items: center; justify-content: center; 
-          border: none; border-radius: 12px; cursor: pointer;
-      }
+      .tag { font-size: 12px; padding: 2px 6px; border-radius: 4px; color: white; display: inline-block; margin-top: 4px; }
+      .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
+      
+      /* 🔥 日期輸入框樣式 (直接使用 type=date) */
+      .date-group { margin-bottom: 15px; }
+      .date-group input { margin-bottom: 0; width: 100%; }
+      
+      .search-wrapper { position: relative; margin-bottom: 15px; }
+      #search { border-radius: 30px !important; border: 2px solid #3498db !important; background-color: #f0f8ff !important; padding-left: 20px; margin-bottom: 0; color: #333; font-weight: bold; }
+      
+      /* 🔥 燈箱樣式 (保留 v6.6 功能) */
+      #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; backdrop-filter: blur(5px); }
+      #imageModal img { max-width: 95%; max-height: 80vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); object-fit: contain; }
+      #modalClose { margin-top: 20px; color: white; background: rgba(255,255,255,0.2); border: 1px solid white; padding: 8px 20px; border-radius: 20px; cursor: pointer; }
+      
+      #debug-status { text-align: center; padding: 10px; margin-bottom: 20px; font-weight: bold; border-radius: 8px; background: #ffecec; color: red; border: 2px solid red; display:none; }
+      #sync-status { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #aaa; background: rgba(255,255,255,0.8); padding: 2px 5px; border-radius: 4px; pointer-events: none; }
     </style>
-  </head>
-  <body>
+</head>
+<body>
 
-    <div id="scanOverlay">
-      <div style="color:white; margin-bottom:10px;">請對準條碼 (EAN/UPC)</div>
-      <div id="reader"></div>
-      <button class="scan-close-btn" onclick="stopScan()">❌ 關閉相機</button>
+    <div id="loader"><div class="spinner"></div><div id="loaderText">連線中...</div></div>
+    <div id="debug-status"></div>
+    <div id="sync-status"></div>
+
+    <div id="imageModal" onclick="closeLargeImg()">
+        <img id="largeImgDisplay" src="">
+        <div id="modalClose">✕ 關閉圖片</div>
     </div>
 
-    <header>
-      <h1>食品小管家 🎫</h1>
-      <p>智能自學版 v7.2</p>
-    </header>
+    <div id="loginSection">
+        <h2>📦 冰箱小管家</h2>
+        <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase;">
+        <button onclick="doLogin()">🚀 登入</button>
+        <button class="secondary" onclick="doRegister()">🎲 產生新代碼</button>
+    </div>
 
-    <div class="container">
-
-      <div id="pageLanding" class="page-section active">
-        <h2>歡迎使用</h2>
-        <p>已有通行證？直接登入。<br>第一次使用？立即註冊。</p>
-        <br>
-        <button class="btn btn-primary" onclick="goToLogin()">🔐 我有代碼 (登入)</button>
-        <button class="btn btn-outline" onclick="goToRegister()">✨ 我要註冊 (隨機產生)</button>
-      </div>
-
-      <div id="pageRegister" class="page-section">
-        <h2>正在產生通行證...</h2>
-        <div id="newCodeDisplay" class="code-display">----</div>
-        <p>請記住這組代碼！它是你進入冰箱的唯一鑰匙。</p>
-        <button class="btn btn-primary" onclick="doLoginAfterReg()">🚀 直接進入</button>
-      </div>
-
-      <div id="pageLogin" class="page-section">
-        <h2>輸入通行證</h2>
-        <input type="text" id="inputCode" placeholder="請輸入 4 碼代碼" style="text-align:center; font-size: 1.5rem; text-transform:uppercase;">
-        <button class="btn btn-primary" onclick="doVerifyLogin()">進入冰箱</button>
-        <button class="btn btn-outline" onclick="goBack()">返回</button>
-      </div>
-
-      <div id="pageMain" class="page-section">
-        <div class="top-nav">
-          <span>🎫 ID: <b id="displayId">----</b></span>
-          <span style="cursor:pointer; color: #888;" onclick="doLogout()">登出 ➔</span>
+    <div id="appSection">
+        <div class="header">
+            <div>我的冰箱 <span id="myCode" class="code-tag"></span></div>
+            <button onclick="doLogout()" style="width:auto; padding:5px 12px; margin:0; background:#e74c3c; font-size:13px;">登出</button>
         </div>
-
-        <input type="text" id="inCreator" list="creatorHistory" placeholder="👤 建立者 (可選或自填)">
-        <datalist id="creatorHistory"></datalist>
-
-        <input type="text" id="inName" placeholder="🍎 食品名稱 (可掃描)">
-        <input type="text" id="inLoc" placeholder="🧊 放置位置">
+        <input type="text" id="inName" placeholder="🍎 食品名稱">
+        <input type="text" id="inLoc" placeholder="🧊 放置位置 (例如: 冷凍庫)">
         
         <div class="date-group">
-            <input type="text" inputmode="numeric" id="inDate" placeholder="📅 格式: 20250821" maxlength="10" oninput="superSmartDate(this)">
-            <button class="date-btn" onclick="openDatePicker()">📅</button>
-            <input type="date" id="hiddenPicker" min="2000-01-01" max="2100-12-31" style="position:absolute; visibility:hidden; width:0; height:0;" onchange="syncDate(this)">
+            <input type="date" id="inDate" max="2099-12-31">
         </div>
         
-        <div style="display:flex; gap:10px;">
-          <button class="btn btn-scan" onclick="startScan()">📷 掃描</button>
-          <button class="btn btn-primary" onclick="addData()">➕ 加入</button>
+        <div class="btn-row">
+             <input type="file" id="fileIn" accept="image/*" style="display:none" onchange="previewImg(this)">
+             <button style="background:#f39c12;" onclick="document.getElementById('fileIn').click()">📷 拍照</button>
+             <button onclick="doAdd()">🚀 加入清單</button>
         </div>
-
-        <input type="text" id="searchIn" placeholder="🔍 搜尋..." onkeyup="filterList()" style="margin-top:20px;">
-        <div id="loader">載入中...</div>
-        <div class="food-list" id="listArea"></div>
-      </div>
-
+        <div id="imgPreview" style="font-size:12px; color:#aaa; text-align:center; margin-bottom:10px;"></div>
+        <hr style="border:0; border-top:1px solid #eee; margin: 20px 0;">
+        <div class="search-wrapper">
+            <input type="text" id="search" placeholder="🔍 搜尋名稱或地點..." onkeyup="renderList()">
+        </div>
+        <div id="list"></div>
     </div>
 
     <script>
-      var myCode = "";
-      var allFoodData = [];
-      var html5QrcodeScanner = null;
-      var lastScannedBarcode = "";
+        // ✅ 網址分段 (防斷行)
+        var urlParts = [
+            "https://script.google.com/macros/s/",
+            "AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV",
+            "/exec"
+        ];
+        const API_URL = urlParts.join("");
 
-      // 🔥🔥🔥 v7.2 超強日期判讀邏輯 🔥🔥🔥
-      function superSmartDate(el) {
-          // 1. 先把所有非數字去掉
-          var val = el.value.replace(/\D/g, '');
-          
-          // 2. ✨ 核心魔法：處理 "202582" 這種情況
-          // 當長度 >= 6 (年份4碼 + 月份2碼)
-          if (val.length >= 6) {
-              var monthPart = parseInt(val.substring(4, 6)); // 抓出第5、6碼，例如 "82"
-              
-              // 如果這兩碼大於 12 (代表使用者想打 8月 2號，而不是 82月)
-              if (monthPart > 12) {
-                  // 自動在第 4 碼位置插入 '0'
-                  // "202582" -> "2025" + "0" + "82" -> "2025082"
-                  val = val.substring(0, 4) + '0' + val.substring(4);
-              }
-              // 如果月份是 00，改成 01
-              else if (monthPart === 0) {
-                  val = val.substring(0, 4) + '01' + val.substring(6);
-              }
-          }
-
-          // 3. 限制長度 8
-          if (val.length > 8) val = val.substring(0, 8);
-
-          // 4. 天數防呆 (打滿8碼才檢查)
-          if (val.length === 8) {
-              var y = parseInt(val.substring(0, 4));
-              var m = parseInt(val.substring(4, 6));
-              var d = parseInt(val.substring(6, 8));
-              var maxDays = new Date(y, m, 0).getDate();
-              if (d > maxDays) d = maxDays; 
-              if (d === 0) d = 1;
-              var dd = (d < 10 ? '0' : '') + d;
-              val = val.substring(0, 6) + dd;
-          }
-
-          // 5. 視覺排版 (自動加橫線)
-          var formatted = "";
-          if (val.length > 4) {
-              formatted += val.substring(0, 4) + '-';
-              if (val.length > 6) {
-                  formatted += val.substring(4, 6) + '-' + val.substring(6);
-              } else {
-                  formatted += val.substring(4);
-              }
-          } else {
-              formatted = val;
-          }
-          
-          el.value = formatted;
-      }
-
-      function openDatePicker() { try{document.getElementById("hiddenPicker").showPicker();}catch(e){document.getElementById("hiddenPicker").click();} }
-      function syncDate(p) { document.getElementById("inDate").value = p.value; }
-      // 🔥🔥🔥 日期邏輯結束 🔥🔥🔥
-
-      window.onload = function() {
-        var savedCode = localStorage.getItem("my_fridge_code");
-        if (savedCode) { verifyAndEnter(savedCode); }
-      };
-
-      function showPage(id) {
-        document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-      }
-      function goBack() { showPage('pageLanding'); }
-      function goToLogin() { showPage('pageLogin'); }
-      
-      function goToRegister() {
-        showPage('pageRegister');
-        google.script.run.withSuccessHandler(function(code){
-          document.getElementById('newCodeDisplay').innerText = code;
-          myCode = code;
-        }).registerNewUser();
-      }
-      
-      function doLoginAfterReg() {
-        localStorage.setItem("my_fridge_code", myCode);
-        enterMainApp();
-      }
-
-      function doVerifyLogin() {
-        var code = document.getElementById('inputCode').value.toUpperCase().trim();
-        if(!code) return alert("請輸入代碼");
-        verifyAndEnter(code);
-      }
-
-      function verifyAndEnter(code) {
-        google.script.run.withSuccessHandler(function(isValid){
-          if(isValid) {
-            myCode = code;
-            localStorage.setItem("my_fridge_code", myCode);
-            enterMainApp();
-          } else {
-            alert("找不到這個通行證代碼喔！");
-            localStorage.removeItem("my_fridge_code");
-            showPage('pageLogin');
-          }
-        }).loginUser(code);
-      }
-
-      function doLogout() {
-        localStorage.removeItem("my_fridge_code");
-        location.reload();
-      }
-
-      function enterMainApp() {
-        showPage('pageMain');
-        document.getElementById('displayId').innerText = myCode;
-        loadData();
-        loadCreators();
-      }
-
-      function loadCreators() {
-        google.script.run.withSuccessHandler(function(list){
-          var dataList = document.getElementById('creatorHistory');
-          dataList.innerHTML = "";
-          list.forEach(name => {
-            var option = document.createElement('option');
-            option.value = name;
-            dataList.appendChild(option);
-          });
-        }).getCreatorHistory(myCode);
-      }
-
-      function loadData() {
-        google.script.run.withSuccessHandler(renderList).getFoodData(myCode);
-      }
-
-      function renderList(data) {
-        document.getElementById('loader').style.display = 'none';
-        allFoodData = data;
-        data.sort((a, b) => new Date(a.date) - new Date(b.date));
-        
-        var html = "";
-        if (data.length === 0) html = "<div style='color:#ccc; margin-top:20px;'>目前沒有資料</div>";
-        var today = new Date(); today.setHours(0,0,0,0);
-        data.forEach(item => {
-          var parts = item.date.split('-');
-          var expDate = new Date(parts[0], parts[1]-1, parts[2]);
-          var diff = Math.ceil((expDate - today) / (86400000));
-          var tagClass = "bg-ok"; var tagText = `剩 ${diff} 天`;
-          if (diff < 0) { tagClass = "bg-bad"; tagText = "已過期"; }
-          else if (diff <= 3) { tagClass = "bg-soon"; tagText = "快壞了"; }
-          var displayDate = item.date.replace(/-/g, '/');
-          var creatorInfo = item.creator ? `<span class="creator-tag">${item.creator}</span>` : "";
-
-          html += `
-            <div class="food-item">
-              <div class="food-info">
-                <div><span class="food-name">${item.name}</span>${creatorInfo}</div>
-                <span class="food-loc">📍 ${item.location}</span>
-              </div>
-              <div style="display:flex; align-items:center; gap:10px;">
-                <div class="status-tag ${tagClass}">${tagText}<br>${displayDate}</div>
-                <button class="btn-delete" onclick="deleteData('${item.name}', '${item.location}', '${item.date}')">🗑️</button>
-              </div>
-            </div>`;
-        });
-        document.getElementById('listArea').innerHTML = html;
-      }
-
-      function addData() {
-        var creator = document.getElementById('inCreator').value.trim();
-        var name = document.getElementById('inName').value;
-        var loc = document.getElementById('inLoc').value;
-        var date = document.getElementById('inDate').value;
-        if(!name || !date) return alert("名稱與日期必填");
-        
-        // 驗證日期格式
-        if(date.length !== 10) return alert("日期格式不正確 (請打滿8碼或使用日曆)");
-
-        var year = date.split('-')[0];
-        if (year.length > 4 || parseInt(year) > 2099) {
-          alert("日期太遙遠囉！");
-          return;
+        // ✅ 圖片放大功能 (v6.6 功能)
+        function showLargeImg(url) {
+            if(!url) return;
+            document.getElementById("largeImgDisplay").src = url;
+            document.getElementById("imageModal").style.display = "flex";
         }
 
-        allFoodData.push({name:name, location:loc, date:date, creator:creator});
-        renderList(allFoodData);
-        var dataList = document.getElementById('creatorHistory');
-        var options = Array.from(dataList.options).map(o => o.value);
-        if(creator && !options.includes(creator)) {
-           var option = document.createElement('option');
-           option.value = creator;
-           dataList.appendChild(option);
+        function closeLargeImg() {
+            document.getElementById("imageModal").style.display = "none";
         }
 
-        document.getElementById('inName').value = '';
-        document.getElementById('inDate').value = '';
+        window.onload = function() {
+            try {
+                var savedCode = localStorage.getItem("pass_code");
+                if (savedCode) {
+                    // 🔥 快取功能：先顯示舊資料，體驗更順暢 (v6.6 功能)
+                    var cacheKey = "fridge_data_" + savedCode;
+                    var cachedData = localStorage.getItem(cacheKey);
+                    if(cachedData) {
+                        try {
+                            allData = JSON.parse(cachedData);
+                            enterApp(savedCode, true); 
+                            refreshList(savedCode, true); // 背景靜默更新
+                        } catch(e) { enterApp(savedCode, false); }
+                    } else {
+                        showLoader("自動登入中...");
+                        callApi("checkCode", {code: savedCode}, function(res) {
+                            if (res && res.valid) enterApp(savedCode);
+                            else { localStorage.removeItem("pass_code"); hideLoader(); }
+                        });
+                    }
+                }
+            } catch (e) { 
+                document.getElementById("debug-status").style.display = "block";
+                document.getElementById("debug-status").innerText = "啟動錯誤：" + e.message;
+            }
+        };
+
+        function callApi(action, payload, cb) {
+            payload.action = action;
+            fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            }).then(function(r){ return r.text(); })
+              .then(function(txt){
+                  if(!payload.silent) hideLoader();
+                  try {
+                      var data = JSON.parse(txt);
+                      cb(data);
+                  } catch(e) { 
+                      alert("系統資料錯誤：\n" + e.message); 
+                  }
+              })
+              .catch(function(err){
+                  if(!payload.silent) hideLoader();
+                  alert("連線失敗，請檢查網路");
+              });
+        }
+
+        function doLogin() {
+            var code = document.getElementById("codeIn").value.toUpperCase().trim();
+            if(!code) return alert("請輸入代碼");
+            showLoader("驗證中...");
+            callApi("checkCode", {code: code}, function(res){
+                if(res.valid) {
+                    localStorage.setItem("pass_code", code);
+                    enterApp(code);
+                } else alert("❌ 代碼錯誤");
+            });
+        }
+
+        function doRegister() {
+            showLoader("註冊中...");
+            callApi("register", {}, function(res){
+                localStorage.setItem("pass_code", res.code);
+                alert("代碼: " + res.code);
+                enterApp(res.code);
+            });
+        }
+
+        function enterApp(code, useCache) {
+            document.getElementById("loginSection").style.display = "none";
+            document.getElementById("appSection").style.display = "block";
+            document.getElementById("myCode").innerText = code;
+            if(!useCache) refreshList(code); else renderList();
+        }
+
+        function doLogout() {
+            if(confirm("登出？")) { localStorage.removeItem("pass_code"); location.reload(); }
+        }
+
+        function refreshList(code, isSilent) {
+            var c = code || document.getElementById("myCode").innerText;
+            if(isSilent) document.getElementById("sync-status").innerText = "🔄 更新中..."; else showLoader("讀取中...");
+
+            callApi("getList", {code: c, silent: isSilent}, function(res){
+                allData = res.data || [];
+                // 更新快取
+                var cacheKey = "fridge_data_" + c;
+                localStorage.setItem(cacheKey, JSON.stringify(allData));
+                
+                renderList();
+                document.getElementById("sync-status").innerText = "✅ 已同步";
+                setTimeout(function(){ document.getElementById("sync-status").innerText = ""; }, 2000);
+            });
+        }
+
+        function doAdd() {
+            var name = document.getElementById("inName").value;
+            var loc = document.getElementById("inLoc").value;
+            var date = document.getElementById("inDate").value; // 直接抓原生日曆值
+            var file = document.getElementById("fileIn").files[0];
+            var code = document.getElementById("myCode").innerText;
+
+            if(!name || !date) return alert("請填寫名稱與日期");
+            
+            // 🔥 簡單驗證年份 (保留您上傳檔案中的邏輯)
+            var year = date.split('-')[0];
+            if (year.length > 4 || parseInt(year) > 2099) {
+              alert("日期太遙遠囉！");
+              return;
+            }
+
+            showLoader("儲存中...");
+            var pl = { code: code, name: name, loc: loc, date: date, image: "" };
+            
+            if(file) {
+                var reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = function(e) {
+                    pl.image = e.target.result.split(",")[1];
+                    sendAdd(pl);
+                };
+            } else { sendAdd(pl); }
+        }
+
+        function sendAdd(pl) {
+            callApi("add", pl, function(res){
+                document.getElementById("inName").value = "";
+                document.getElementById("inDate").value = "";
+                document.getElementById("fileIn").value = "";
+                document.getElementById("imgPreview").innerText = "";
+                refreshList(pl.code);
+            });
+        }
+
+        function deleteItem(id) {
+            if(!confirm("刪除？")) return;
+            showLoader("刪除中...");
+            callApi("delete", {id: id}, function(){
+                 refreshList(document.getElementById("myCode").innerText);
+            });
+        }
         
-        // 保留掃描ID，若無掃描則為空
-        google.script.run.addFood(name, loc, date, myCode, creator, lastScannedBarcode);
-        lastScannedBarcode = "";
-      }
-
-      function deleteData(name, loc, date) {
-        if(!confirm("確定刪除嗎？")) return;
-        allFoodData = allFoodData.filter(i => !(i.name==name && i.location==loc && i.date==date));
-        renderList(allFoodData);
-        google.script.run.deleteFood(name, loc, date, myCode);
-      }
-
-      function filterList() {
-        var k = document.getElementById('searchIn').value.toLowerCase();
-        var f = allFoodData.filter(i => i.name.toLowerCase().includes(k) || i.location.toLowerCase().includes(k) || (i.creator && i.creator.toLowerCase().includes(k)));
-        renderList(f);
-      }
-
-      function startScan() {
-        document.getElementById('scanOverlay').style.display = 'flex';
-        html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-      }
-
-      function stopScan() {
-        if (html5QrcodeScanner) {
-          html5QrcodeScanner.clear().then(_ => { document.getElementById('scanOverlay').style.display = 'none'; }).catch(error => { document.getElementById('scanOverlay').style.display = 'none'; });
-        } else { document.getElementById('scanOverlay').style.display = 'none'; }
-      }
-
-      function onScanSuccess(decodedText) {
-        html5QrcodeScanner.clear();
-        document.getElementById('scanOverlay').style.display = 'none';
-        lastScannedBarcode = decodedText;
-        document.getElementById('inName').value = "🔍 搜尋商品中...";
+        let allData = [];
         
-        google.script.run.withSuccessHandler(function(foundName){
-          if(foundName) {
-            document.getElementById('inName').value = foundName;
-          } else {
-            document.getElementById('inName').value = "";
-            document.getElementById('inName').placeholder = "查無資料，請手動輸入 (系統會為您專屬記憶)";
-            alert("這是新商品！請輸入您習慣的名稱，下次就認得了 🧠");
-          }
-        }).lookupProductInfo(decodedText, myCode);
-      }
+        function renderList() {
+            var key = document.getElementById("search").value.toLowerCase();
+            var list = document.getElementById("list");
+            list.innerHTML = "";
+            var today = new Date(); today.setHours(0,0,0,0);
+            var hasData = false; 
 
-      function onScanFailure(error) {}
+            allData.sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
+
+            allData.forEach(function(item){
+                var n = String(item.name || "").toLowerCase();
+                var l = String(item.location || "").toLowerCase();
+                if(key && !n.includes(key) && !l.includes(key)) return;
+                
+                hasData = true;
+
+                var d = new Date(item.date);
+                var diff = Math.ceil((d - today)/86400000);
+                var cls = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
+                var txt = diff < 0 ? "過期 "+Math.abs(diff)+" 天" : "剩 "+diff+" 天";
+                
+                // 🔥 圖片點擊放大 (保留 v6.6 功能)
+                var img = item.imgUrl ? 
+                    `<img src="${item.imgUrl}" onclick="showLargeImg('${item.imgUrl}')">` : 
+                    `<div style="width:60px;height:60px;background:#eee;margin-right:10px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;">無圖</div>`;
+
+                var delBtn = `<button style="width:auto;background:none;color:#aaa;padding:5px;" onclick="deleteItem(${item.rowId})">✕</button>`;
+                
+                list.innerHTML += `<div class="card">${img}<div style="flex:1"><div style="font-weight:bold">${item.name}</div><div style="font-size:13px;color:#666">📍 ${item.location}</div><div class="tag ${cls}">${txt}</div><div style="font-size:12px;color:#aaa">${item.date}</div></div>${delBtn}</div>`;
+            });
+
+            if (!hasData) list.innerHTML = `<div style="text-align:center; padding:30px; color:#aaa;">📭 找不到相關食材</div>`;
+        }
+
+        function previewImg(i) { if(i.files[0]) document.getElementById("imgPreview").innerText = "已選: "+i.files[0].name; }
+        function showLoader(t) { document.getElementById("loader").style.display="flex"; document.getElementById("loaderText").innerText=t; }
+        function hideLoader() { document.getElementById("loader").style.display="none"; }
     </script>
-  </body>
+</body>
 </html>
