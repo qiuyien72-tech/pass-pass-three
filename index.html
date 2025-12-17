@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>冰箱小管家 v4.3</title>
+    <title>冰箱小管家 v4.4</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
@@ -36,7 +36,7 @@
     <div id="loader"><div class="spinner"></div><div id="loaderText">連線中...</div></div>
 
     <div id="loginSection">
-        <h2>📦 冰箱小管家 <span class="ver-tag">v4.3</span></h2>
+        <h2>📦 冰箱小管家 <span class="ver-tag">v4.4</span></h2>
         <p style="color:#666; font-size:14px; margin-bottom:20px;">請直接輸入代碼登入</p>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase; letter-spacing:1px; font-weight:bold;">
         <button onclick="doLogin()">🚀 登入</button>
@@ -51,7 +51,7 @@
         <input type="text" id="inName" placeholder="🍎 食品名稱">
         <input type="text" id="inLoc" placeholder="🧊 放置位置 (例如: 冷凍庫)">
         <div class="date-group">
-            <input type="text" id="inDate" placeholder="📅 到期日 (6碼: 251231)" maxlength="6">
+            <input type="text" id="inDate" placeholder="📅 到期日 (8碼: 20251231)" maxlength="8">
             <button class="date-btn" onclick="openDatePicker()">📅</button>
             <input type="date" id="hiddenPicker" style="position:absolute; visibility:hidden; width:0; height:0;" onchange="syncDate(this)">
         </div>
@@ -69,7 +69,7 @@
     </div>
 
     <script>
-        // ✅ 已經幫您填入正確網址，請直接使用，不要修改！
+        // ✅ 網址已固定，請勿修改
         const API_URL = "https://script.google.com/macros/s/AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV/exec";
 
         function callApi(action, payload, callback) {
@@ -113,9 +113,10 @@
 
         function openDatePicker() { try { document.getElementById("hiddenPicker").showPicker(); } catch (e) { document.getElementById("hiddenPicker").click(); } }
         
+        // 📅 日曆選完後，自動幫忙填成 8 碼 (例如 20250101)
         function syncDate(picker) { 
             let d = new Date(picker.value);
-            let yy = String(d.getFullYear()).slice(-2);
+            let yy = d.getFullYear(); // 這次抓完整的年份 2025
             let mm = String(d.getMonth() + 1).padStart(2, '0');
             let dd = String(d.getDate()).padStart(2, '0');
             document.getElementById("inDate").value = yy + mm + dd;
@@ -174,22 +175,31 @@
 
                 if(!name || !rawDate) return alert("請輸入名稱與日期");
 
-                // --- 6碼日期邏輯 ---
+                // --- 8碼日期邏輯 (YYYYMMDD) ---
                 let cleanDate = rawDate.replace(/[^\d]/g, "");
-                if (cleanDate.length !== 6) {
-                    return alert("⚠️ 請輸入 6 位數日期！\n例如：251231 (代表 2025年12月31日)");
+                
+                // 檢查是否為 8 碼
+                if (cleanDate.length !== 8) {
+                    return alert("⚠️ 請輸入 8 位數日期！\n例如：20251231");
                 }
 
-                let yy = parseInt(cleanDate.slice(0, 2), 10);
-                let mm = parseInt(cleanDate.slice(2, 4), 10);
-                let dd = parseInt(cleanDate.slice(4, 6), 10);
-                let fullYear = 2000 + yy;
+                // 切割年份、月份、日期
+                let yy = parseInt(cleanDate.slice(0, 4), 10); // 前4碼是年
+                let mm = parseInt(cleanDate.slice(4, 6), 10); // 中間2碼是月
+                let dd = parseInt(cleanDate.slice(6, 8), 10); // 最後2碼是日
 
+                // 檢查年份範圍 (避免輸入 0000 或 9999)
+                if (yy < 2000 || yy > 2100) return alert(`📅 年份錯誤 (${yy})！\n請輸入 2000~2100 之間的年份。`);
+
+                // 檢查月份
                 if (mm < 1 || mm > 12) return alert(`📅 月份錯誤！沒有 ${mm} 月。`);
-                let daysInMonth = new Date(fullYear, mm, 0).getDate();
-                if (dd < 1 || dd > daysInMonth) return alert(`📅 日期錯誤！\n20${yy}年 ${mm}月 只有 ${daysInMonth} 天。`);
+                
+                // 檢查日期 (考慮閏年與大小月)
+                let daysInMonth = new Date(yy, mm, 0).getDate();
+                if (dd < 1 || dd > daysInMonth) return alert(`📅 日期錯誤！\n${yy}年 ${mm}月 只有 ${daysInMonth} 天。`);
 
-                let formattedDate = `${fullYear}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
+                // 組合回標準格式 YYYY-MM-DD
+                let formattedDate = `${yy}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
 
                 showLoader("儲存中...");
                 let payload = { code: currentCode, name: name, loc: loc, date: formattedDate, image: "" };
@@ -204,7 +214,7 @@
                 } else { sendAdd(payload); }
 
             } catch (e) {
-                alert("❌ 按鈕執行失敗：\n" + e.message);
+                alert("❌ 錯誤：\n" + e.message);
                 console.error(e);
             }
         }
