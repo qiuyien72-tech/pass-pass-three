@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>冰箱小管家 v5.7</title>
+    <title>冰箱小管家 v5.8</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
@@ -39,7 +39,7 @@
     <div id="debug-status">🔴 系統載入中...</div>
 
     <div id="loginSection">
-        <h2>📦 冰箱小管家 <span>v5.7</span></h2>
+        <h2>📦 冰箱小管家 <span>v5.8</span></h2>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase;">
         <button id="btnLogin" onclick="doLogin()">🚀 登入</button>
         <button class="secondary" id="btnRegister" onclick="doRegister()">🎲 產生新代碼</button>
@@ -53,7 +53,7 @@
         <input type="text" id="inName" placeholder="🍎 食品名稱">
         <input type="text" id="inLoc" placeholder="🧊 放置位置 (例如: 冷凍庫)">
         <div class="date-group">
-            <input type="text" id="inDate" placeholder="📅 到期日 (例如: 20250230)" maxlength="10" oninput="autoFixDate(this)">
+            <input type="text" id="inDate" placeholder="📅 到期日 (例如: 20250230)" maxlength="10" oninput="fullSmartFix(this)">
             <button class="date-btn" onclick="openDatePicker()">📅</button>
             <input type="date" id="hiddenPicker" style="position:absolute; visibility:hidden; width:0; height:0;" onchange="syncDate(this)">
         </div>
@@ -79,18 +79,38 @@
         ];
         const API_URL = urlParts.join("");
 
-        // ✅ 智慧日期修正
-        function autoFixDate(el) {
+        // ✅ 全方位智慧修正函數 (v5.8 新增)
+        function fullSmartFix(el) {
+            // 1. 只留數字
             var val = el.value.replace(/\D/g, '');
+
+            // 2. 當打滿 8 碼時，開始進行邏輯手術
             if (val.length === 8) {
                 var y = parseInt(val.substring(0, 4));
                 var m = parseInt(val.substring(4, 6));
                 var d = parseInt(val.substring(6, 8));
-                if (m > 12) m = 12; if (m < 1) m = 1;
+
+                // A. 年份邏輯：限制在 2000 ~ 2100 之間
+                // 如果打 1999 或 3000，會自動修正為最接近的邊界，或當作今年
+                if (y < 2000) y = 2000;
+                if (y > 2100) y = 2100;
+
+                // B. 月份邏輯：限制在 1 ~ 12
+                if (m > 12) m = 12;
+                if (m < 1) m = 1;
+
+                // C. 日期邏輯：根據 年+月 算出該月最大天數 (含閏年判斷)
+                // new Date(y, m, 0) 中的 0 會自動指向「上個月的最後一天」
+                // 因為 js 的月份是 0-11，所以這裡傳入 m (1-12) 剛好是下個月，取第 0 天就是本月最後一天
                 var maxDays = new Date(y, m, 0).getDate();
-                if (d > maxDays) d = maxDays; if (d < 1) d = 1;
+                
+                if (d > maxDays) d = maxDays; // 如果超過該月最大天數，自動變最大天數
+                if (d < 1) d = 1;
+
+                // D. 格式化回寫 (YYYY-MM-DD)
                 var mm = (m < 10 ? '0' : '') + m;
                 var dd = (d < 10 ? '0' : '') + d;
+                
                 el.value = y + "-" + mm + "-" + dd;
             }
         }
@@ -106,7 +126,7 @@
 
         window.onload = function() {
             try {
-                setStatus("🟢 系統正常：連線成功", "green");
+                setStatus("🟢 系統正常：智慧日期邏輯已啟動", "green");
                 var savedCode = localStorage.getItem("pass_code");
                 if (savedCode) {
                     showLoader("自動登入中...");
@@ -142,7 +162,6 @@
               });
         }
 
-        // ... 其他功能函數 ...
         function doLogin() {
             var code = document.getElementById("codeIn").value.toUpperCase().trim();
             if(!code) return alert("請輸入代碼");
@@ -192,6 +211,8 @@
             var code = document.getElementById("myCode").innerText;
 
             if(!name || !date) return alert("請填寫名稱與日期");
+            
+            // 雙重保險：即使已經自動修正，提交前再檢查一次
             if(date.length !== 10) return alert("日期格式不正確");
 
             showLoader("儲存中...");
@@ -233,8 +254,7 @@
             list.innerHTML = "";
             var today = new Date(); today.setHours(0,0,0,0);
             
-            // 🔥 補回遺失的變數 🔥
-            var hasData = false; 
+            var hasData = false; // ✅ 補回這個變數，防止搜尋時報錯
 
             allData.sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
 
@@ -244,7 +264,6 @@
                 
                 if(key && !n.includes(key) && !l.includes(key)) return;
                 
-                // 🔥 標記有找到資料
                 hasData = true;
 
                 var d = new Date(item.date);
