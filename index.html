@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>冰箱小管家 v7.0</title>
+    <title>冰箱小管家 v7.1</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
@@ -78,8 +78,7 @@
         <input type="text" id="inLoc" placeholder="🧊 放置位置 (例如: 冷凍庫)">
         
         <div class="date-group">
-            <input type="tel" inputmode="numeric" id="inDate" placeholder="📅 格式: 20250230 (自動修正)" maxlength="10" oninput="magicDateInput(this)">
-            
+            <input type="tel" inputmode="numeric" id="inDate" placeholder="📅 格式: 20250821 (自動補零)" maxlength="10" oninput="magicDateInput(this)">
             <button class="date-btn" onclick="openDatePicker()">📅</button>
             <input type="date" id="hiddenPicker" min="2000-01-01" max="2100-12-31" style="position:absolute; visibility:hidden; width:0; height:0;" onchange="syncDate(this)">
         </div>
@@ -105,44 +104,48 @@
         ];
         const API_URL = urlParts.join("");
 
-        // 🔥🔥🔥 v7.0 核心：即時動態修正函數 🔥🔥🔥
+        // 🔥🔥🔥 v7.1 核心修正：自動補零邏輯 🔥🔥🔥
         function magicDateInput(el) {
-            // 1. 先把非數字全拿掉，確保只剩數字
+            // 1. 強制移除任何非數字
             var val = el.value.replace(/\D/g, '');
             
-            // 2. 限制最大長度 8 (YYYYMMDD)
-            if (val.length > 8) val = val.substring(0, 8);
-
-            // 3. ✨ 即時邏輯檢查 (這就是您要的「自動改」) ✨
-            // 如果輸入了月份 (第5,6碼)
+            // 2. ✨ 自動補零邏輯 ✨
+            // 只有當長度 >= 6 (代表已經打到月份的第二碼了)，才進行判斷
             if (val.length >= 6) {
-                var m = parseInt(val.substring(4, 6));
-                // 如果月份 > 12，立刻強制改成 12 (防止您打出 82月)
+                var m = parseInt(val.substring(4, 6)); // 抓取第5、6碼
+                
+                // 情況一：月份 > 12 (例如輸入 82，代表本來想打 08)
+                // 修正：插入一個 0 在 8 的前面 -> 變成 082
                 if (m > 12) {
-                    val = val.substring(0, 4) + '12' + val.substring(6);
+                    val = val.substring(0, 4) + '0' + val.substring(4);
                 }
-                // 如果月份是 00，強制改成 01
+                
+                // 情況二：月份是 00 (不合法)
+                // 修正：強制改成 01
                 if (m === 0) {
                     val = val.substring(0, 4) + '01' + val.substring(6);
                 }
             }
 
-            // 4. 如果輸入了日期 (第7,8碼)，且打滿了 8 碼
+            // 3. 限制最大長度 8 (YYYYMMDD)
+            if (val.length > 8) val = val.substring(0, 8);
+
+            // 4. 打滿 8 碼後的最後防線 (日期天數檢查)
             if (val.length === 8) {
                 var y = parseInt(val.substring(0, 4));
                 var m = parseInt(val.substring(4, 6));
                 var d = parseInt(val.substring(6, 8));
                 
-                // 檢查該月有幾天
                 var maxDays = new Date(y, m, 0).getDate();
-                if (d > maxDays) d = maxDays; // 超過就變最後一天
+                if (d > maxDays) d = maxDays; // 如果打 31 但只有 30 天，自動變 30
                 if (d === 0) d = 1;
 
+                // 拼回去
                 var dd = (d < 10 ? '0' : '') + d;
                 val = val.substring(0, 6) + dd;
             }
 
-            // 5. ✨ 即時視覺格式化 (加橫線) ✨
+            // 5. 視覺格式化 (加橫線)
             var formatted = "";
             if (val.length > 4) {
                 formatted += val.substring(0, 4) + '-';
@@ -155,7 +158,6 @@
                 formatted = val;
             }
             
-            // 寫回輸入框
             el.value = formatted;
         }
 
@@ -269,7 +271,7 @@
 
             if(!name || !date) return alert("請填寫名稱與日期");
             
-            // v7.0 最終檢查：即使有自動修正，確保格式是 YYYY-MM-DD (長度10)
+            // 驗證日期格式
             if(date.length !== 10) return alert("日期格式不正確 (請打滿8碼)");
 
             var year = date.split('-')[0];
