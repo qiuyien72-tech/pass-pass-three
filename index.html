@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>冰箱小管家 v3.8</title>
+    <title>冰箱小管家 v3.9</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
@@ -36,7 +36,7 @@
     <div id="loader"><div class="spinner"></div><div id="loaderText">連線中...</div></div>
 
     <div id="loginSection">
-        <h2>📦 冰箱小管家 <span class="ver-tag">v3.8</span></h2>
+        <h2>📦 冰箱小管家 <span class="ver-tag">v3.9</span></h2>
         <p style="color:#666; font-size:14px; margin-bottom:20px;">請直接輸入代碼登入</p>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase; letter-spacing:1px; font-weight:bold;">
         <button onclick="doLogin()">🚀 登入</button>
@@ -165,42 +165,44 @@
 
             if(!name || !rawDate) return alert("請輸入名稱與日期");
 
-            // --- 📅 v3.8 強力日期檢查邏輯 ---
+            // --- 📅 v3.9 日期防呆 (鎖定年份長度) ---
             
-            // 1. 先處理分隔符號，把 . 或 / 都換成 -
-            let cleanDate = rawDate.replace(/\./g, "-").replace(/\//g, "-");
-            
-            // 2. 如果輸入的是純數字 8 碼 (例如 20250101)，自動補上 -
-            if (!cleanDate.includes("-") && cleanDate.length === 8) {
+            // 1. 強力清洗：只把數字跟橫線留下來 (移除 . / 和中文)
+            let cleanDate = rawDate.replace(/\./g, "-").replace(/\//g, "-").replace(/[^\d-]/g, "");
+
+            // 2. 處理 "純數字" 的情況
+            // 如果使用者打 20250101 (8碼)，自動補線
+            if (cleanDate.match(/^\d{8}$/)) {
                 cleanDate = cleanDate.slice(0, 4) + "-" + cleanDate.slice(4, 6) + "-" + cleanDate.slice(6);
             }
 
-            // 3. 檢查格式是不是 YYYY-MM-DD (簡易檢查)
+            // 3. 正規表達式檢查：確保是 YYYY-MM-DD
+            // ^\d{4} 表示開頭"必須"是4個數字 (不能是3個也不能是5個)
             let datePattern = /^(\d{4})-(\d{1,2})-(\d{1,2})$/;
             let match = cleanDate.match(datePattern);
 
             if (!match) {
-                return alert("⚠️ 日期格式看不懂！\n請輸入例如：20250101 或 2025-01-01");
+                return alert("⚠️ 日期格式錯誤！\n請輸入 8 碼 (20250101) 或標準格式 (2025-01-01)");
             }
 
-            // 4. 嚴格邏輯檢查 (檢查這一天是不是真的存在)
+            // 4. 嚴格邏輯檢查 (Check Valid Date)
             let y = parseInt(match[1], 10);
             let m = parseInt(match[2], 10);
             let d = parseInt(match[3], 10);
 
-            // 補零 (把 2025-1-1 變成 2025-01-01)
+            // 補零 (讓 2025-1-1 變 2025-01-01)
             let formattedDate = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
             // 檢查年份範圍
-            if (y < 2000 || y > 2100) return alert(`📅 年份太誇張了 (${y})！\n請輸入 2000 ~ 2100 之間的年份。`);
+            if (y < 2000 || y > 2100) return alert(`📅 年份錯誤！(${y})\n請輸入 4 位數年份 (例如 2025)。`);
             
             // 檢查月份
-            if (m < 1 || m > 12) return alert(`📅 沒有 ${m} 月這種東西啦！\n月份必須是 1 ~ 12。`);
+            if (m < 1 || m > 12) return alert(`📅 沒有 ${m} 月！`);
 
-            // 檢查日期 (考慮每個月天數不同)
-            let daysInMonth = new Date(y, m, 0).getDate(); // 取得該月有幾天
+            // 檢查日期
+            let daysInMonth = new Date(y, m, 0).getDate();
             if (d < 1 || d > daysInMonth) {
-                return alert(`📅 日期錯誤！\n${y} 年 ${m} 月 只有 ${daysInMonth} 天，\n但你輸入了 ${d} 號。`);
+                return alert(`📅 日期錯誤！\n${y} 年 ${m} 月 只有 ${daysInMonth} 天。`);
             }
             // --- 檢查結束 ---
 
