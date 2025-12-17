@@ -3,8 +3,7 @@
   <head>
     <base target="_top">
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-
+    
     <style>
       :root {
         --bg-color: #fdfbf7; --card-bg: #ffffff;
@@ -36,7 +35,6 @@
       .btn:active { transform: scale(0.98); }
       .btn-primary { background-color: var(--secondary); color: white; }
       .btn-outline { background-color: white; border: 2px solid var(--secondary); color: var(--secondary); }
-      .btn-scan { background-color: var(--accent); color: white; } 
       .btn-delete { background: none; border: none; font-size: 1.2rem; cursor: pointer; opacity: 0.5; padding: 5px; flex: 0; }
       .btn-delete:hover { opacity: 1; color: var(--danger); }
       
@@ -71,22 +69,10 @@
       .bg-soon { background: var(--accent); }
       .bg-bad { background: var(--danger); }
       .top-nav { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 2px dashed #eee; padding-bottom: 10px; font-size: 0.9rem;}
-      #scanOverlay {
-        position: fixed; top: 0;
-        left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.8); z-index: 999;
-        display: none; flex-direction: column; justify-content: center; align-items: center;
-      }
-      #reader { width: 300px; height: 300px; background: #000; }
-      .scan-close-btn {
-        margin-top: 20px; padding: 10px 30px;
-        background: white; border: none;
-        border-radius: 20px; font-weight: bold; cursor: pointer;
-      }
 
-      /* 🔥🔥🔥 新增：智慧日期區塊樣式 🔥🔥🔥 */
+      /* 🔥 智慧日期區塊專屬樣式 */
       .date-group { display: flex; gap: 5px; margin-bottom: 10px; }
-      .date-group input { margin-bottom: 0; }
+      .date-group input { margin-bottom: 0; flex: 1; }
       .date-btn { 
           width: auto; padding: 0 15px; margin-bottom: 0; 
           background: #eee; color: #555; font-size: 1.2rem; 
@@ -96,12 +82,6 @@
     </style>
   </head>
   <body>
-
-    <div id="scanOverlay">
-      <div style="color:white; margin-bottom:10px;">請對準條碼 (EAN/UPC)</div>
-      <div id="reader"></div>
-      <button class="scan-close-btn" onclick="stopScan()">❌ 關閉相機</button>
-    </div>
 
     <header>
       <h1>食品小管家 🎫</h1>
@@ -141,7 +121,7 @@
         <input type="text" id="inCreator" list="creatorHistory" placeholder="👤 建立者 (可選或自填)">
         <datalist id="creatorHistory"></datalist>
 
-        <input type="text" id="inName" placeholder="🍎 食品名稱 (可掃描)">
+        <input type="text" id="inName" placeholder="🍎 食品名稱">
         <input type="text" id="inLoc" placeholder="🧊 放置位置">
         
         <div class="date-group">
@@ -150,10 +130,7 @@
             <input type="date" id="hiddenPicker" min="2000-01-01" max="2100-12-31" style="position:absolute; visibility:hidden; width:0; height:0;" onchange="syncDate(this)">
         </div>
         
-        <div style="display:flex; gap:10px;">
-          <button class="btn btn-scan" onclick="startScan()">📷 掃描</button>
-          <button class="btn btn-primary" onclick="addData()">➕ 加入</button>
-        </div>
+        <button class="btn btn-primary" onclick="addData()">➕ 加入清單</button>
 
         <input type="text" id="searchIn" placeholder="🔍 搜尋..." onkeyup="filterList()" style="margin-top:20px;">
         <div id="loader">載入中...</div>
@@ -165,17 +142,12 @@
     <script>
       var myCode = "";
       var allFoodData = [];
-      var html5QrcodeScanner = null;
-      var lastScannedBarcode = "";
 
-      // 🔥🔥🔥 新增：智慧日期修正邏輯 (v6.6移植過來) 🔥🔥🔥
+      // 🔥 智慧日期修正邏輯 🔥
       function fullSmartFix(el) {
-          // 1. 強制移除任何非數字 (電腦版防亂打英文)
+          // 1. 強制移除任何非數字 (防呆)
           var val = el.value.replace(/\D/g, '');
-          
-          if (val !== el.value) {
-              el.value = val;
-          }
+          if (val !== el.value) el.value = val;
           
           // 2. 打滿8碼才做日期邏輯檢查
           if (val.length === 8) {
@@ -193,14 +165,13 @@
               var mm = (m < 10 ? '0' : '') + m;
               var dd = (d < 10 ? '0' : '') + d;
               
-              // 自動補上橫線
               el.value = y + "-" + mm + "-" + dd;
           }
       }
 
       function openDatePicker() { try{document.getElementById("hiddenPicker").showPicker();}catch(e){document.getElementById("hiddenPicker").click();} }
       function syncDate(p) { document.getElementById("inDate").value = p.value; }
-      // 🔥🔥🔥 日期邏輯結束 🔥🔥🔥
+      // 🔥 日期邏輯結束 🔥
 
       window.onload = function() {
         var savedCode = localStorage.getItem("my_fridge_code");
@@ -315,7 +286,6 @@
         var date = document.getElementById('inDate').value;
         if(!name || !date) return alert("名稱與日期必填");
         
-        // 🔥 日期檢查：因為有自動修正，基本上格式一定是 YYYY-MM-DD
         var year = date.split('-')[0];
         if (year.length > 4 || parseInt(year) > 2099) {
           alert("日期太遙遠囉！");
@@ -334,8 +304,9 @@
 
         document.getElementById('inName').value = '';
         document.getElementById('inDate').value = '';
-        google.script.run.addFood(name, loc, date, myCode, creator, lastScannedBarcode);
-        lastScannedBarcode = "";
+        
+        // 傳送空字串 "" 給條碼欄位，因為移除了掃描
+        google.script.run.addFood(name, loc, date, myCode, creator, "");
       }
 
       function deleteData(name, loc, date) {
@@ -350,38 +321,6 @@
         var f = allFoodData.filter(i => i.name.toLowerCase().includes(k) || i.location.toLowerCase().includes(k) || (i.creator && i.creator.toLowerCase().includes(k)));
         renderList(f);
       }
-
-      function startScan() {
-        document.getElementById('scanOverlay').style.display = 'flex';
-        html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-      }
-
-      function stopScan() {
-        if (html5QrcodeScanner) {
-          html5QrcodeScanner.clear().then(_ => { document.getElementById('scanOverlay').style.display = 'none'; }).catch(error => { document.getElementById('scanOverlay').style.display = 'none'; });
-        } else { document.getElementById('scanOverlay').style.display = 'none'; }
-      }
-
-      // 掃描成功處理
-      function onScanSuccess(decodedText) {
-        html5QrcodeScanner.clear();
-        document.getElementById('scanOverlay').style.display = 'none';
-        lastScannedBarcode = decodedText;
-        document.getElementById('inName').value = "🔍 搜尋商品中...";
-        
-        google.script.run.withSuccessHandler(function(foundName){
-          if(foundName) {
-            document.getElementById('inName').value = foundName;
-          } else {
-            document.getElementById('inName').value = "";
-            document.getElementById('inName').placeholder = "查無資料，請手動輸入 (系統會為您專屬記憶)";
-            alert("這是新商品！請輸入您習慣的名稱，下次就認得了 🧠");
-          }
-        }).lookupProductInfo(decodedText, myCode);
-      }
-
-      function onScanFailure(error) {}
     </script>
   </body>
 </html>
