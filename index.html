@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>冰箱小管家 v6.0</title>
+    <title>冰箱小管家 v6.1</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
@@ -29,29 +29,28 @@
       .search-wrapper { position: relative; margin-bottom: 15px; }
       #search { border-radius: 30px !important; border: 2px solid #3498db !important; background-color: #f0f8ff !important; padding-left: 20px; margin-bottom: 0; color: #333; font-weight: bold; }
       
-      #debug-status { text-align: center; padding: 10px; margin-bottom: 20px; font-weight: bold; border-radius: 8px; background: #ffecec; color: red; border: 2px solid red; }
+      /* 小小的同步狀態提示 */
+      #sync-status { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #aaa; background: rgba(255,255,255,0.8); padding: 2px 5px; border-radius: 4px; pointer-events: none; }
+      
+      #debug-status { text-align: center; padding: 10px; margin-bottom: 20px; font-weight: bold; border-radius: 8px; background: #ffecec; color: red; border: 2px solid red; display:none; }
     </style>
 
     <script>
+        // 錯誤攔截器
         window.onerror = function(msg, url, line) {
-            alert("❌ 程式發生嚴重錯誤 (語法錯誤)！\n\n錯誤原因: " + msg + "\n第 " + line + " 行\n\n請截圖這個畫面給工程師！");
-            var statusDiv = document.getElementById("debug-status");
-            if(statusDiv) {
-                statusDiv.innerHTML = "❌ 系統崩潰: " + msg;
-                statusDiv.style.background = "#ffcccc";
-            }
-            return false; // 讓錯誤繼續在 console 顯示
+            alert("❌ 錯誤: " + msg + "\n第 " + line + " 行");
+            return false;
         };
     </script>
 </head>
 <body>
 
     <div id="loader"><div class="spinner"></div><div id="loaderText">連線中...</div></div>
-    
-    <div id="debug-status">🔴 系統載入中... (如果一直卡在這，代表有語法錯誤)</div>
+    <div id="debug-status"></div>
+    <div id="sync-status"></div>
 
     <div id="loginSection">
-        <h2>📦 冰箱小管家 <span>v6.0</span></h2>
+        <h2>📦 冰箱小管家 <span>v6.1</span></h2>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase;">
         <button id="btnLogin" onclick="doLogin()">🚀 登入</button>
         <button class="secondary" id="btnRegister" onclick="doRegister()">🎲 產生新代碼</button>
@@ -83,7 +82,7 @@
     </div>
 
     <script>
-        // ✅ 網址分段 (防斷行)
+        // ✅ 網址分段
         var urlParts = [
             "https://script.google.com/macros/s/",
             "AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV",
@@ -91,24 +90,17 @@
         ];
         const API_URL = urlParts.join("");
 
-        // ✅ 智慧日期修正函數
+        // ✅ 智慧日期修正
         function fullSmartFix(el) {
             var val = el.value.replace(/\D/g, '');
             if (val.length === 8) {
                 var y = parseInt(val.substring(0, 4));
                 var m = parseInt(val.substring(4, 6));
                 var d = parseInt(val.substring(6, 8));
-
-                if (y < 2000) y = 2000;
-                if (y > 2100) y = 2100;
-
-                if (m > 12) m = 12;
-                if (m < 1) m = 1;
-
+                if (y < 2000) y = 2000; if (y > 2100) y = 2100;
+                if (m > 12) m = 12; if (m < 1) m = 1;
                 var maxDays = new Date(y, m, 0).getDate();
-                if (d > maxDays) d = maxDays;
-                if (d < 1) d = 1;
-
+                if (d > maxDays) d = maxDays; if (d < 1) d = 1;
                 var mm = (m < 10 ? '0' : '') + m;
                 var dd = (d < 10 ? '0' : '') + d;
                 el.value = y + "-" + mm + "-" + dd;
@@ -116,28 +108,39 @@
         }
 
         function setStatus(msg, color) {
-            var el = document.getElementById("debug-status");
-            el.innerHTML = msg;
-            el.style.color = color;
-            el.style.borderColor = color;
-            el.style.background = (color === 'green' ? '#e6ffec' : '#ffecec');
-            if(color === 'green') setTimeout(function(){ el.style.display='none'; }, 2000);
+            // 這裡改成 console log 避免畫面太亂
+            console.log(msg);
         }
 
         window.onload = function() {
             try {
-                setStatus("🟢 系統正常：功能全開", "green");
                 var savedCode = localStorage.getItem("pass_code");
                 if (savedCode) {
-                    showLoader("自動登入中...");
-                    callApi("checkCode", {code: savedCode}, function(res) {
-                        if (res && res.valid) enterApp(savedCode);
-                        else { localStorage.removeItem("pass_code"); hideLoader(); }
-                    });
+                    // 🔥 極速模式：先顯示上次的資料
+                    var cacheKey = "fridge_data_" + savedCode;
+                    var cachedData = localStorage.getItem(cacheKey);
+                    
+                    if(cachedData) {
+                        try {
+                            allData = JSON.parse(cachedData);
+                            enterApp(savedCode, true); // true 表示使用快取，不顯示滿版 Loading
+                            // 雖然已經顯示了，但還是要在背景偷偷更新最新資料
+                            refreshList(savedCode, true); 
+                        } catch(e) {
+                            // 如果快取壞了，就乖乖正常讀取
+                            enterApp(savedCode, false);
+                        }
+                    } else {
+                        // 沒有快取，正常讀取
+                        showLoader("自動登入中...");
+                        callApi("checkCode", {code: savedCode}, function(res) {
+                            if (res && res.valid) enterApp(savedCode);
+                            else { localStorage.removeItem("pass_code"); hideLoader(); }
+                        });
+                    }
                 }
             } catch (e) {
-                // 如果 window.onload 裡面出錯，會被這裡抓到
-                alert("❌ 啟動時發生邏輯錯誤: " + e.message);
+                alert("啟動錯誤：" + e.message);
             }
         };
 
@@ -149,17 +152,17 @@
                 body: JSON.stringify(payload)
             }).then(function(r){ return r.text(); })
               .then(function(txt){
-                  hideLoader();
+                  if(!payload.silent) hideLoader(); // 如果是靜音模式，就不關閉Loader(因為根本沒開)
                   try {
                       var data = JSON.parse(txt);
                       cb(data);
                   } catch(e) { 
-                      alert("系統錯誤：\n" + e.message); 
+                      console.error("Parse error", e);
                   }
               })
               .catch(function(err){
-                  hideLoader();
-                  alert("連線失敗，請檢查網路");
+                  if(!payload.silent) hideLoader();
+                  console.error("Net error", err);
               });
         }
 
@@ -184,23 +187,44 @@
             });
         }
 
-        function enterApp(code) {
+        function enterApp(code, useCache) {
             document.getElementById("loginSection").style.display = "none";
             document.getElementById("appSection").style.display = "block";
             document.getElementById("myCode").innerText = code;
-            refreshList(code);
+            
+            // 如果不是使用快取，就要去抓資料
+            if(!useCache) {
+                refreshList(code);
+            } else {
+                renderList(); // 直接用快取資料渲染
+            }
         }
 
         function doLogout() {
             if(confirm("登出？")) { localStorage.removeItem("pass_code"); location.reload(); }
         }
 
-        function refreshList(code) {
+        // 🔥 支援靜音更新 (isSilent)
+        function refreshList(code, isSilent) {
             var c = code || document.getElementById("myCode").innerText;
-            showLoader("讀取中...");
-            callApi("getList", {code: c}, function(res){
+            
+            if(isSilent) {
+                document.getElementById("sync-status").innerText = "🔄 更新中...";
+            } else {
+                showLoader("讀取中...");
+            }
+
+            // 呼叫 API
+            callApi("getList", {code: c, silent: isSilent}, function(res){
                 allData = res.data || [];
+                
+                // 🔥 拿到新資料後，馬上存入快取！
+                var cacheKey = "fridge_data_" + c;
+                localStorage.setItem(cacheKey, JSON.stringify(allData));
+
                 renderList();
+                document.getElementById("sync-status").innerText = "✅ 已同步";
+                setTimeout(function(){ document.getElementById("sync-status").innerText = ""; }, 2000);
             });
         }
 
@@ -253,13 +277,11 @@
             list.innerHTML = "";
             var today = new Date(); today.setHours(0,0,0,0);
             
-            // ✅ 關鍵修復：這裡把 hasData 補回來了！
             var hasData = false; 
 
             allData.sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
 
             allData.forEach(function(item){
-                // ✅ 關鍵修復：強制轉字串，防止數字造成當機
                 var n = String(item.name || "").toLowerCase();
                 var l = String(item.location || "").toLowerCase();
                 
