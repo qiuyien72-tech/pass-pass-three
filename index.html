@@ -88,7 +88,7 @@
 
     <script>
         // 👇👇👇 網址不需要動，維持原樣 👇👇👇
-        const API_URL = "https://script.google.com/macros/s/AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycby-bYYuuhz4nYVTrNE4APMVykmkeg59klK6-Od3K4_obiOJbFt-wm46ON9dl6K8EllX/exec";
         
         function callApi(action, payload, callback) {
             payload.action = action;
@@ -231,5 +231,52 @@
             list.innerHTML = "";
             let today = new Date(); today.setHours(0,0,0,0);
             
-            let has
+            let hasData = false;
 
+            allData.forEach(item => {
+                // 🛑 關鍵修復：把資料強制轉成 String 再搜尋，防止數字導致當機
+                let itemName = String(item.name || "").toLowerCase();
+                let itemLoc = String(item.location || "").toLowerCase();
+
+                if(searchKey) {
+                    // 比對名稱或地點
+                    if (!itemName.includes(searchKey) && !itemLoc.includes(searchKey)) {
+                        return; // 不符合就跳過
+                    }
+                }
+                
+                hasData = true;
+                
+                let d = new Date(item.date);
+                let diff = Math.ceil((d - today) / (86400000));
+                let tagClass = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
+                let tagText = diff < 0 ? `過期 ${Math.abs(diff)} 天` : `剩 ${diff} 天`;
+                let imgHtml = item.imgUrl ? `<img src="${item.imgUrl}">` : `<div style="width:60px;height:60px;background:#eee;margin-right:10px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#aaa;">無圖</div>`;
+                
+                list.innerHTML += `
+                    <div class="card">
+                        ${imgHtml}
+                        <div style="flex:1">
+                            <div style="font-weight:bold">${item.name}</div>
+                            <div style="font-size:13px;color:#666">📍 ${item.location}</div>
+                            <div class="tag ${tagClass}">${tagText}</div>
+                            <div style="font-size:12px;color:#aaa">${item.date}</div>
+                        </div>
+                        <button style="width:auto;background:none;color:#aaa;padding:5px;" onclick="deleteItem(${item.rowId})">✕</button>
+                    </div>`;
+            });
+
+            if (!hasData) {
+                list.innerHTML = `<div style="text-align:center; padding:30px; color:#aaa;">📭 找不到相關食材</div>`;
+            }
+        }
+
+        document.getElementById("fileIn").onchange = function() {
+            if(this.files[0]) document.getElementById("imgPreview").innerText = "已選: " + this.files[0].name;
+        }
+
+        function showLoader(txt) { document.getElementById("loader").style.display = "flex"; document.getElementById("loaderText").innerText = txt; }
+        function hideLoader() { document.getElementById("loader").style.display = "none"; }
+    </script>
+</body>
+</html>
