@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>冰箱小管家 v7.4</title>
+    <title>冰箱小管家 v7.5</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
@@ -23,21 +23,27 @@
       .btn-row { display: flex; gap: 10px; }
       .card { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 8px; display: flex; align-items: center; background: #fff; }
       
-      /* 🔥 v6.6 的圖片放大功能 */
+      /* 圖片可點擊放大 */
       .card img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 10px; background: #f0f0f0; cursor: zoom-in; transition: transform 0.2s; }
       .card img:active { transform: scale(0.95); }
 
       .tag { font-size: 12px; padding: 2px 6px; border-radius: 4px; color: white; display: inline-block; margin-top: 4px; }
       .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
       
-      /* 🔥 日期輸入框樣式 (直接使用 type=date，與您上傳的檔案一致) */
-      .date-group { margin-bottom: 15px; }
-      .date-group input { margin-bottom: 0; width: 100%; }
+      /* 日期輸入區塊樣式 */
+      .date-group { display: flex; gap: 5px; margin-bottom: 15px; }
+      .date-group input { margin-bottom: 0; flex: 1; font-weight: bold; letter-spacing: 1px; }
+      .date-btn { 
+          width: auto; padding: 0 15px; margin-bottom: 0; 
+          background: #eee; color: #555; font-size: 1.2rem; 
+          display: flex; align-items: center; justify-content: center; 
+          border: none; border-radius: 12px; cursor: pointer;
+      }
       
       .search-wrapper { position: relative; margin-bottom: 15px; }
       #search { border-radius: 30px !important; border: 2px solid #3498db !important; background-color: #f0f8ff !important; padding-left: 20px; margin-bottom: 0; color: #333; font-weight: bold; }
       
-      /* 🔥 v6.6 的燈箱樣式 */
+      /* 燈箱樣式 */
       #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; backdrop-filter: blur(5px); }
       #imageModal img { max-width: 95%; max-height: 80vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); object-fit: contain; }
       #modalClose { margin-top: 20px; color: white; background: rgba(255,255,255,0.2); border: 1px solid white; padding: 8px 20px; border-radius: 20px; cursor: pointer; }
@@ -73,7 +79,9 @@
         <input type="text" id="inLoc" placeholder="🧊 放置位置 (例如: 冷凍庫)">
         
         <div class="date-group">
-            <input type="date" id="inDate" max="2099-12-31">
+            <input type="tel" inputmode="numeric" id="inDate" placeholder="📅 格式: 20250821" maxlength="10" oninput="superSmartDate(this)">
+            <button class="date-btn" onclick="openDatePicker()">📅</button>
+            <input type="date" id="hiddenPicker" min="2000-01-01" max="2100-12-31" style="position:absolute; visibility:hidden; width:0; height:0;" onchange="syncDate(this)">
         </div>
         
         <div class="btn-row">
@@ -90,7 +98,6 @@
     </div>
 
     <script>
-        // ✅ 網址分段 (防斷行)
         var urlParts = [
             "https://script.google.com/macros/s/",
             "AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV",
@@ -98,29 +105,94 @@
         ];
         const API_URL = urlParts.join("");
 
-        // ✅ v6.6 的圖片放大功能
+        // 🔥🔥🔥 v7.5 全方位日期修正邏輯 🔥🔥🔥
+        function superSmartDate(el) {
+            // 1. 強制移除任何非數字
+            var val = el.value.replace(/\D/g, '');
+            
+            // 2. 月份智慧補零 (處理 2025821 這種情況)
+            if (val.length >= 6) {
+                var m = parseInt(val.substring(4, 6)); 
+                // 如果月份 > 12，自動在第4碼補0
+                if (m > 12) {
+                    val = val.substring(0, 4) + '0' + val.substring(4);
+                }
+                if (m === 0) {
+                    val = val.substring(0, 4) + '01' + val.substring(6);
+                }
+            }
+
+            // 3. 限制長度
+            if (val.length > 8) val = val.substring(0, 8);
+
+            // 4. 打滿 8 碼時進行「年份」與「日期」的終極校正
+            if (val.length === 8) {
+                var y = parseInt(val.substring(0, 4));
+                var m = parseInt(val.substring(4, 6));
+                var d = parseInt(val.substring(6, 8));
+
+                // A. 年份邏輯：
+                // 如果打 0025，自動變 2025
+                if (y < 100) y += 2000;
+                
+                // 限制範圍 2000 ~ 2100
+                if (y < 2000) y = 2000; 
+                if (y > 2100) y = 2100;
+
+                // B. 月份邏輯
+                if (m > 12) m = 12;
+                if (m < 1) m = 1;
+
+                // C. 日期邏輯 (檢查該月最大天數)
+                var maxDays = new Date(y, m, 0).getDate();
+                if (d > maxDays) d = maxDays;
+                if (d === 0) d = 1;
+
+                // 拼回去 (YYYYMMDD)
+                var mm = (m < 10 ? '0' : '') + m;
+                var dd = (d < 10 ? '0' : '') + d;
+                val = y + "" + mm + "" + dd;
+            }
+
+            // 5. 視覺排版 (自動加橫線)
+            var formatted = "";
+            if (val.length > 4) {
+                formatted += val.substring(0, 4) + '-';
+                if (val.length > 6) {
+                    formatted += val.substring(4, 6) + '-' + val.substring(6);
+                } else {
+                    formatted += val.substring(4);
+                }
+            } else {
+                formatted = val;
+            }
+            
+            el.value = formatted;
+        }
+
+        // 其他功能維持不變...
         function showLargeImg(url) {
             if(!url) return;
             document.getElementById("largeImgDisplay").src = url;
             document.getElementById("imageModal").style.display = "flex";
         }
 
-        function closeLargeImg() {
-            document.getElementById("imageModal").style.display = "none";
-        }
+        function closeLargeImg() { document.getElementById("imageModal").style.display = "none"; }
+
+        function openDatePicker() { try{document.getElementById("hiddenPicker").showPicker();}catch(e){document.getElementById("hiddenPicker").click();} }
+        function syncDate(p) { document.getElementById("inDate").value = p.value; }
 
         window.onload = function() {
             try {
                 var savedCode = localStorage.getItem("pass_code");
                 if (savedCode) {
-                    // 🔥 v6.6 的快取功能：先顯示舊資料
                     var cacheKey = "fridge_data_" + savedCode;
                     var cachedData = localStorage.getItem(cacheKey);
                     if(cachedData) {
                         try {
                             allData = JSON.parse(cachedData);
                             enterApp(savedCode, true); 
-                            refreshList(savedCode, true); // 背景靜默更新
+                            refreshList(savedCode, true); 
                         } catch(e) { enterApp(savedCode, false); }
                     } else {
                         showLoader("自動登入中...");
@@ -130,10 +202,7 @@
                         });
                     }
                 }
-            } catch (e) { 
-                document.getElementById("debug-status").style.display = "block";
-                document.getElementById("debug-status").innerText = "啟動錯誤：" + e.message;
-            }
+            } catch (e) { document.getElementById("debug-status").innerText = "啟動錯誤：" + e.message; }
         };
 
         function callApi(action, payload, cb) {
@@ -148,9 +217,7 @@
                   try {
                       var data = JSON.parse(txt);
                       cb(data);
-                  } catch(e) { 
-                      alert("系統資料錯誤：\n" + e.message); 
-                  }
+                  } catch(e) { alert("系統資料錯誤：\n" + e.message); }
               })
               .catch(function(err){
                   if(!payload.silent) hideLoader();
@@ -196,10 +263,8 @@
 
             callApi("getList", {code: c, silent: isSilent}, function(res){
                 allData = res.data || [];
-                // 更新快取
                 var cacheKey = "fridge_data_" + c;
                 localStorage.setItem(cacheKey, JSON.stringify(allData));
-                
                 renderList();
                 document.getElementById("sync-status").innerText = "✅ 已同步";
                 setTimeout(function(){ document.getElementById("sync-status").innerText = ""; }, 2000);
@@ -209,16 +274,17 @@
         function doAdd() {
             var name = document.getElementById("inName").value;
             var loc = document.getElementById("inLoc").value;
-            var date = document.getElementById("inDate").value; // 直接抓日曆的值 (YYYY-MM-DD)
+            var date = document.getElementById("inDate").value; 
             var file = document.getElementById("fileIn").files[0];
             var code = document.getElementById("myCode").innerText;
 
             if(!name || !date) return alert("請填寫名稱與日期");
-            
-            // 🔥 保留您上傳檔案中的簡單驗證邏輯
-            var year = date.split('-')[0];
-            if (year.length > 4 || parseInt(year) > 2099) {
-              alert("日期太遙遠囉！");
+            if(date.length !== 10) return alert("日期格式不正確 (請打滿8碼)");
+
+            // 雙重保險年份檢查
+            var year = parseInt(date.split('-')[0]);
+            if (year < 2000 || year > 2100) {
+              alert("日期年份超出範圍 (2000~2100)");
               return;
             }
 
@@ -276,22 +342,6 @@
                 var cls = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
                 var txt = diff < 0 ? "過期 "+Math.abs(diff)+" 天" : "剩 "+diff+" 天";
                 
-                // 🔥 v6.6 的圖片點擊放大
                 var img = item.imgUrl ? 
                     `<img src="${item.imgUrl}" onclick="showLargeImg('${item.imgUrl}')">` : 
-                    `<div style="width:60px;height:60px;background:#eee;margin-right:10px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;">無圖</div>`;
-
-                var delBtn = `<button style="width:auto;background:none;color:#aaa;padding:5px;" onclick="deleteItem(${item.rowId})">✕</button>`;
-                
-                list.innerHTML += `<div class="card">${img}<div style="flex:1"><div style="font-weight:bold">${item.name}</div><div style="font-size:13px;color:#666">📍 ${item.location}</div><div class="tag ${cls}">${txt}</div><div style="font-size:12px;color:#aaa">${item.date}</div></div>${delBtn}</div>`;
-            });
-
-            if (!hasData) list.innerHTML = `<div style="text-align:center; padding:30px; color:#aaa;">📭 找不到相關食材</div>`;
-        }
-
-        function previewImg(i) { if(i.files[0]) document.getElementById("imgPreview").innerText = "已選: "+i.files[0].name; }
-        function showLoader(t) { document.getElementById("loader").style.display="flex"; document.getElementById("loaderText").innerText=t; }
-        function hideLoader() { document.getElementById("loader").style.display="none"; }
-    </script>
-</body>
-</html>
+                    `<div style="width:60px;height:60px;background:#eee;margin-right:10px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:1
