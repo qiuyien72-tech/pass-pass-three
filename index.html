@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>冰箱小管家 v4.5</title>
+    <title>冰箱小管家 v4.6</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
@@ -36,7 +36,7 @@
     <div id="loader"><div class="spinner"></div><div id="loaderText">連線中...</div></div>
 
     <div id="loginSection">
-        <h2>📦 冰箱小管家 <span class="ver-tag">v4.5</span></h2>
+        <h2>📦 冰箱小管家 <span class="ver-tag">v4.6</span></h2>
         <p style="color:#666; font-size:14px; margin-bottom:20px;">請直接輸入代碼登入</p>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase; letter-spacing:1px; font-weight:bold;">
         <button onclick="doLogin()">🚀 登入</button>
@@ -51,7 +51,7 @@
         <input type="text" id="inName" placeholder="🍎 食品名稱">
         <input type="text" id="inLoc" placeholder="🧊 放置位置 (例如: 冷凍庫)">
         <div class="date-group">
-            <input type="text" id="inDate" placeholder="📅 到期日 (輸入 20251231 自動變換)" maxlength="10">
+            <input type="text" id="inDate" placeholder="📅 到期日 (輸入 20251231 自動變換)" maxlength="10" oninput="autoFormatDate(this)">
             <button class="date-btn" onclick="openDatePicker()">📅</button>
             <input type="date" id="hiddenPicker" style="position:absolute; visibility:hidden; width:0; height:0;" onchange="syncDate(this)">
         </div>
@@ -69,24 +69,22 @@
     </div>
 
     <script>
+        // ✅ 網址設定
         const API_URL = "https://script.google.com/macros/s/AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV/exec";
 
-        // 🔥 自動格式化監聽器 🔥
-        document.getElementById("inDate").addEventListener("input", function(e) {
-            // 1. 先把非數字的字元全部消掉
-            let val = this.value.replace(/\D/g, ''); 
+        // 🔥 新的自動格式化函數 (更穩定)
+        function autoFormatDate(input) {
+            // 只保留數字
+            let val = input.value.replace(/\D/g, ''); 
             
-            // 2. 如果使用者打滿 8 碼，就自動加橫線
+            // 如果打滿 8 碼 (例如 20250101)，自動變成 2025-01-01
             if (val.length === 8) {
                 let y = val.slice(0, 4);
                 let m = val.slice(4, 6);
                 let d = val.slice(6, 8);
-                this.value = `${y}-${m}-${d}`; // 變成 2025-01-01
-            } else {
-                // 如果還沒打滿，就顯示原本的數字
-                // (注意：如果使用者刪除橫線，會退回純數字模式，這是正常的)
+                input.value = `${y}-${m}-${d}`;
             }
-        });
+        }
 
         function callApi(action, payload, callback) {
             payload.action = action;
@@ -190,9 +188,8 @@
 
                 if(!name || !rawDate) return alert("請輸入名稱與日期");
 
-                // --- 提交前檢查邏輯 ---
-                // 因為輸入框已經自動變成了 YYYY-MM-DD，所以我們這裡做最後確認
-                // 1. 先把非數字去掉，確保是8碼數字
+                // --- 8碼日期邏輯 ---
+                // 先把可能已經被自動加上的橫線去掉，還原成純數字檢查
                 let cleanDate = rawDate.replace(/[^\d]/g, "");
                 
                 if (cleanDate.length !== 8) {
@@ -207,4 +204,49 @@
                 if (mm < 1 || mm > 12) return alert(`📅 月份錯誤！沒有 ${mm} 月。`);
                 
                 let daysInMonth = new Date(yy, mm, 0).getDate();
-                if (dd < 1 || dd > daysInMonth) return alert(`📅 日期錯誤！\n${yy}年 ${mm}月 只有 ${daysInMonth} 天
+                if (dd < 1 || dd > daysInMonth) return alert(`📅 日期錯誤！\n${yy}年 ${mm}月 只有 ${daysInMonth} 天。`);
+
+                let formattedDate = `${yy}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
+
+                showLoader("儲存中...");
+                let payload = { code: currentCode, name: name, loc: loc, date: formattedDate, image: "" };
+                
+                if(file) {
+                    let reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = function(e) {
+                        payload.image = e.target.result.split(",")[1];
+                        sendAdd(payload);
+                    }
+                } else { sendAdd(payload); }
+
+            } catch (e) {
+                alert("❌ 錯誤：\n" + e.message);
+                console.error(e);
+            }
+        }
+
+        function sendAdd(payload) {
+            callApi("add", payload, (res) => {
+                document.getElementById("inName").value = "";
+                document.getElementById("inDate").value = "";
+                document.getElementById("fileIn").value = "";
+                document.getElementById("imgPreview").innerText = "";
+                refreshList();
+            });
+        }
+
+        function deleteItem(id) {
+            if(!confirm("確定刪除？")) return;
+            showLoader("刪除中...");
+            callApi("delete", {id: id}, () => refreshList());
+        }
+
+        function renderList() {
+            let searchKey = document.getElementById("search").value.toLowerCase().trim();
+            let list = document.getElementById("list");
+            list.innerHTML = "";
+            let today = new Date(); today.setHours(0,0,0,0);
+            let hasData = false;
+
+            allData.sort(
