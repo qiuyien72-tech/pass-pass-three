@@ -3,7 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>冰箱小管家 v7.6</title>
+    <title>冰箱小管家 v7.7</title>
+    
+    <script>
+        window.onerror = function(msg, url, line) {
+            alert("❌ 程式發生錯誤！\n原因: " + msg + "\n行數: " + line + "\n\n請截圖給工程師修正！");
+            var statusDiv = document.getElementById("debug-status");
+            if(statusDiv) {
+                statusDiv.style.display = "block";
+                statusDiv.innerHTML = "❌ 系統崩潰: " + msg;
+            }
+            return false;
+        };
+    </script>
+
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
@@ -22,28 +35,19 @@
       .code-tag { background: #eee; padding: 4px 8px; border-radius: 4px; font-size: 14px; font-weight: bold; color: #555; }
       .btn-row { display: flex; gap: 10px; }
       .card { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 8px; display: flex; align-items: center; background: #fff; }
-      
-      /* 圖片可點擊放大 */
       .card img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 10px; background: #f0f0f0; cursor: zoom-in; transition: transform 0.2s; }
       .card img:active { transform: scale(0.95); }
-
       .tag { font-size: 12px; padding: 2px 6px; border-radius: 4px; color: white; display: inline-block; margin-top: 4px; }
       .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
       
       /* 🔥 智慧輸入框樣式 */
       .date-group { display: flex; gap: 5px; margin-bottom: 15px; }
       .date-group input { margin-bottom: 0; flex: 1; font-weight: bold; letter-spacing: 1px; }
-      .date-btn { 
-          width: auto; padding: 0 15px; margin-bottom: 0; 
-          background: #eee; color: #555; font-size: 1.2rem; 
-          display: flex; align-items: center; justify-content: center; 
-          border: none; border-radius: 12px; cursor: pointer;
-      }
+      .date-btn { width: auto; padding: 0 15px; margin-bottom: 0; background: #eee; color: #555; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: none; border-radius: 12px; cursor: pointer; }
       
       .search-wrapper { position: relative; margin-bottom: 15px; }
       #search { border-radius: 30px !important; border: 2px solid #3498db !important; background-color: #f0f8ff !important; padding-left: 20px; margin-bottom: 0; color: #333; font-weight: bold; }
       
-      /* 燈箱樣式 */
       #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; backdrop-filter: blur(5px); }
       #imageModal img { max-width: 95%; max-height: 80vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); object-fit: contain; }
       #modalClose { margin-top: 20px; color: white; background: rgba(255,255,255,0.2); border: 1px solid white; padding: 8px 20px; border-radius: 20px; cursor: pointer; }
@@ -64,7 +68,7 @@
     </div>
 
     <div id="loginSection">
-        <h2>📦 冰箱小管家</h2>
+        <h2>📦 冰箱小管家 <span>v7.7</span></h2>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase;">
         <button onclick="doLogin()">🚀 登入</button>
         <button class="secondary" onclick="doRegister()">🎲 產生新代碼</button>
@@ -103,18 +107,20 @@
             "AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV",
             "/exec"
         ];
-        const API_URL = urlParts.join("");
+        var API_URL = urlParts.join("");
 
-        // 🔥🔥🔥 v7.6 核心：年份/月份/日期 全方位校正 🔥🔥🔥
+        // 🔥🔥🔥 全方位智慧校正函數 (修復版) 🔥🔥🔥
         function superSmartDate(el) {
             var val = el.value.replace(/\D/g, '');
             
-            // 月份智慧補零 (例如輸入 2025821)
+            // A. 月份智慧補零 (例如 2025821 -> 20250821)
             if (val.length >= 6) {
                 var m = parseInt(val.substring(4, 6)); 
+                // 邏輯：如果第5,6碼大於12，代表使用者漏打0，自動補上
                 if (m > 12) {
-                    val = val.substring(0, 4) + '0' + val.substring(4); // 補 0
+                    val = val.substring(0, 4) + '0' + val.substring(4);
                 }
+                // 邏輯：如果月份是00，自動改成01
                 if (m === 0) {
                     val = val.substring(0, 4) + '01' + val.substring(6);
                 }
@@ -122,34 +128,35 @@
 
             if (val.length > 8) val = val.substring(0, 8);
 
-            // 打滿 8 碼時進行終極校正
+            // B. 打滿8碼後的終極校正
             if (val.length === 8) {
                 var y = parseInt(val.substring(0, 4));
                 var m = parseInt(val.substring(4, 6));
                 var d = parseInt(val.substring(6, 8));
 
-                // ✅ 年份強效校正：
-                // 如果是 0233 (233 < 2000)，直接改成 2000
+                // ✅ 年份校正 (解決 0233 問題)
+                // 規則1: 如果年份小於100 (如 25)，自動加2000 (變2025)
+                if (y < 100) y += 2000;
+                // 規則2: 限制範圍 2000 ~ 2100，超出則強制歸位
                 if (y < 2000) y = 2000;
-                // 如果是 3000 (3000 > 2100)，直接改成 2100
                 if (y > 2100) y = 2100;
 
-                // 月份校正
+                // ✅ 月份校正
                 if (m > 12) m = 12;
                 if (m < 1) m = 1;
 
-                // 日期校正
+                // ✅ 日期校正 (檢查當月最大天數)
                 var maxDays = new Date(y, m, 0).getDate();
                 if (d > maxDays) d = maxDays;
                 if (d === 0) d = 1;
 
-                // 拼回去 (YYYYMMDD)
+                // 拼回去
                 var mm = (m < 10 ? '0' : '') + m;
                 var dd = (d < 10 ? '0' : '') + d;
                 val = y + "" + mm + "" + dd;
             }
 
-            // 視覺排版 (自動加橫線)
+            // C. 視覺排版 (YYYY-MM-DD)
             var formatted = "";
             if (val.length > 4) {
                 formatted += val.substring(0, 4) + '-';
@@ -165,61 +172,13 @@
             el.value = formatted;
         }
 
-        // 其他功能 (圖片、快取、登入...)
-        function showLargeImg(url) {
-            if(!url) return;
-            document.getElementById("largeImgDisplay").src = url;
-            document.getElementById("imageModal").style.display = "flex";
-        }
-
-        function closeLargeImg() { document.getElementById("imageModal").style.display = "none"; }
-
+        // 系統功能區
+        function showLargeImg(url) { if(!url)return; document.getElementById("largeImgDisplay").src=url; document.getElementById("imageModal").style.display="flex"; }
+        function closeLargeImg() { document.getElementById("imageModal").style.display="none"; }
         function openDatePicker() { try{document.getElementById("hiddenPicker").showPicker();}catch(e){document.getElementById("hiddenPicker").click();} }
         function syncDate(p) { document.getElementById("inDate").value = p.value; }
 
-        window.onload = function() {
-            try {
-                var savedCode = localStorage.getItem("pass_code");
-                if (savedCode) {
-                    var cacheKey = "fridge_data_" + savedCode;
-                    var cachedData = localStorage.getItem(cacheKey);
-                    if(cachedData) {
-                        try {
-                            allData = JSON.parse(cachedData);
-                            enterApp(savedCode, true); 
-                            refreshList(savedCode, true); 
-                        } catch(e) { enterApp(savedCode, false); }
-                    } else {
-                        showLoader("自動登入中...");
-                        callApi("checkCode", {code: savedCode}, function(res) {
-                            if (res && res.valid) enterApp(savedCode);
-                            else { localStorage.removeItem("pass_code"); hideLoader(); }
-                        });
-                    }
-                }
-            } catch (e) { document.getElementById("debug-status").innerText = "啟動錯誤：" + e.message; }
-        };
-
-        function callApi(action, payload, cb) {
-            payload.action = action;
-            fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify(payload)
-            }).then(function(r){ return r.text(); })
-              .then(function(txt){
-                  if(!payload.silent) hideLoader();
-                  try {
-                      var data = JSON.parse(txt);
-                      cb(data);
-                  } catch(e) { alert("系統資料錯誤：\n" + e.message); }
-              })
-              .catch(function(err){
-                  if(!payload.silent) hideLoader();
-                  alert("連線失敗，請檢查網路");
-              });
-        }
-
+        // 登入邏輯
         function doLogin() {
             var code = document.getElementById("codeIn").value.toUpperCase().trim();
             if(!code) return alert("請輸入代碼");
@@ -252,6 +211,7 @@
             if(confirm("登出？")) { localStorage.removeItem("pass_code"); location.reload(); }
         }
 
+        // 資料處理
         function refreshList(code, isSilent) {
             var c = code || document.getElementById("myCode").innerText;
             if(isSilent) document.getElementById("sync-status").innerText = "🔄 更新中..."; else showLoader("讀取中...");
@@ -274,13 +234,12 @@
             var code = document.getElementById("myCode").innerText;
 
             if(!name || !date) return alert("請填寫名稱與日期");
-            
-            // v7.6 驗證：即使有自動修正，最後提交前還是要把關
             if(date.length !== 10) return alert("日期格式不正確 (請打滿8碼)");
 
+            // 雙重保險：如果自動校正失敗，這裡會攔截
             var year = parseInt(date.split('-')[0]);
             if (year < 2000 || year > 2100) {
-              alert("年份錯誤 (自動校正可能失效，請檢查年份)");
+              alert("年份錯誤 (2000~2100)，請檢查輸入");
               return;
             }
 
@@ -337,11 +296,7 @@
                 var diff = Math.ceil((d - today)/86400000);
                 var cls = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
                 var txt = diff < 0 ? "過期 "+Math.abs(diff)+" 天" : "剩 "+diff+" 天";
-                
-                var img = item.imgUrl ? 
-                    `<img src="${item.imgUrl}" onclick="showLargeImg('${item.imgUrl}')">` : 
-                    `<div style="width:60px;height:60px;background:#eee;margin-right:10px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;">無圖</div>`;
-
+                var img = item.imgUrl ? `<img src="${item.imgUrl}" onclick="showLargeImg('${item.imgUrl}')">` : `<div style="width:60px;height:60px;background:#eee;margin-right:10px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;">無圖</div>`;
                 var delBtn = `<button style="width:auto;background:none;color:#aaa;padding:5px;" onclick="deleteItem(${item.rowId})">✕</button>`;
                 
                 list.innerHTML += `<div class="card">${img}<div style="flex:1"><div style="font-weight:bold">${item.name}</div><div style="font-size:13px;color:#666">📍 ${item.location}</div><div class="tag ${cls}">${txt}</div><div style="font-size:12px;color:#aaa">${item.date}</div></div>${delBtn}</div>`;
@@ -350,7 +305,54 @@
             if (!hasData) list.innerHTML = `<div style="text-align:center; padding:30px; color:#aaa;">📭 找不到相關食材</div>`;
         }
 
-        function previewImg(i) { if(i.files[0]) document.getElementById("imgPreview").innerText = "已選: "+i.files[0].name; }
+        // 啟動邏輯
+        window.onload = function() {
+            try {
+                var savedCode = localStorage.getItem("pass_code");
+                if (savedCode) {
+                    var cacheKey = "fridge_data_" + savedCode;
+                    var cachedData = localStorage.getItem(cacheKey);
+                    if(cachedData) {
+                        try {
+                            allData = JSON.parse(cachedData);
+                            enterApp(savedCode, true); 
+                            refreshList(savedCode, true); 
+                        } catch(e) { enterApp(savedCode, false); }
+                    } else {
+                        showLoader("自動登入中...");
+                        callApi("checkCode", {code: savedCode}, function(res) {
+                            if (res && res.valid) enterApp(savedCode);
+                            else { localStorage.removeItem("pass_code"); hideLoader(); }
+                        });
+                    }
+                }
+            } catch (e) {
+                // 🔥 修復：如果啟動失敗，顯示錯誤在畫面上
+                var dbg = document.getElementById("debug-status");
+                if(dbg) { dbg.style.display="block"; dbg.innerText = "啟動錯誤：" + e.message; }
+            }
+        };
+
+        function callApi(action, payload, cb) {
+            payload.action = action;
+            fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            }).then(function(r){ return r.text(); })
+              .then(function(txt){
+                  if(!payload.silent) hideLoader();
+                  try {
+                      var data = JSON.parse(txt);
+                      cb(data);
+                  } catch(e) { alert("API 錯誤：\n" + e.message); }
+              })
+              .catch(function(err){
+                  if(!payload.silent) hideLoader();
+                  alert("連線失敗，請檢查網路");
+              });
+        }
+
         function showLoader(t) { document.getElementById("loader").style.display="flex"; document.getElementById("loaderText").innerText=t; }
         function hideLoader() { document.getElementById("loader").style.display="none"; }
     </script>
