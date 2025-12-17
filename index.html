@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>冰箱小管家 v4.4</title>
+    <title>冰箱小管家 v4.5</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
@@ -36,7 +36,7 @@
     <div id="loader"><div class="spinner"></div><div id="loaderText">連線中...</div></div>
 
     <div id="loginSection">
-        <h2>📦 冰箱小管家 <span class="ver-tag">v4.4</span></h2>
+        <h2>📦 冰箱小管家 <span class="ver-tag">v4.5</span></h2>
         <p style="color:#666; font-size:14px; margin-bottom:20px;">請直接輸入代碼登入</p>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase; letter-spacing:1px; font-weight:bold;">
         <button onclick="doLogin()">🚀 登入</button>
@@ -51,7 +51,7 @@
         <input type="text" id="inName" placeholder="🍎 食品名稱">
         <input type="text" id="inLoc" placeholder="🧊 放置位置 (例如: 冷凍庫)">
         <div class="date-group">
-            <input type="text" id="inDate" placeholder="📅 到期日 (8碼: 20251231)" maxlength="8">
+            <input type="text" id="inDate" placeholder="📅 到期日 (輸入 20251231 自動變換)" maxlength="10">
             <button class="date-btn" onclick="openDatePicker()">📅</button>
             <input type="date" id="hiddenPicker" style="position:absolute; visibility:hidden; width:0; height:0;" onchange="syncDate(this)">
         </div>
@@ -69,8 +69,24 @@
     </div>
 
     <script>
-        // ✅ 網址已固定，請勿修改
         const API_URL = "https://script.google.com/macros/s/AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV/exec";
+
+        // 🔥 自動格式化監聽器 🔥
+        document.getElementById("inDate").addEventListener("input", function(e) {
+            // 1. 先把非數字的字元全部消掉
+            let val = this.value.replace(/\D/g, ''); 
+            
+            // 2. 如果使用者打滿 8 碼，就自動加橫線
+            if (val.length === 8) {
+                let y = val.slice(0, 4);
+                let m = val.slice(4, 6);
+                let d = val.slice(6, 8);
+                this.value = `${y}-${m}-${d}`; // 變成 2025-01-01
+            } else {
+                // 如果還沒打滿，就顯示原本的數字
+                // (注意：如果使用者刪除橫線，會退回純數字模式，這是正常的)
+            }
+        });
 
         function callApi(action, payload, callback) {
             payload.action = action;
@@ -113,13 +129,12 @@
 
         function openDatePicker() { try { document.getElementById("hiddenPicker").showPicker(); } catch (e) { document.getElementById("hiddenPicker").click(); } }
         
-        // 📅 日曆選完後，自動幫忙填成 8 碼 (例如 20250101)
         function syncDate(picker) { 
             let d = new Date(picker.value);
-            let yy = d.getFullYear(); // 這次抓完整的年份 2025
+            let yy = d.getFullYear();
             let mm = String(d.getMonth() + 1).padStart(2, '0');
             let dd = String(d.getDate()).padStart(2, '0');
-            document.getElementById("inDate").value = yy + mm + dd;
+            document.getElementById("inDate").value = `${yy}-${mm}-${dd}`;
         }
 
         function doLogin() {
@@ -175,108 +190,21 @@
 
                 if(!name || !rawDate) return alert("請輸入名稱與日期");
 
-                // --- 8碼日期邏輯 (YYYYMMDD) ---
+                // --- 提交前檢查邏輯 ---
+                // 因為輸入框已經自動變成了 YYYY-MM-DD，所以我們這裡做最後確認
+                // 1. 先把非數字去掉，確保是8碼數字
                 let cleanDate = rawDate.replace(/[^\d]/g, "");
                 
-                // 檢查是否為 8 碼
                 if (cleanDate.length !== 8) {
-                    return alert("⚠️ 請輸入 8 位數日期！\n例如：20251231");
+                    return alert("⚠️ 日期還沒打完喔！\n請輸入 8 位數，例如：20251231");
                 }
 
-                // 切割年份、月份、日期
-                let yy = parseInt(cleanDate.slice(0, 4), 10); // 前4碼是年
-                let mm = parseInt(cleanDate.slice(4, 6), 10); // 中間2碼是月
-                let dd = parseInt(cleanDate.slice(6, 8), 10); // 最後2碼是日
+                let yy = parseInt(cleanDate.slice(0, 4), 10);
+                let mm = parseInt(cleanDate.slice(4, 6), 10);
+                let dd = parseInt(cleanDate.slice(6, 8), 10);
 
-                // 檢查年份範圍 (避免輸入 0000 或 9999)
-                if (yy < 2000 || yy > 2100) return alert(`📅 年份錯誤 (${yy})！\n請輸入 2000~2100 之間的年份。`);
-
-                // 檢查月份
+                if (yy < 2000 || yy > 2100) return alert(`📅 年份錯誤 (${yy})`);
                 if (mm < 1 || mm > 12) return alert(`📅 月份錯誤！沒有 ${mm} 月。`);
                 
-                // 檢查日期 (考慮閏年與大小月)
                 let daysInMonth = new Date(yy, mm, 0).getDate();
-                if (dd < 1 || dd > daysInMonth) return alert(`📅 日期錯誤！\n${yy}年 ${mm}月 只有 ${daysInMonth} 天。`);
-
-                // 組合回標準格式 YYYY-MM-DD
-                let formattedDate = `${yy}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
-
-                showLoader("儲存中...");
-                let payload = { code: currentCode, name: name, loc: loc, date: formattedDate, image: "" };
-                
-                if(file) {
-                    let reader = new FileReader();
-                    reader.readAsDataURL(file);
-                    reader.onload = function(e) {
-                        payload.image = e.target.result.split(",")[1];
-                        sendAdd(payload);
-                    }
-                } else { sendAdd(payload); }
-
-            } catch (e) {
-                alert("❌ 錯誤：\n" + e.message);
-                console.error(e);
-            }
-        }
-
-        function sendAdd(payload) {
-            callApi("add", payload, (res) => {
-                document.getElementById("inName").value = "";
-                document.getElementById("inDate").value = "";
-                document.getElementById("fileIn").value = "";
-                document.getElementById("imgPreview").innerText = "";
-                refreshList();
-            });
-        }
-
-        function deleteItem(id) {
-            if(!confirm("確定刪除？")) return;
-            showLoader("刪除中...");
-            callApi("delete", {id: id}, () => refreshList());
-        }
-
-        function renderList() {
-            let searchKey = document.getElementById("search").value.toLowerCase().trim();
-            let list = document.getElementById("list");
-            list.innerHTML = "";
-            let today = new Date(); today.setHours(0,0,0,0);
-            let hasData = false;
-
-            allData.sort(function(a, b) {
-                return new Date(a.date) - new Date(b.date);
-            });
-
-            allData.forEach(item => {
-                let itemName = String(item.name || "").toLowerCase();
-                let itemLoc = String(item.location || "").toLowerCase();
-
-                if(searchKey) {
-                    if (!itemName.includes(searchKey) && !itemLoc.includes(searchKey)) {
-                        return;
-                    }
-                }
-                
-                hasData = true;
-                let d = new Date(item.date);
-                let diff = Math.ceil((d - today) / (86400000));
-                let tagClass = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
-                let tagText = diff < 0 ? `過期 ${Math.abs(diff)} 天` : `剩 ${diff} 天`;
-                let imgHtml = item.imgUrl ? `<img src="${item.imgUrl}">` : `<div style="width:60px;height:60px;background:#eee;margin-right:10px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#aaa;">無圖</div>`;
-                
-                list.innerHTML += `<div class="card">${imgHtml}<div style="flex:1"><div style="font-weight:bold">${item.name}</div><div style="font-size:13px;color:#666">📍 ${item.location}</div><div class="tag ${tagClass}">${tagText}</div><div style="font-size:12px;color:#aaa">${item.date}</div></div><button style="width:auto;background:none;color:#aaa;padding:5px;" onclick="deleteItem(${item.rowId})">✕</button></div>`;
-            });
-
-            if (!hasData) {
-                list.innerHTML = `<div style="text-align:center; padding:30px; color:#aaa;">📭 找不到相關食材</div>`;
-            }
-        }
-
-        document.getElementById("fileIn").onchange = function() {
-            if(this.files[0]) document.getElementById("imgPreview").innerText = "已選: " + this.files[0].name;
-        }
-
-        function showLoader(txt) { document.getElementById("loader").style.display = "flex"; document.getElementById("loaderText").innerText = txt; }
-        function hideLoader() { document.getElementById("loader").style.display = "none"; }
-    </script>
-</body>
-</html>
+                if (dd < 1 || dd > daysInMonth) return alert(`📅 日期錯誤！\n${yy}年 ${mm}月 只有 ${daysInMonth} 天
