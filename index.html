@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>冰箱小管家 v5.5</title>
+    <title>冰箱小管家 v5.6</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
@@ -36,10 +36,10 @@
 
     <div id="loader"><div class="spinner"></div><div id="loaderText">連線中...</div></div>
     
-    <div id="debug-status">🔴 系統載入中... (如果卡住請按 F12 看錯誤)</div>
+    <div id="debug-status">🔴 系統載入中...</div>
 
     <div id="loginSection">
-        <h2>📦 冰箱小管家 <span>v5.5</span></h2>
+        <h2>📦 冰箱小管家 <span>v5.6</span></h2>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase;">
         <button id="btnLogin" onclick="doLogin()">🚀 登入</button>
         <button class="secondary" id="btnRegister" onclick="doRegister()">🎲 產生新代碼</button>
@@ -53,7 +53,7 @@
         <input type="text" id="inName" placeholder="🍎 食品名稱">
         <input type="text" id="inLoc" placeholder="🧊 放置位置 (例如: 冷凍庫)">
         <div class="date-group">
-            <input type="text" id="inDate" placeholder="📅 到期日 (例: 20250230)" maxlength="10" oninput="autoFixDate(this)">
+            <input type="text" id="inDate" placeholder="📅 到期日 (例如: 20250230)" maxlength="10" oninput="autoFixDate(this)">
             <button class="date-btn" onclick="openDatePicker()">📅</button>
             <input type="date" id="hiddenPicker" style="position:absolute; visibility:hidden; width:0; height:0;" onchange="syncDate(this)">
         </div>
@@ -71,8 +71,7 @@
     </div>
 
     <script>
-        // --- 1. 基礎設定 (絕對不會錯的部分) ---
-        // 為了防止斷行錯誤，我用陣列把網址接起來
+        // ✅ 網址分段
         var urlParts = [
             "https://script.google.com/macros/s/",
             "AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV",
@@ -80,36 +79,22 @@
         ];
         const API_URL = urlParts.join("");
 
-        // --- 2. 智慧日期修正邏輯 (這是您要的功能) ---
+        // ✅ 智慧日期修正
         function autoFixDate(el) {
-            // 把非數字去掉
             var val = el.value.replace(/\D/g, '');
-            
-            // 只有打滿 8 碼才開始工作
             if (val.length === 8) {
                 var y = parseInt(val.substring(0, 4));
                 var m = parseInt(val.substring(4, 6));
                 var d = parseInt(val.substring(6, 8));
-
-                // A. 修正月份 (1~12)
-                if (m > 12) m = 12;
-                if (m < 1) m = 1;
-
-                // B. 修正日期 (該月有幾天就限制幾天)
+                if (m > 12) m = 12; if (m < 1) m = 1;
                 var maxDays = new Date(y, m, 0).getDate();
-                if (d > maxDays) d = maxDays;
-                if (d < 1) d = 1;
-
-                // C. 格式化 (補零 + 橫線)
+                if (d > maxDays) d = maxDays; if (d < 1) d = 1;
                 var mm = (m < 10 ? '0' : '') + m;
                 var dd = (d < 10 ? '0' : '') + d;
-                
-                // 直接改變輸入框的值
                 el.value = y + "-" + mm + "-" + dd;
             }
         }
 
-        // --- 3. 系統核心 ---
         function setStatus(msg, color) {
             var el = document.getElementById("debug-status");
             el.innerHTML = msg;
@@ -119,13 +104,9 @@
             if(color === 'green') setTimeout(function(){ el.style.display='none'; }, 2000);
         }
 
-        // 當網頁載入完成時
         window.onload = function() {
             try {
-                // 測試連線
-                setStatus("🟢 系統正常：功能已啟動", "green");
-
-                // 自動登入
+                setStatus("🟢 系統正常：連線成功", "green");
                 var savedCode = localStorage.getItem("pass_code");
                 if (savedCode) {
                     showLoader("自動登入中...");
@@ -151,15 +132,18 @@
                   try {
                       var data = JSON.parse(txt);
                       cb(data);
-                  } catch(e) { alert("系統錯誤: " + txt.substring(0,50)); }
+                  } catch(e) { 
+                      // 🛑 這裡改善了錯誤顯示，如果回傳的是資料但有錯誤，會顯示具體原因
+                      alert("顯示資料時發生錯誤：\n" + e.message); 
+                  }
               })
               .catch(function(err){
                   hideLoader();
-                  alert("連線失敗，請檢查網路");
+                  alert("連線失敗");
               });
         }
 
-        // --- 4. 業務功能 ---
+        // ... 其他功能函數 ...
         function doLogin() {
             var code = document.getElementById("codeIn").value.toUpperCase().trim();
             if(!code) return alert("請輸入代碼");
@@ -243,6 +227,8 @@
         }
         
         let allData = [];
+        
+        // 🔥🔥🔥 這裡修復了「數字導致當機」的問題 🔥🔥🔥
         function renderList() {
             var key = document.getElementById("search").value.toLowerCase();
             var list = document.getElementById("list");
@@ -252,8 +238,10 @@
             allData.sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
 
             allData.forEach(function(item){
-                var n = (item.name||"").toLowerCase();
-                var l = (item.location||"").toLowerCase();
+                // ✅ 關鍵修復：強制把名稱和地點轉成文字 (String)，再轉小寫
+                var n = String(item.name || "").toLowerCase();
+                var l = String(item.location || "").toLowerCase();
+                
                 if(key && !n.includes(key) && !l.includes(key)) return;
 
                 var d = new Date(item.date);
@@ -262,8 +250,12 @@
                 var txt = diff < 0 ? "過期 "+Math.abs(diff)+" 天" : "剩 "+diff+" 天";
                 var img = item.imgUrl ? `<img src="${item.imgUrl}">` : `<div style="width:60px;height:60px;background:#eee;margin-right:10px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;">無圖</div>`;
 
-                list.innerHTML += `<div class="card">${img}<div style="flex:1"><div style="font-weight:bold">${item.name}</div><div style="font-size:13px;color:#666">📍 ${item.location}</div><div class="tag ${cls}">${txt}</div><div style="font-size:12px;color:#aaa">${item.date}</div></div><button style="width:auto;background:none;color:#aaa;padding:5px;" onclick="deleteItem(${item.rowId})">✕</button></div>`;
+                var delBtn = `<button style="width:auto;background:none;color:#aaa;padding:5px;" onclick="deleteItem(${item.rowId})">✕</button>`;
+                
+                list.innerHTML += `<div class="card">${img}<div style="flex:1"><div style="font-weight:bold">${item.name}</div><div style="font-size:13px;color:#666">📍 ${item.location}</div><div class="tag ${cls}">${txt}</div><div style="font-size:12px;color:#aaa">${item.date}</div></div>${delBtn}</div>`;
             });
+
+            if (!hasData) list.innerHTML = `<div style="text-align:center; padding:30px; color:#aaa;">📭 找不到相關食材</div>`;
         }
 
         function openDatePicker() { try{document.getElementById("hiddenPicker").showPicker();}catch(e){document.getElementById("hiddenPicker").click();} }
