@@ -3,20 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>冰箱小管家 v7.7</title>
-    
-    <script>
-        window.onerror = function(msg, url, line) {
-            alert("❌ 程式發生錯誤！\n原因: " + msg + "\n行數: " + line + "\n\n請截圖給工程師修正！");
-            var statusDiv = document.getElementById("debug-status");
-            if(statusDiv) {
-                statusDiv.style.display = "block";
-                statusDiv.innerHTML = "❌ 系統崩潰: " + msg;
-            }
-            return false;
-        };
-    </script>
-
+    <title>冰箱小管家 v7.8</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
@@ -24,9 +11,7 @@
       @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
       #loginSection { max-width: 350px; margin: 40px auto; background: white; padding: 40px 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
       h2 { margin-top: 0; color: #2c3e50; }
-      
       input, button, select { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
-      
       button { background: #3498db; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
       button:active { transform: scale(0.98); }
       button.secondary { background: white; color: #3498db; border: 2px dashed #3498db; }
@@ -39,27 +24,20 @@
       .card img:active { transform: scale(0.95); }
       .tag { font-size: 12px; padding: 2px 6px; border-radius: 4px; color: white; display: inline-block; margin-top: 4px; }
       .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
-      
-      /* 🔥 智慧輸入框樣式 */
       .date-group { display: flex; gap: 5px; margin-bottom: 15px; }
       .date-group input { margin-bottom: 0; flex: 1; font-weight: bold; letter-spacing: 1px; }
       .date-btn { width: auto; padding: 0 15px; margin-bottom: 0; background: #eee; color: #555; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: none; border-radius: 12px; cursor: pointer; }
-      
       .search-wrapper { position: relative; margin-bottom: 15px; }
       #search { border-radius: 30px !important; border: 2px solid #3498db !important; background-color: #f0f8ff !important; padding-left: 20px; margin-bottom: 0; color: #333; font-weight: bold; }
-      
       #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; backdrop-filter: blur(5px); }
       #imageModal img { max-width: 95%; max-height: 80vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); object-fit: contain; }
       #modalClose { margin-top: 20px; color: white; background: rgba(255,255,255,0.2); border: 1px solid white; padding: 8px 20px; border-radius: 20px; cursor: pointer; }
-      
-      #debug-status { text-align: center; padding: 10px; margin-bottom: 20px; font-weight: bold; border-radius: 8px; background: #ffecec; color: red; border: 2px solid red; display:none; }
       #sync-status { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #aaa; background: rgba(255,255,255,0.8); padding: 2px 5px; border-radius: 4px; pointer-events: none; }
     </style>
 </head>
 <body>
 
     <div id="loader"><div class="spinner"></div><div id="loaderText">連線中...</div></div>
-    <div id="debug-status"></div>
     <div id="sync-status"></div>
 
     <div id="imageModal" onclick="closeLargeImg()">
@@ -68,7 +46,7 @@
     </div>
 
     <div id="loginSection">
-        <h2>📦 冰箱小管家 <span>v7.7</span></h2>
+        <h2>📦 冰箱小管家 <span>v7.8</span></h2>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase;">
         <button onclick="doLogin()">🚀 登入</button>
         <button class="secondary" onclick="doRegister()">🎲 產生新代碼</button>
@@ -83,7 +61,7 @@
         <input type="text" id="inLoc" placeholder="🧊 放置位置 (例如: 冷凍庫)">
         
         <div class="date-group">
-            <input type="tel" inputmode="numeric" id="inDate" placeholder="📅 格式: 20250821" maxlength="10" oninput="superSmartDate(this)">
+            <input type="tel" inputmode="numeric" id="inDate" placeholder="📅 格式: 20250821" maxlength="10" oninput="superSmartDate(this)" onblur="finalizeDate(this)">
             <button class="date-btn" onclick="openDatePicker()">📅</button>
             <input type="date" id="hiddenPicker" min="2000-01-01" max="2100-12-31" style="position:absolute; visibility:hidden; width:0; height:0;" onchange="syncDate(this)">
         </div>
@@ -109,76 +87,69 @@
         ];
         var API_URL = urlParts.join("");
 
-        // 🔥🔥🔥 全方位智慧校正函數 (修復版) 🔥🔥🔥
+        // 🔥🔥🔥 1. 輸入時的智慧邏輯 (處理月份錯字) 🔥🔥🔥
         function superSmartDate(el) {
             var val = el.value.replace(/\D/g, '');
             
-            // A. 月份智慧補零 (例如 2025821 -> 20250821)
+            // A. 月份智慧補零：輸入 2025821 -> 20250821
             if (val.length >= 6) {
                 var m = parseInt(val.substring(4, 6)); 
-                // 邏輯：如果第5,6碼大於12，代表使用者漏打0，自動補上
                 if (m > 12) {
-                    val = val.substring(0, 4) + '0' + val.substring(4);
+                    val = val.substring(0, 4) + '0' + val.substring(4); // 補 0
                 }
-                // 邏輯：如果月份是00，自動改成01
                 if (m === 0) {
                     val = val.substring(0, 4) + '01' + val.substring(6);
                 }
             }
-
             if (val.length > 8) val = val.substring(0, 8);
+            
+            // B. 即時視覺排版 (加橫線)
+            var formatted = "";
+            if (val.length > 4) formatted += val.substring(0, 4) + '-';
+            else formatted += val;
+            
+            if (val.length > 6) formatted += val.substring(4, 6) + '-' + val.substring(6);
+            else if (val.length > 4) formatted += val.substring(4);
+            
+            el.value = formatted;
+        }
 
-            // B. 打滿8碼後的終極校正
+        // 🔥🔥🔥 2. 離開輸入框時的終極修正 (處理年份與缺碼) 🔥🔥🔥
+        function finalizeDate(el) {
+            var val = el.value.replace(/\D/g, ''); // 取出純數字
+            
+            // 如果輸入了 7 碼 (例如 2025081)，自動補成 20250801
+            if (val.length === 7) {
+                val = val.substring(0, 6) + '0' + val.substring(6);
+            }
+
+            // 如果有 8 碼，進行年份與日期邏輯檢查
             if (val.length === 8) {
                 var y = parseInt(val.substring(0, 4));
                 var m = parseInt(val.substring(4, 6));
                 var d = parseInt(val.substring(6, 8));
 
-                // ✅ 年份校正 (解決 0233 問題)
-                // 規則1: 如果年份小於100 (如 25)，自動加2000 (變2025)
-                if (y < 100) y += 2000;
-                // 規則2: 限制範圍 2000 ~ 2100，超出則強制歸位
-                if (y < 2000) y = 2000;
-                if (y > 2100) y = 2100;
+                // A. 年份校正
+                if (y < 100) y += 2000;  // 0025 -> 2025
+                if (y < 2000) y = 2000;  // 0233 -> 2000
+                if (y > 2100) y = 2100;  // 3000 -> 2100
 
-                // ✅ 月份校正
-                if (m > 12) m = 12;
-                if (m < 1) m = 1;
+                // B. 月份校正
+                if (m > 12) m = 12; if (m < 1) m = 1;
 
-                // ✅ 日期校正 (檢查當月最大天數)
+                // C. 日期校正
                 var maxDays = new Date(y, m, 0).getDate();
                 if (d > maxDays) d = maxDays;
-                if (d === 0) d = 1;
+                if (d < 1) d = 1;
 
-                // 拼回去
+                // 組合回去
                 var mm = (m < 10 ? '0' : '') + m;
                 var dd = (d < 10 ? '0' : '') + d;
-                val = y + "" + mm + "" + dd;
+                el.value = y + "-" + mm + "-" + dd;
             }
-
-            // C. 視覺排版 (YYYY-MM-DD)
-            var formatted = "";
-            if (val.length > 4) {
-                formatted += val.substring(0, 4) + '-';
-                if (val.length > 6) {
-                    formatted += val.substring(4, 6) + '-' + val.substring(6);
-                } else {
-                    formatted += val.substring(4);
-                }
-            } else {
-                formatted = val;
-            }
-            
-            el.value = formatted;
         }
 
-        // 系統功能區
-        function showLargeImg(url) { if(!url)return; document.getElementById("largeImgDisplay").src=url; document.getElementById("imageModal").style.display="flex"; }
-        function closeLargeImg() { document.getElementById("imageModal").style.display="none"; }
-        function openDatePicker() { try{document.getElementById("hiddenPicker").showPicker();}catch(e){document.getElementById("hiddenPicker").click();} }
-        function syncDate(p) { document.getElementById("inDate").value = p.value; }
-
-        // 登入邏輯
+        // --- 核心功能函式 ---
         function doLogin() {
             var code = document.getElementById("codeIn").value.toUpperCase().trim();
             if(!code) return alert("請輸入代碼");
@@ -200,48 +171,20 @@
             });
         }
 
-        function enterApp(code, useCache) {
-            document.getElementById("loginSection").style.display = "none";
-            document.getElementById("appSection").style.display = "block";
-            document.getElementById("myCode").innerText = code;
-            if(!useCache) refreshList(code); else renderList();
-        }
-
-        function doLogout() {
-            if(confirm("登出？")) { localStorage.removeItem("pass_code"); location.reload(); }
-        }
-
-        // 資料處理
-        function refreshList(code, isSilent) {
-            var c = code || document.getElementById("myCode").innerText;
-            if(isSilent) document.getElementById("sync-status").innerText = "🔄 更新中..."; else showLoader("讀取中...");
-
-            callApi("getList", {code: c, silent: isSilent}, function(res){
-                allData = res.data || [];
-                var cacheKey = "fridge_data_" + c;
-                localStorage.setItem(cacheKey, JSON.stringify(allData));
-                renderList();
-                document.getElementById("sync-status").innerText = "✅ 已同步";
-                setTimeout(function(){ document.getElementById("sync-status").innerText = ""; }, 2000);
-            });
-        }
-
         function doAdd() {
             var name = document.getElementById("inName").value;
             var loc = document.getElementById("inLoc").value;
-            var date = document.getElementById("inDate").value; 
+            var dateEl = document.getElementById("inDate");
+            
+            // 🔥 在送出前，強制執行一次終極修正，確保 202581 也能過關
+            finalizeDate(dateEl);
+            var date = dateEl.value;
+
             var file = document.getElementById("fileIn").files[0];
             var code = document.getElementById("myCode").innerText;
 
             if(!name || !date) return alert("請填寫名稱與日期");
-            if(date.length !== 10) return alert("日期格式不正確 (請打滿8碼)");
-
-            // 雙重保險：如果自動校正失敗，這裡會攔截
-            var year = parseInt(date.split('-')[0]);
-            if (year < 2000 || year > 2100) {
-              alert("年份錯誤 (2000~2100)，請檢查輸入");
-              return;
-            }
+            if(date.length !== 10) return alert("日期格式不正確 (請確認格式為 YYYY-MM-DD)");
 
             showLoader("儲存中...");
             var pl = { code: code, name: name, loc: loc, date: date, image: "" };
@@ -263,6 +206,32 @@
                 document.getElementById("fileIn").value = "";
                 document.getElementById("imgPreview").innerText = "";
                 refreshList(pl.code);
+            });
+        }
+
+        // --- 輔助功能 ---
+        function enterApp(code, useCache) {
+            document.getElementById("loginSection").style.display = "none";
+            document.getElementById("appSection").style.display = "block";
+            document.getElementById("myCode").innerText = code;
+            if(!useCache) refreshList(code); else renderList();
+        }
+
+        function doLogout() {
+            if(confirm("登出？")) { localStorage.removeItem("pass_code"); location.reload(); }
+        }
+
+        function refreshList(code, isSilent) {
+            var c = code || document.getElementById("myCode").innerText;
+            if(isSilent) document.getElementById("sync-status").innerText = "🔄 更新中..."; else showLoader("讀取中...");
+
+            callApi("getList", {code: c, silent: isSilent}, function(res){
+                allData = res.data || [];
+                var cacheKey = "fridge_data_" + c;
+                localStorage.setItem(cacheKey, JSON.stringify(allData));
+                renderList();
+                document.getElementById("sync-status").innerText = "✅ 已同步";
+                setTimeout(function(){ document.getElementById("sync-status").innerText = ""; }, 2000);
             });
         }
 
@@ -305,7 +274,36 @@
             if (!hasData) list.innerHTML = `<div style="text-align:center; padding:30px; color:#aaa;">📭 找不到相關食材</div>`;
         }
 
-        // 啟動邏輯
+        // --- 系統基礎 ---
+        function showLargeImg(url) { if(!url) return; document.getElementById("largeImgDisplay").src = url; document.getElementById("imageModal").style.display = "flex"; }
+        function closeLargeImg() { document.getElementById("imageModal").style.display = "none"; }
+        function openDatePicker() { try{document.getElementById("hiddenPicker").showPicker();}catch(e){document.getElementById("hiddenPicker").click();} }
+        function syncDate(p) { document.getElementById("inDate").value = p.value; }
+        function previewImg(i) { if(i.files[0]) document.getElementById("imgPreview").innerText = "已選: "+i.files[0].name; }
+        function showLoader(t) { document.getElementById("loader").style.display="flex"; document.getElementById("loaderText").innerText=t; }
+        function hideLoader() { document.getElementById("loader").style.display="none"; }
+
+        function callApi(action, payload, cb) {
+            payload.action = action;
+            fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            }).then(function(r){ return r.text(); })
+              .then(function(txt){
+                  if(!payload.silent) hideLoader();
+                  try {
+                      var data = JSON.parse(txt);
+                      cb(data);
+                  } catch(e) { alert("系統資料錯誤：\n" + e.message); }
+              })
+              .catch(function(err){
+                  if(!payload.silent) hideLoader();
+                  alert("連線失敗，請檢查網路");
+              });
+        }
+
+        // 啟動
         window.onload = function() {
             try {
                 var savedCode = localStorage.getItem("pass_code");
@@ -326,35 +324,8 @@
                         });
                     }
                 }
-            } catch (e) {
-                // 🔥 修復：如果啟動失敗，顯示錯誤在畫面上
-                var dbg = document.getElementById("debug-status");
-                if(dbg) { dbg.style.display="block"; dbg.innerText = "啟動錯誤：" + e.message; }
-            }
+            } catch (e) { alert("啟動錯誤: " + e.message); }
         };
-
-        function callApi(action, payload, cb) {
-            payload.action = action;
-            fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify(payload)
-            }).then(function(r){ return r.text(); })
-              .then(function(txt){
-                  if(!payload.silent) hideLoader();
-                  try {
-                      var data = JSON.parse(txt);
-                      cb(data);
-                  } catch(e) { alert("API 錯誤：\n" + e.message); }
-              })
-              .catch(function(err){
-                  if(!payload.silent) hideLoader();
-                  alert("連線失敗，請檢查網路");
-              });
-        }
-
-        function showLoader(t) { document.getElementById("loader").style.display="flex"; document.getElementById("loaderText").innerText=t; }
-        function hideLoader() { document.getElementById("loader").style.display="none"; }
     </script>
 </body>
 </html>
