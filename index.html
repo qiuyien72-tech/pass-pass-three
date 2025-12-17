@@ -21,7 +21,6 @@
       .btn-row { display: flex; gap: 10px; }
       .card { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 8px; display: flex; align-items: center; background: #fff; }
       
-      /* 🔥 讓圖片看起來可以點擊 */
       .card img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 10px; background: #f0f0f0; cursor: zoom-in; transition: transform 0.2s; }
       .card img:hover { transform: scale(1.05); }
 
@@ -35,7 +34,6 @@
       #sync-status { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #aaa; background: rgba(255,255,255,0.8); padding: 2px 5px; border-radius: 4px; pointer-events: none; }
       #debug-status { text-align: center; padding: 10px; margin-bottom: 20px; font-weight: bold; border-radius: 8px; background: #ffecec; color: red; border: 2px solid red; display:none; }
 
-      /* 🔥 圖片放大模態框 (Lightbox) */
       #imageModal { 
           display: none; 
           position: fixed; 
@@ -68,7 +66,8 @@
 
     <script>
         window.onerror = function(msg, url, line) {
-            alert("❌ 錯誤: " + msg + "\n第 " + line + " 行");
+            // alert("❌ 錯誤: " + msg + "\n第 " + line + " 行"); 
+            // 為了美觀，正式版可以把 alert 註解掉，或保留給自己除錯用
             return false;
         };
     </script>
@@ -85,7 +84,7 @@
     </div>
 
     <div id="loginSection">
-        <h2>㊙️pass pass <span>v6.2</span></h2>
+        <h2>㊙️pass pass</h2> 
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase;">
         <button id="btnLogin" onclick="doLogin()">🚀 登入</button>
         <button class="secondary" id="btnRegister" onclick="doRegister()">🎲 產生新代碼</button>
@@ -93,7 +92,7 @@
 
     <div id="appSection">
         <div class="header">
-            <div>我的庫存 <span id="myCode" class="code-tag"></span></div>
+            <div>我的冰箱 <span id="myCode" class="code-tag"></span></div>
             <button id="btnLogout" onclick="doLogout()" style="width:auto; padding:5px 12px; margin:0; background:#e74c3c; font-size:13px;">登出</button>
         </div>
         <input type="text" id="inName" placeholder="🆔️物品名稱">
@@ -140,19 +139,15 @@
             }
         }
 
-        // 🔥 開啟大圖
         function showLargeImg(url) {
             if(!url) return;
             document.getElementById("largeImgDisplay").src = url;
             document.getElementById("imageModal").style.display = "flex";
         }
 
-        // 🔥 關閉大圖
         function closeLargeImg() {
             document.getElementById("imageModal").style.display = "none";
         }
-
-        function setStatus(msg, color) { console.log(msg); }
 
         window.onload = function() {
             try {
@@ -307,7 +302,6 @@
                 var cls = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
                 var txt = diff < 0 ? "過期 "+Math.abs(diff)+" 天" : "剩 "+diff+" 天";
                 
-                // 🔥 修改這裡：如果有圖，加上 onclick 放大功能
                 var img = item.imgUrl ? 
                     `<img src="${item.imgUrl}" onclick="showLargeImg('${item.imgUrl}')">` : 
                     `<div style="width:60px;height:60px;background:#eee;margin-right:10px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;">無圖</div>`;
@@ -328,4 +322,3 @@
     </script>
 </body>
 </html>
-
