@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>冰箱小管家 v7.5</title>
+    <title>冰箱小管家 v7.6</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
@@ -30,7 +30,7 @@
       .tag { font-size: 12px; padding: 2px 6px; border-radius: 4px; color: white; display: inline-block; margin-top: 4px; }
       .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
       
-      /* 日期輸入區塊樣式 */
+      /* 🔥 智慧輸入框樣式 */
       .date-group { display: flex; gap: 5px; margin-bottom: 15px; }
       .date-group input { margin-bottom: 0; flex: 1; font-weight: bold; letter-spacing: 1px; }
       .date-btn { 
@@ -105,45 +105,40 @@
         ];
         const API_URL = urlParts.join("");
 
-        // 🔥🔥🔥 v7.5 全方位日期修正邏輯 🔥🔥🔥
+        // 🔥🔥🔥 v7.6 核心：年份/月份/日期 全方位校正 🔥🔥🔥
         function superSmartDate(el) {
-            // 1. 強制移除任何非數字
             var val = el.value.replace(/\D/g, '');
             
-            // 2. 月份智慧補零 (處理 2025821 這種情況)
+            // 月份智慧補零 (例如輸入 2025821)
             if (val.length >= 6) {
                 var m = parseInt(val.substring(4, 6)); 
-                // 如果月份 > 12，自動在第4碼補0
                 if (m > 12) {
-                    val = val.substring(0, 4) + '0' + val.substring(4);
+                    val = val.substring(0, 4) + '0' + val.substring(4); // 補 0
                 }
                 if (m === 0) {
                     val = val.substring(0, 4) + '01' + val.substring(6);
                 }
             }
 
-            // 3. 限制長度
             if (val.length > 8) val = val.substring(0, 8);
 
-            // 4. 打滿 8 碼時進行「年份」與「日期」的終極校正
+            // 打滿 8 碼時進行終極校正
             if (val.length === 8) {
                 var y = parseInt(val.substring(0, 4));
                 var m = parseInt(val.substring(4, 6));
                 var d = parseInt(val.substring(6, 8));
 
-                // A. 年份邏輯：
-                // 如果打 0025，自動變 2025
-                if (y < 100) y += 2000;
-                
-                // 限制範圍 2000 ~ 2100
-                if (y < 2000) y = 2000; 
+                // ✅ 年份強效校正：
+                // 如果是 0233 (233 < 2000)，直接改成 2000
+                if (y < 2000) y = 2000;
+                // 如果是 3000 (3000 > 2100)，直接改成 2100
                 if (y > 2100) y = 2100;
 
-                // B. 月份邏輯
+                // 月份校正
                 if (m > 12) m = 12;
                 if (m < 1) m = 1;
 
-                // C. 日期邏輯 (檢查該月最大天數)
+                // 日期校正
                 var maxDays = new Date(y, m, 0).getDate();
                 if (d > maxDays) d = maxDays;
                 if (d === 0) d = 1;
@@ -154,7 +149,7 @@
                 val = y + "" + mm + "" + dd;
             }
 
-            // 5. 視覺排版 (自動加橫線)
+            // 視覺排版 (自動加橫線)
             var formatted = "";
             if (val.length > 4) {
                 formatted += val.substring(0, 4) + '-';
@@ -170,7 +165,7 @@
             el.value = formatted;
         }
 
-        // 其他功能維持不變...
+        // 其他功能 (圖片、快取、登入...)
         function showLargeImg(url) {
             if(!url) return;
             document.getElementById("largeImgDisplay").src = url;
@@ -279,12 +274,13 @@
             var code = document.getElementById("myCode").innerText;
 
             if(!name || !date) return alert("請填寫名稱與日期");
+            
+            // v7.6 驗證：即使有自動修正，最後提交前還是要把關
             if(date.length !== 10) return alert("日期格式不正確 (請打滿8碼)");
 
-            // 雙重保險年份檢查
             var year = parseInt(date.split('-')[0]);
             if (year < 2000 || year > 2100) {
-              alert("日期年份超出範圍 (2000~2100)");
+              alert("年份錯誤 (自動校正可能失效，請檢查年份)");
               return;
             }
 
@@ -344,4 +340,19 @@
                 
                 var img = item.imgUrl ? 
                     `<img src="${item.imgUrl}" onclick="showLargeImg('${item.imgUrl}')">` : 
-                    `<div style="width:60px;height:60px;background:#eee;margin-right:10px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:1
+                    `<div style="width:60px;height:60px;background:#eee;margin-right:10px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;">無圖</div>`;
+
+                var delBtn = `<button style="width:auto;background:none;color:#aaa;padding:5px;" onclick="deleteItem(${item.rowId})">✕</button>`;
+                
+                list.innerHTML += `<div class="card">${img}<div style="flex:1"><div style="font-weight:bold">${item.name}</div><div style="font-size:13px;color:#666">📍 ${item.location}</div><div class="tag ${cls}">${txt}</div><div style="font-size:12px;color:#aaa">${item.date}</div></div>${delBtn}</div>`;
+            });
+
+            if (!hasData) list.innerHTML = `<div style="text-align:center; padding:30px; color:#aaa;">📭 找不到相關食材</div>`;
+        }
+
+        function previewImg(i) { if(i.files[0]) document.getElementById("imgPreview").innerText = "已選: "+i.files[0].name; }
+        function showLoader(t) { document.getElementById("loader").style.display="flex"; document.getElementById("loaderText").innerText=t; }
+        function hideLoader() { document.getElementById("loader").style.display="none"; }
+    </script>
+</body>
+</html>
