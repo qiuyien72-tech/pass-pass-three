@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>冰箱小管家 v5.6</title>
+    <title>冰箱小管家 v5.7</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
@@ -39,7 +39,7 @@
     <div id="debug-status">🔴 系統載入中...</div>
 
     <div id="loginSection">
-        <h2>📦 冰箱小管家 <span>v5.6</span></h2>
+        <h2>📦 冰箱小管家 <span>v5.7</span></h2>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase;">
         <button id="btnLogin" onclick="doLogin()">🚀 登入</button>
         <button class="secondary" id="btnRegister" onclick="doRegister()">🎲 產生新代碼</button>
@@ -133,7 +133,6 @@
                       var data = JSON.parse(txt);
                       cb(data);
                   } catch(e) { 
-                      // 🛑 這裡改善了錯誤顯示，如果回傳的是資料但有錯誤，會顯示具體原因
                       alert("顯示資料時發生錯誤：\n" + e.message); 
                   }
               })
@@ -228,21 +227,25 @@
         
         let allData = [];
         
-        // 🔥🔥🔥 這裡修復了「數字導致當機」的問題 🔥🔥🔥
         function renderList() {
             var key = document.getElementById("search").value.toLowerCase();
             var list = document.getElementById("list");
             list.innerHTML = "";
             var today = new Date(); today.setHours(0,0,0,0);
             
+            // 🔥 補回遺失的變數 🔥
+            var hasData = false; 
+
             allData.sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
 
             allData.forEach(function(item){
-                // ✅ 關鍵修復：強制把名稱和地點轉成文字 (String)，再轉小寫
                 var n = String(item.name || "").toLowerCase();
                 var l = String(item.location || "").toLowerCase();
                 
                 if(key && !n.includes(key) && !l.includes(key)) return;
+                
+                // 🔥 標記有找到資料
+                hasData = true;
 
                 var d = new Date(item.date);
                 var diff = Math.ceil((d - today)/86400000);
