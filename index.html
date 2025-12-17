@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>冰箱小管家 v3.0</title>
+    <title>冰箱小管家 v3.1 (搜尋修復版)</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
@@ -12,7 +12,6 @@
       
       #loginSection { max-width: 350px; margin: 40px auto; background: white; padding: 40px 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
       h2 { margin-top: 0; color: #2c3e50; }
-      /* 強制設定所有輸入框樣式 */
       input, button, select { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
       button { background: #3498db; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
       button:active { transform: scale(0.98); }
@@ -31,7 +30,6 @@
       .date-group input { margin-bottom: 0; }
       .date-btn { width: auto; padding: 0 20px; margin-bottom: 0; background: #eee; color: #555; font-size: 20px; display: flex; align-items: center; justify-content: center; }
 
-      /* 👇👇👇 萬能搜尋框的專屬樣式 (藍色圓角) 👇👇👇 */
       .search-wrapper { position: relative; margin-bottom: 15px; }
       #search { 
           border-radius: 30px !important; 
@@ -42,7 +40,6 @@
           color: #333;
           font-weight: bold;
       }
-      /* 版本號標籤 */
       .ver-tag { font-size: 10px; background: #333; color: white; padding: 2px 5px; border-radius: 4px; vertical-align: middle; margin-left: 5px; }
     </style>
 </head>
@@ -51,7 +48,7 @@
     <div id="loader"><div class="spinner"></div><div id="loaderText">連線中...</div></div>
 
     <div id="loginSection">
-        <h2>📦 冰箱小管家 <span class="ver-tag">v3.0</span></h2>
+        <h2>📦 冰箱小管家 <span class="ver-tag">v3.1</span></h2>
         <p style="color:#666; font-size:14px; margin-bottom:20px;">請直接輸入代碼登入</p>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase; letter-spacing:1px; font-weight:bold;">
         <button onclick="doLogin()">🚀 登入</button>
@@ -85,11 +82,12 @@
         <div class="search-wrapper">
             <input type="text" id="search" placeholder="🔍 搜尋名稱或地點..." onkeyup="renderList()">
         </div>
+
         <div id="list"></div>
     </div>
 
     <script>
-        // 👇👇👇 請確認這是您最新的 Google 部署網址 (結尾是 /exec) 👇👇👇
+        // 👇👇👇 網址不需要動，維持原樣 👇👇👇
         const API_URL = "https://script.google.com/macros/s/AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV/exec";
         
         function callApi(action, payload, callback) {
@@ -211,7 +209,7 @@
         function sendAdd(payload) {
             callApi("add", payload, (res) => {
                 document.getElementById("inName").value = "";
-                document.getElementById("inLoc").value = ""; 
+                // document.getElementById("inLoc").value = ""; 
                 document.getElementById("inDate").value = "";
                 document.getElementById("fileIn").value = "";
                 document.getElementById("imgPreview").innerText = "";
@@ -225,36 +223,12 @@
             callApi("delete", {id: id}, () => refreshList());
         }
 
-        // 萬能搜尋邏輯
+        // 🔧 修復後的搜尋邏輯 (v3.1)
         function renderList() {
-            let searchKey = document.getElementById("search").value.toLowerCase();
+            // 轉成小寫並去除前後空白
+            let searchKey = document.getElementById("search").value.toLowerCase().trim();
             let list = document.getElementById("list");
             list.innerHTML = "";
             let today = new Date(); today.setHours(0,0,0,0);
-
-            allData.forEach(item => {
-                // 💡 只要 名稱 或 地點 其中一個符合，就顯示
-                if(searchKey) {
-                    let matchName = item.name.toLowerCase().includes(searchKey);
-                    let matchLoc = item.location.toLowerCase().includes(searchKey);
-                    if (!matchName && !matchLoc) return;
-                }
-                
-                let d = new Date(item.date);
-                let diff = Math.ceil((d - today) / (86400000));
-                let tagClass = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
-                let tagText = diff < 0 ? `過期 ${Math.abs(diff)} 天` : `剩 ${diff} 天`;
-                let imgHtml = item.imgUrl ? `<img src="${item.imgUrl}">` : `<div style="width:60px;height:60px;background:#eee;margin-right:10px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#aaa;">無圖</div>`;
-                list.innerHTML += `<div class="card">${imgHtml}<div style="flex:1"><div style="font-weight:bold">${item.name}</div><div style="font-size:13px;color:#666">📍 ${item.location}</div><div class="tag ${tagClass}">${tagText}</div><div style="font-size:12px;color:#aaa">${item.date}</div></div><button style="width:auto;background:none;color:#aaa;padding:5px;" onclick="deleteItem(${item.rowId})">✕</button></div>`;
-            });
-        }
-
-        document.getElementById("fileIn").onchange = function() {
-            if(this.files[0]) document.getElementById("imgPreview").innerText = "已選: " + this.files[0].name;
-        }
-
-        function showLoader(txt) { document.getElementById("loader").style.display = "flex"; document.getElementById("loaderText").innerText = txt; }
-        function hideLoader() { document.getElementById("loader").style.display = "none"; }
-    </script>
-</body>
-</html>
+            
+            let has
