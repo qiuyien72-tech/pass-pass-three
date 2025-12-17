@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>冰箱小管家 v5.0</title>
+    <title>冰箱小管家 v5.1</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
@@ -29,27 +29,17 @@
       .search-wrapper { position: relative; margin-bottom: 15px; }
       #search { border-radius: 30px !important; border: 2px solid #3498db !important; background-color: #f0f8ff !important; padding-left: 20px; margin-bottom: 0; color: #333; font-weight: bold; }
       
-      /* 除錯燈號樣式 */
-      #debug-status { 
-          text-align: center; 
-          padding: 10px; 
-          margin-bottom: 20px; 
-          font-weight: bold; 
-          border-radius: 8px;
-          background: #ffecec;
-          color: red;
-          border: 2px solid red;
-      }
+      #debug-status { text-align: center; padding: 10px; margin-bottom: 20px; font-weight: bold; border-radius: 8px; background: #ffecec; color: red; border: 2px solid red; }
     </style>
 </head>
 <body>
 
     <div id="loader"><div class="spinner"></div><div id="loaderText">連線中...</div></div>
 
-    <div id="debug-status">🔴 系統故障：JavaScript 沒跑 (請檢查程式碼)</div>
+    <div id="debug-status">🔴 系統故障：程式碼可能有斷行錯誤</div>
 
     <div id="loginSection">
-        <h2>📦 冰箱小管家 <span>v5.0</span></h2>
+        <h2>📦 冰箱小管家 <span>v5.1</span></h2>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase;">
         <button id="btnLogin">🚀 登入</button>
         <button class="secondary" id="btnRegister">🎲 產生新代碼</button>
@@ -69,4 +59,136 @@
         </div>
         <div class="btn-row">
              <input type="file" id="fileIn" accept="image/*" style="display:none">
-             <button style="background:#f39c1
+             <button style="background:#f39c12;" onclick="document.getElementById('fileIn').click()">📷 拍照</button>
+             <button id="btnAdd">🚀 加入清單</button>
+        </div>
+        <div id="imgPreview" style="font-size:12px; color:#aaa; text-align:center; margin-bottom:10px;"></div>
+        <hr style="border:0; border-top:1px solid #eee; margin: 20px 0;">
+        <div class="search-wrapper">
+            <input type="text" id="search" placeholder="🔍 搜尋名稱或地點...">
+        </div>
+        <div id="list"></div>
+    </div>
+
+    <script>
+        // ✅ 安全連接網址 (防止複製時斷行導致程式錯誤)
+        var P1 = "https://script.google.com/macros/s/";
+        var P2 = "AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV";
+        var P3 = "/exec";
+        const API_URL = P1 + P2 + P3;
+
+        // ✅ 綁定按鈕事件
+        window.onload = function() {
+            try {
+                document.getElementById("btnLogin").onclick = doLogin;
+                document.getElementById("btnRegister").onclick = doRegister;
+                document.getElementById("btnLogout").onclick = doLogout;
+                document.getElementById("btnAdd").onclick = doAdd;
+                document.getElementById("btnDatePick").onclick = openDatePicker;
+                document.getElementById("hiddenPicker").onchange = function() { syncDate(this); };
+                document.getElementById("search").onkeyup = renderList;
+                document.getElementById("fileIn").onchange = function() {
+                    if(this.files[0]) document.getElementById("imgPreview").innerText = "已選: " + this.files[0].name;
+                };
+
+                // 自動登入檢查
+                let currentCode = localStorage.getItem("pass_code") || "";
+                if(currentCode) {
+                    showLoader("自動登入中...");
+                    callApi("checkCode", {code: currentCode}, (res) => {
+                        if(res && res.valid) enterApp(currentCode);
+                        else { localStorage.removeItem("pass_code"); hideLoader(); }
+                    });
+                }
+
+                // 🟢 成功執行：亮綠燈
+                var statusDiv = document.getElementById("debug-status");
+                statusDiv.innerHTML = "🟢 系統正常：可以按了！";
+                statusDiv.style.background = "#e6ffec";
+                statusDiv.style.color = "green";
+                statusDiv.style.borderColor = "green";
+                setTimeout(function(){ statusDiv.style.display = 'none'; }, 3000);
+
+            } catch (err) {
+                alert("❌ 啟動失敗: " + err.message);
+            }
+        };
+
+        let allData = [];
+
+        function callApi(action, payload, callback) {
+            payload.action = action;
+            fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.text())
+            .then(text => {
+                hideLoader();
+                try {
+                    const data = JSON.parse(text);
+                    callback(data);
+                } catch (e) {
+                    if (text.includes("<!DOCTYPE html>") || text.includes("Google")) {
+                        alert("❌ 權限錯誤！請檢查部署設定");
+                    } else {
+                        alert("❌ 系統錯誤: " + text.substring(0, 50));
+                    }
+                }
+            })
+            .catch(err => { 
+                hideLoader();
+                console.error("Fetch Error:", err);
+                alert("❌ 網路連線失敗");
+            });
+        }
+
+        function openDatePicker() { try { document.getElementById("hiddenPicker").showPicker(); } catch (e) { document.getElementById("hiddenPicker").click(); } }
+        
+        function syncDate(picker) { 
+            let d = new Date(picker.value);
+            let yy = d.getFullYear();
+            let mm = String(d.getMonth() + 1).padStart(2, '0');
+            let dd = String(d.getDate()).padStart(2, '0');
+            document.getElementById("inDate").value = yy + mm + dd;
+        }
+
+        function doLogin() {
+            let code = document.getElementById("codeIn").value.toUpperCase().trim();
+            if(!code) return alert("請輸入代碼");
+            showLoader("驗證中...");
+            callApi("checkCode", {code: code}, (res) => {
+                if(res.valid) {
+                    localStorage.setItem("pass_code", code);
+                    enterApp(code);
+                } else {
+                    alert("❌ 找不到這個代碼");
+                }
+            });
+        }
+
+        function doRegister() {
+            showLoader("註冊中...");
+            callApi("register", {}, (res) => {
+                localStorage.setItem("pass_code", res.code);
+                alert("🎉 註冊成功！代碼：" + res.code);
+                enterApp(res.code);
+            });
+        }
+
+        function enterApp(code) {
+            document.getElementById("loginSection").style.display = "none";
+            document.getElementById("appSection").style.display = "block";
+            document.getElementById("myCode").innerText = code;
+            refreshList(code);
+        }
+
+        function doLogout() {
+            if(confirm("確定要登出嗎？")) { localStorage.removeItem("pass_code"); location.reload(); }
+        }
+
+        function refreshList(code) {
+            let c = code || document.getElementById("myCode").innerText;
+            showLoader("讀取資料...");
+            callApi("getList", {code: c}, (res) => {
