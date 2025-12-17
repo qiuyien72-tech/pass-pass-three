@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>冰箱小管家 v8.5</title>
+    <title>冰箱小管家 v8.6</title>
     
     <script>
         window.onerror = function(msg, url, line) {
-            console.error("系統錯誤: " + msg);
+            console.error("Error: " + msg);
             return false;
         };
     </script>
@@ -32,8 +32,8 @@
       .card img:active { transform: scale(0.95); }
       .tag { font-size: 12px; padding: 2px 6px; border-radius: 4px; color: white; display: inline-block; margin-top: 4px; }
       .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
-      .date-group { display: flex; gap: 5px; margin-bottom: 15px; }
-      .date-group input { margin-bottom: 0; flex: 1; font-weight: bold; letter-spacing: 1px; }
+      .date-group { display: flex; gap: 5px; margin-bottom: 5px; } /* 縮小 margin 給預覽文字 */
+      .date-group input { margin-bottom: 0; flex: 1; font-weight: bold; letter-spacing: 2px; }
       .date-btn { width: auto; padding: 0 15px; margin-bottom: 0; background: #eee; color: #555; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: none; border-radius: 12px; cursor: pointer; }
       .search-wrapper { position: relative; margin-bottom: 15px; }
       #search { border-radius: 30px !important; border: 2px solid #3498db !important; background-color: #f0f8ff !important; padding-left: 20px; margin-bottom: 0; color: #333; font-weight: bold; }
@@ -41,13 +41,12 @@
       #imageModal img { max-width: 95%; max-height: 80vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); object-fit: contain; }
       #modalClose { margin-top: 20px; color: white; background: rgba(255,255,255,0.2); border: 1px solid white; padding: 8px 20px; border-radius: 20px; cursor: pointer; }
       #sync-status { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #aaa; background: rgba(255,255,255,0.8); padding: 2px 5px; border-radius: 4px; pointer-events: none; }
-      #debug-status { text-align: center; padding: 10px; margin-bottom: 20px; font-weight: bold; border-radius: 8px; background: #ffecec; color: red; border: 2px solid red; display:none; }
+      #date-preview { font-size: 12px; color: #3498db; margin-bottom: 15px; margin-left: 5px; height: 15px; font-weight: bold;}
     </style>
 </head>
 <body>
 
     <div id="loader"><div class="spinner"></div><div id="loaderText">連線中...</div></div>
-    <div id="debug-status"></div>
     <div id="sync-status"></div>
 
     <div id="imageModal" onclick="closeLargeImg()">
@@ -56,7 +55,7 @@
     </div>
 
     <div id="loginSection">
-        <h2>📦 冰箱小管家 <span>v8.5</span></h2>
+        <h2>📦 冰箱小管家 <span>v8.6</span></h2>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase;">
         <button onclick="doLogin()">🚀 登入</button>
         <button class="secondary" onclick="doRegister()">🎲 產生新代碼</button>
@@ -71,12 +70,11 @@
         <input type="text" id="inLoc" placeholder="🧊 放置位置 (例如: 冷凍庫)">
         
         <div class="date-group">
-            <input type="tel" inputmode="numeric" id="inDate" placeholder="📅 範例: 2025821 (自動修正)" maxlength="10" oninput="simpleFormat(this)" onblur="magicCorrect(this)">
+            <input type="text" inputmode="numeric" id="inDate" placeholder="📅 範例: 2025821" maxlength="10" oninput="handleInput(this)" onblur="applyCorrection(this)">
             <button class="date-btn" onclick="openDatePicker()">📅</button>
             <input type="date" id="hiddenPicker" min="2000-01-01" max="2100-12-31" style="position:absolute; visibility:hidden; width:0; height:0;" onchange="syncDate(this)">
         </div>
-        
-        <div class="btn-row">
+        <div id="date-preview"></div> <div class="btn-row">
              <input type="file" id="fileIn" accept="image/*" style="display:none" onchange="previewImg(this)">
              <button style="background:#f39c12;" onclick="document.getElementById('fileIn').click()">📷 拍照</button>
              <button onclick="doAdd()">🚀 加入清單</button>
@@ -97,84 +95,94 @@
         ];
         var API_URL = urlParts.join("");
 
-        // 🔥 1. 打字時：只做最簡單的橫線顯示，不干擾您的手感
-        function simpleFormat(el) {
-            var val = el.value.replace(/\D/g, ''); // 只留數字
-            if (val.length > 8) val = val.substring(0, 8); // 最多8碼
+        // 🔥 1. 輸入時：計算預覽結果，但不改動輸入框
+        function handleInput(el) {
+            var val = el.value.replace(/\D/g, ''); // 只取數字
+            if(val.length > 8) val = val.substring(0, 8);
             
-            var formatted = "";
-            // 4碼加橫線: 2025-
-            if (val.length > 4) formatted += val.substring(0, 4) + '-';
-            else formatted += val;
+            // 計算「如果現在送出，會變成什麼日期」
+            var parsed = parseDateString(val);
+            var preview = document.getElementById("date-preview");
             
-            // 6碼加橫線: 2025-82-
-            if (val.length > 6) formatted += val.substring(4, 6) + '-' + val.substring(6);
-            else if (val.length > 4) formatted += val.substring(4);
-            
-            el.value = formatted;
+            if (parsed) {
+                preview.innerText = "將變成： " + parsed;
+                preview.style.color = "#3498db";
+            } else {
+                preview.innerText = "";
+            }
         }
 
-        // 🔥 2. 離開或加入時：啟動超級大腦進行修正
-        function magicCorrect(el) {
-            var val = el.value.replace(/\D/g, ''); // 取出純數字
-            
-            // 情況 A: 只有 6 碼 (如 202581) -> 判讀為 2025-08-01
-            if (val.length === 6) {
-                // YYYY M D -> YYYY 0M 0D
-                val = val.substring(0, 4) + '0' + val.substring(4, 5) + '0' + val.substring(5, 6);
+        // 🔥 2. 核心判讀邏輯 (離開或送出時呼叫)
+        function applyCorrection(el) {
+            var val = el.value.replace(/\D/g, '');
+            var corrected = parseDateString(val);
+            if (corrected) {
+                el.value = corrected; // 填入標準格式
+                document.getElementById("date-preview").innerText = ""; // 清空預覽
             }
-            
-            // 情況 B: 有 7 碼 (如 2025821 或 2025121)
-            else if (val.length === 7) {
-                var y = val.substring(0, 4);
-                var monthPart = parseInt(val.substring(4, 6)); // 取出第5,6碼 (例如 82 或 12)
-                var rest = val.substring(4); // 剩下的3碼 (例如 821 或 121)
+        }
 
-                if (monthPart > 12) {
-                    // 如果是大於12 (如 82)，肯定不是月份！
-                    // 解析為：08月 21日
-                    val = y + '0' + rest.substring(0, 1) + rest.substring(1);
+        // 🔥 3. 智慧解析函數 (處理 6, 7, 8 碼)
+        function parseDateString(raw) {
+            if (!raw || raw.length < 6) return null; // 太短不處理
+
+            var y, m, d;
+
+            // 🟢 6 碼 (202581) -> 2025-08-01
+            if (raw.length === 6) {
+                y = raw.substring(0, 4);
+                m = "0" + raw.substring(4, 5); // 補0
+                d = "0" + raw.substring(5, 6); // 補0
+            }
+            // 🟢 7 碼 (2025821 或 2025111)
+            else if (raw.length === 7) {
+                y = raw.substring(0, 4);
+                var part1 = parseInt(raw.substring(4, 6)); // 取 2 碼 (如 82 或 11)
+                
+                if (part1 > 12) {
+                    // 如果是大於12 (如 82)，那肯定是 8月 21日
+                    m = "0" + raw.substring(4, 5); // 08
+                    d = raw.substring(5, 7);       // 21
                 } else {
-                    // 如果是 12 或更小，優先當作雙位數月份
-                    // 解析為：12月 01日
-                    val = y + rest.substring(0, 2) + '0' + rest.substring(2);
+                    // 如果是 12 或更小 (如 11)，優先當作 11月 1日
+                    m = raw.substring(4, 6);       // 11
+                    d = "0" + raw.substring(6, 7); // 01
                 }
             }
-
-            // 情況 C: 一般 8 碼，或其他長度，進行最終防呆檢查
-            if (val.length >= 5) {
-                // 如果長度不足8碼，嘗試補全 (例如 20258 -> 20250801)
-                while(val.length < 8) val += '1'; 
-                if (val.length > 8) val = val.substring(0, 8);
-
-                var y = parseInt(val.substring(0, 4));
-                var m = parseInt(val.substring(4, 6));
-                var d = parseInt(val.substring(6, 8));
-
-                // 年份防呆 (0233 -> 2000)
-                if (y < 100) y += 2000;
-                if (y < 2000) y = 2000; 
-                if (y > 2100) y = 2100;
-
-                // 月份/日期限制
-                if (m > 12) m = 12; if (m < 1) m = 1;
-                
-                var maxDays = new Date(y, m, 0).getDate();
-                if (d > maxDays) d = maxDays;
-                if (d < 1) d = 1;
-
-                // 組合回去
-                var mm = (m < 10 ? '0' : '') + m;
-                var dd = (d < 10 ? '0' : '') + d;
-                el.value = y + "-" + mm + "-" + dd;
+            // 🟢 8 碼 (20250821)
+            else {
+                y = raw.substring(0, 4);
+                m = raw.substring(4, 6);
+                d = raw.substring(6, 8);
             }
+
+            // 🛡️ 年份/日期防呆檢查
+            var nY = parseInt(y);
+            if (nY < 100) nY += 2000;
+            if (nY < 2000) nY = 2000;
+            if (nY > 2100) nY = 2100;
+            
+            var nM = parseInt(m);
+            if (nM > 12) nM = 12; if (nM < 1) nM = 1;
+            
+            var nD = parseInt(d);
+            var maxDays = new Date(nY, nM, 0).getDate(); // 取得當月最大天數
+            if (nD > maxDays) nD = maxDays;
+            if (nD < 1) nD = 1;
+
+            // 格式化回字串
+            y = nY;
+            m = (nM < 10 ? "0" : "") + nM;
+            d = (nD < 10 ? "0" : "") + nD;
+
+            return `${y}-${m}-${d}`;
         }
 
         // 系統功能
         function showLargeImg(url) { if(!url) return; document.getElementById("largeImgDisplay").src = url; document.getElementById("imageModal").style.display = "flex"; }
         function closeLargeImg() { document.getElementById("imageModal").style.display = "none"; }
         function openDatePicker() { try{document.getElementById("hiddenPicker").showPicker();}catch(e){document.getElementById("hiddenPicker").click();} }
-        function syncDate(p) { document.getElementById("inDate").value = p.value; }
+        function syncDate(p) { document.getElementById("inDate").value = p.value; handleInput(document.getElementById("inDate")); } // 選完日曆也觸發預覽更新
         function previewImg(i) { if(i.files[0]) document.getElementById("imgPreview").innerText = "已選: "+i.files[0].name; }
         function showLoader(t) { document.getElementById("loader").style.display="flex"; document.getElementById("loaderText").innerText=t; }
         function hideLoader() { document.getElementById("loader").style.display="none"; }
@@ -235,20 +243,17 @@
         function doAdd() {
             var name = document.getElementById("inName").value;
             var loc = document.getElementById("inLoc").value;
-            
-            // 🔥 加入前，強制觸發一次修正 (確保按鈕按下時也能正確補全)
             var dateEl = document.getElementById("inDate");
-            magicCorrect(dateEl); 
+            
+            // 🔥 加入前，強制執行一次修正 (確保按鈕按下時也生效)
+            applyCorrection(dateEl);
             var date = dateEl.value;
 
             var file = document.getElementById("fileIn").files[0];
             var code = document.getElementById("myCode").innerText;
 
             if(!name || !date) return alert("請填寫名稱與日期");
-            if(date.length !== 10) return alert("日期格式不正確");
-
-            var year = parseInt(date.split('-')[0]);
-            if (year < 2000 || year > 2100) { alert("年份錯誤"); return; }
+            if(date.length !== 10) return alert("日期格式不正確"); // 經過修正後應為 YYYY-MM-DD (10碼)
 
             showLoader("儲存中...");
             var pl = { code: code, name: name, loc: loc, date: date, image: "" };
@@ -269,6 +274,7 @@
                 document.getElementById("inDate").value = "";
                 document.getElementById("fileIn").value = "";
                 document.getElementById("imgPreview").innerText = "";
+                document.getElementById("date-preview").innerText = "";
                 refreshList(pl.code);
             });
         }
@@ -344,10 +350,7 @@
                         });
                     }
                 }
-            } catch (e) {
-                document.getElementById("debug-status").style.display="block";
-                document.getElementById("debug-status").innerText = "啟動錯誤：" + e.message;
-            }
+            } catch (e) { console.error("Start Error: " + e.message); }
         };
     </script>
 </body>
