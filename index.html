@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>冰箱小管家 v4.2 (自我診斷)</title>
+    <title>冰箱小管家 v4.3</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
@@ -36,7 +36,7 @@
     <div id="loader"><div class="spinner"></div><div id="loaderText">連線中...</div></div>
 
     <div id="loginSection">
-        <h2>📦 冰箱小管家 <span class="ver-tag">v4.2</span></h2>
+        <h2>📦 冰箱小管家 <span class="ver-tag">v4.3</span></h2>
         <p style="color:#666; font-size:14px; margin-bottom:20px;">請直接輸入代碼登入</p>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase; letter-spacing:1px; font-weight:bold;">
         <button onclick="doLogin()">🚀 登入</button>
@@ -51,4 +51,222 @@
         <input type="text" id="inName" placeholder="🍎 食品名稱">
         <input type="text" id="inLoc" placeholder="🧊 放置位置 (例如: 冷凍庫)">
         <div class="date-group">
-            <input type="text" id="inDate" placeholder="📅 到期日 (6碼: 251
+            <input type="text" id="inDate" placeholder="📅 到期日 (6碼: 251231)" maxlength="6">
+            <button class="date-btn" onclick="openDatePicker()">📅</button>
+            <input type="date" id="hiddenPicker" style="position:absolute; visibility:hidden; width:0; height:0;" onchange="syncDate(this)">
+        </div>
+        <div class="btn-row">
+             <input type="file" id="fileIn" accept="image/*" style="display:none">
+             <button style="background:#f39c12;" onclick="document.getElementById('fileIn').click()">📷 拍照</button>
+             <button onclick="doAdd()">🚀 加入清單</button>
+        </div>
+        <div id="imgPreview" style="font-size:12px; color:#aaa; text-align:center; margin-bottom:10px;"></div>
+        <hr style="border:0; border-top:1px solid #eee; margin: 20px 0;">
+        <div class="search-wrapper">
+            <input type="text" id="search" placeholder="🔍 搜尋名稱或地點..." onkeyup="renderList()">
+        </div>
+        <div id="list"></div>
+    </div>
+
+    <script>
+        // ✅ 已經幫您填入正確網址，請直接使用，不要修改！
+        const API_URL = "https://script.google.com/macros/s/AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV/exec";
+
+        function callApi(action, payload, callback) {
+            payload.action = action;
+            fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.text())
+            .then(text => {
+                hideLoader();
+                try {
+                    const data = JSON.parse(text);
+                    callback(data);
+                } catch (e) {
+                    if (text.includes("<!DOCTYPE html>") || text.includes("Google")) {
+                        alert("❌ 權限錯誤！請檢查部署設定");
+                    } else {
+                        alert("❌ 系統錯誤: " + text.substring(0, 50));
+                    }
+                }
+            })
+            .catch(err => { 
+                hideLoader();
+                console.error("Fetch Error:", err);
+                alert("❌ 網路連線失敗，請檢查網址是否有貼對");
+            });
+        }
+        
+        let allData = [];
+        let currentCode = localStorage.getItem("pass_code") || "";
+
+        if(currentCode) {
+            showLoader("自動登入中...");
+            callApi("checkCode", {code: currentCode}, (res) => {
+                if(res && res.valid) enterApp();
+                else { localStorage.removeItem("pass_code"); hideLoader(); }
+            });
+        }
+
+        function openDatePicker() { try { document.getElementById("hiddenPicker").showPicker(); } catch (e) { document.getElementById("hiddenPicker").click(); } }
+        
+        function syncDate(picker) { 
+            let d = new Date(picker.value);
+            let yy = String(d.getFullYear()).slice(-2);
+            let mm = String(d.getMonth() + 1).padStart(2, '0');
+            let dd = String(d.getDate()).padStart(2, '0');
+            document.getElementById("inDate").value = yy + mm + dd;
+        }
+
+        function doLogin() {
+            let code = document.getElementById("codeIn").value.toUpperCase().trim();
+            if(!code) return alert("請輸入代碼");
+            showLoader("驗證中...");
+            callApi("checkCode", {code: code}, (res) => {
+                if(res.valid) {
+                    currentCode = code;
+                    localStorage.setItem("pass_code", code);
+                    enterApp();
+                } else {
+                    alert("❌ 找不到這個代碼");
+                }
+            });
+        }
+
+        function doRegister() {
+            showLoader("註冊中...");
+            callApi("register", {}, (res) => {
+                currentCode = res.code;
+                localStorage.setItem("pass_code", currentCode);
+                alert("🎉 註冊成功！代碼：" + currentCode);
+                enterApp();
+            });
+        }
+
+        function enterApp() {
+            document.getElementById("loginSection").style.display = "none";
+            document.getElementById("appSection").style.display = "block";
+            document.getElementById("myCode").innerText = currentCode;
+            refreshList();
+        }
+
+        function doLogout() {
+            if(confirm("確定要登出嗎？")) { localStorage.removeItem("pass_code"); location.reload(); }
+        }
+
+        function refreshList() {
+            showLoader("讀取資料...");
+            callApi("getList", {code: currentCode}, (res) => {
+                allData = res.data || [];
+                renderList();
+            });
+        }
+
+        function doAdd() {
+            try {
+                let name = document.getElementById("inName").value;
+                let rawDate = document.getElementById("inDate").value.trim();
+                let loc = document.getElementById("inLoc").value;
+                let file = document.getElementById("fileIn").files[0];
+
+                if(!name || !rawDate) return alert("請輸入名稱與日期");
+
+                // --- 6碼日期邏輯 ---
+                let cleanDate = rawDate.replace(/[^\d]/g, "");
+                if (cleanDate.length !== 6) {
+                    return alert("⚠️ 請輸入 6 位數日期！\n例如：251231 (代表 2025年12月31日)");
+                }
+
+                let yy = parseInt(cleanDate.slice(0, 2), 10);
+                let mm = parseInt(cleanDate.slice(2, 4), 10);
+                let dd = parseInt(cleanDate.slice(4, 6), 10);
+                let fullYear = 2000 + yy;
+
+                if (mm < 1 || mm > 12) return alert(`📅 月份錯誤！沒有 ${mm} 月。`);
+                let daysInMonth = new Date(fullYear, mm, 0).getDate();
+                if (dd < 1 || dd > daysInMonth) return alert(`📅 日期錯誤！\n20${yy}年 ${mm}月 只有 ${daysInMonth} 天。`);
+
+                let formattedDate = `${fullYear}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
+
+                showLoader("儲存中...");
+                let payload = { code: currentCode, name: name, loc: loc, date: formattedDate, image: "" };
+                
+                if(file) {
+                    let reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = function(e) {
+                        payload.image = e.target.result.split(",")[1];
+                        sendAdd(payload);
+                    }
+                } else { sendAdd(payload); }
+
+            } catch (e) {
+                alert("❌ 按鈕執行失敗：\n" + e.message);
+                console.error(e);
+            }
+        }
+
+        function sendAdd(payload) {
+            callApi("add", payload, (res) => {
+                document.getElementById("inName").value = "";
+                document.getElementById("inDate").value = "";
+                document.getElementById("fileIn").value = "";
+                document.getElementById("imgPreview").innerText = "";
+                refreshList();
+            });
+        }
+
+        function deleteItem(id) {
+            if(!confirm("確定刪除？")) return;
+            showLoader("刪除中...");
+            callApi("delete", {id: id}, () => refreshList());
+        }
+
+        function renderList() {
+            let searchKey = document.getElementById("search").value.toLowerCase().trim();
+            let list = document.getElementById("list");
+            list.innerHTML = "";
+            let today = new Date(); today.setHours(0,0,0,0);
+            let hasData = false;
+
+            allData.sort(function(a, b) {
+                return new Date(a.date) - new Date(b.date);
+            });
+
+            allData.forEach(item => {
+                let itemName = String(item.name || "").toLowerCase();
+                let itemLoc = String(item.location || "").toLowerCase();
+
+                if(searchKey) {
+                    if (!itemName.includes(searchKey) && !itemLoc.includes(searchKey)) {
+                        return;
+                    }
+                }
+                
+                hasData = true;
+                let d = new Date(item.date);
+                let diff = Math.ceil((d - today) / (86400000));
+                let tagClass = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
+                let tagText = diff < 0 ? `過期 ${Math.abs(diff)} 天` : `剩 ${diff} 天`;
+                let imgHtml = item.imgUrl ? `<img src="${item.imgUrl}">` : `<div style="width:60px;height:60px;background:#eee;margin-right:10px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#aaa;">無圖</div>`;
+                
+                list.innerHTML += `<div class="card">${imgHtml}<div style="flex:1"><div style="font-weight:bold">${item.name}</div><div style="font-size:13px;color:#666">📍 ${item.location}</div><div class="tag ${tagClass}">${tagText}</div><div style="font-size:12px;color:#aaa">${item.date}</div></div><button style="width:auto;background:none;color:#aaa;padding:5px;" onclick="deleteItem(${item.rowId})">✕</button></div>`;
+            });
+
+            if (!hasData) {
+                list.innerHTML = `<div style="text-align:center; padding:30px; color:#aaa;">📭 找不到相關食材</div>`;
+            }
+        }
+
+        document.getElementById("fileIn").onchange = function() {
+            if(this.files[0]) document.getElementById("imgPreview").innerText = "已選: " + this.files[0].name;
+        }
+
+        function showLoader(txt) { document.getElementById("loader").style.display = "flex"; document.getElementById("loaderText").innerText = txt; }
+        function hideLoader() { document.getElementById("loader").style.display = "none"; }
+    </script>
+</body>
+</html>
