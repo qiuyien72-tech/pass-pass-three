@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>冰箱小管家 v6.8</title>
+    <title>冰箱小管家 v6.9</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
@@ -30,9 +30,15 @@
       .tag { font-size: 12px; padding: 2px 6px; border-radius: 4px; color: white; display: inline-block; margin-top: 4px; }
       .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
       
-      /* 🔥 調整日期區塊，只剩一個原生 input */
+      /* 🔥 日期輸入區塊樣式 (input + button) */
       .date-group { display: flex; gap: 5px; margin-bottom: 15px; }
-      .date-group input { margin-bottom: 0; width: 100%; }
+      .date-group input { margin-bottom: 0; flex: 1; } /* 輸入框佔滿剩餘空間 */
+      .date-btn { 
+          width: auto; padding: 0 15px; margin-bottom: 0; 
+          background: #eee; color: #555; font-size: 1.2rem; 
+          display: flex; align-items: center; justify-content: center; 
+          border: none; border-radius: 12px; cursor: pointer;
+      }
       
       .search-wrapper { position: relative; margin-bottom: 15px; }
       #search { border-radius: 30px !important; border: 2px solid #3498db !important; background-color: #f0f8ff !important; padding-left: 20px; margin-bottom: 0; color: #333; font-weight: bold; }
@@ -73,7 +79,10 @@
         <input type="text" id="inLoc" placeholder="🧊 放置位置 (例如: 冷凍庫)">
         
         <div class="date-group">
-            <input type="date" id="inDate" max="2099-12-31">
+            <input type="tel" inputmode="numeric" id="inDate" placeholder="📅 到期日 (例: 20250230)" maxlength="10" oninput="fullSmartFix(this)">
+            
+            <button class="date-btn" onclick="openDatePicker()">📅</button>
+            <input type="date" id="hiddenPicker" min="2000-01-01" max="2100-12-31" style="position:absolute; visibility:hidden; width:0; height:0;" onchange="syncDate(this)">
         </div>
         
         <div class="btn-row">
@@ -97,6 +106,37 @@
             "/exec"
         ];
         const API_URL = urlParts.join("");
+
+        // ✅ 智慧日期修正函數 (讓手動輸入變得很聰明)
+        function fullSmartFix(el) {
+            // 1. 強制移除任何非數字 (防呆)
+            var val = el.value.replace(/\D/g, '');
+            if (val !== el.value) el.value = val;
+            
+            // 2. 打滿8碼才做日期邏輯檢查
+            if (val.length === 8) {
+                var y = parseInt(val.substring(0, 4));
+                var m = parseInt(val.substring(4, 6));
+                var d = parseInt(val.substring(6, 8));
+
+                if (y < 2000) y = 2000; if (y > 2100) y = 2100;
+                if (m > 12) m = 12; if (m < 1) m = 1;
+
+                var maxDays = new Date(y, m, 0).getDate();
+                if (d > maxDays) d = maxDays;
+                if (d < 1) d = 1;
+
+                var mm = (m < 10 ? '0' : '') + m;
+                var dd = (d < 10 ? '0' : '') + d;
+                
+                // 自動幫您加上橫線
+                el.value = y + "-" + mm + "-" + dd;
+            }
+        }
+
+        // ✅ 讓旁邊的日曆按鈕能運作
+        function openDatePicker() { try{document.getElementById("hiddenPicker").showPicker();}catch(e){document.getElementById("hiddenPicker").click();} }
+        function syncDate(p) { document.getElementById("inDate").value = p.value; }
 
         // ✅ 圖片放大功能
         function showLargeImg(url) {
@@ -209,13 +249,15 @@
         function doAdd() {
             var name = document.getElementById("inName").value;
             var loc = document.getElementById("inLoc").value;
-            var date = document.getElementById("inDate").value; // 這裡直接抓 input[type=date] 的值
+            var date = document.getElementById("inDate").value; 
             var file = document.getElementById("fileIn").files[0];
             var code = document.getElementById("myCode").innerText;
 
             if(!name || !date) return alert("請填寫名稱與日期");
             
-            // 🔥 改回您上傳檔案中的簡單驗證邏輯
+            // 驗證日期格式 YYYY-MM-DD
+            if(date.length !== 10) return alert("日期格式不正確 (請打滿8碼或使用日曆)");
+
             var year = date.split('-')[0];
             if (year.length > 4 || parseInt(year) > 2099) {
               alert("日期太遙遠囉！");
