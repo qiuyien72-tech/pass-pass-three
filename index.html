@@ -308,7 +308,7 @@
                 list.innerHTML += `<div class="card">${img}<div style="flex:1"><div style="font-weight:bold">${item.name}</div><div style="font-size:13px;color:#666">📍 ${item.location}</div><div class="tag ${cls}">${txt}</div><div style="font-size:12px;color:#aaa">${item.date}</div></div>${delBtn}</div>`;
             });
 
-            if (!hasData) list.innerHTML = `<div style="text-align:center; padding:30px; color:#aaa;">📭 找不到相關食材</div>`;
+            if (!hasData) list.innerHTML = `<div style="text-align:center; padding:30px; color:#aaa;">📭 找不到相關物品</div>`;
         }
 
         function openDatePicker() { try{document.getElementById("hiddenPicker").showPicker();}catch(e){document.getElementById("hiddenPicker").click();} }
@@ -319,4 +319,5 @@
     </script>
 </body>
 </html>
+
 
