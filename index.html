@@ -170,7 +170,7 @@
             if (!/^\d{4}-\d{2}-\d{2}$/.test(formattedDate)) return alert("⚠️ 日期格式錯誤 (YYYY-MM-DD)");
             let checkDate = new Date(formattedDate);
             let year = checkDate.getFullYear();
-            if (year > 2125) return alert("📅 日期太遙遠");
+            if (year > 2050) return alert("📅 日期太遙遠");
             if (year < 2000) return alert("📅 日期太久遠");
 
             showLoader("儲存中...");
@@ -247,5 +247,6 @@
     </script>
 </body>
 </html>
+
 
 
