@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>冰箱小管家 v4.7</title>
+    <title>冰箱小管家 v5.0</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
@@ -28,31 +28,45 @@
       .date-btn { width: auto; padding: 0 20px; margin-bottom: 0; background: #eee; color: #555; font-size: 20px; display: flex; align-items: center; justify-content: center; }
       .search-wrapper { position: relative; margin-bottom: 15px; }
       #search { border-radius: 30px !important; border: 2px solid #3498db !important; background-color: #f0f8ff !important; padding-left: 20px; margin-bottom: 0; color: #333; font-weight: bold; }
-      .ver-tag { font-size: 10px; background: #333; color: white; padding: 2px 5px; border-radius: 4px; vertical-align: middle; margin-left: 5px; }
+      
+      /* 除錯燈號樣式 */
+      #debug-status { 
+          text-align: center; 
+          padding: 10px; 
+          margin-bottom: 20px; 
+          font-weight: bold; 
+          border-radius: 8px;
+          background: #ffecec;
+          color: red;
+          border: 2px solid red;
+      }
     </style>
 </head>
 <body>
 
     <div id="loader"><div class="spinner"></div><div id="loaderText">連線中...</div></div>
 
+    <div id="debug-status">🔴 系統故障：JavaScript 沒跑 (請檢查程式碼)</div>
+
     <div id="loginSection">
-        <h2>📦 冰箱小管家 <span class="ver-tag">v4.7</span></h2>
-        <p style="color:#666; font-size:14px; margin-bottom:20px;">請直接輸入代碼登入</p>
-        <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase; letter-spacing:1px; font-weight:bold;">
-        <button onclick="doLogin()">🚀 登入</button>
-        <button class="secondary" onclick="doRegister()">🎲 產生新代碼</button>
+        <h2>📦 冰箱小管家 <span>v5.0</span></h2>
+        <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase;">
+        <button id="btnLogin">🚀 登入</button>
+        <button class="secondary" id="btnRegister">🎲 產生新代碼</button>
     </div>
 
     <div id="appSection">
         <div class="header">
             <div>我的冰箱 <span id="myCode" class="code-tag"></span></div>
-            <button style="width:auto; padding:5px 12px; margin:0; background:#e74c3c; font-size:13px;" onclick="doLogout()">登出</button>
+            <button id="btnLogout" style="width:auto; padding:5px 12px; margin:0; background:#e74c3c; font-size:13px;">登出</button>
         </div>
         <input type="text" id="inName" placeholder="🍎 食品名稱">
         <input type="text" id="inLoc" placeholder="🧊 放置位置 (例如: 冷凍庫)">
         <div class="date-group">
-            <input type="text" id="inDate" placeholder="📅 到期日 (請打 8 碼: 20251231)" maxlength="8">
-            <button class="date-btn" onclick="openDatePicker()">📅</button>
-            <input type="date" id="hiddenPicker" style="position:absolute; visibility:hidden; width:0; height:0;" onchange="syncDate(this)">
+            <input type="text" id="inDate" placeholder="📅 到期日 (輸入8碼: 20251231)" maxlength="8">
+            <button class="date-btn" id="btnDatePick">📅</button>
+            <input type="date" id="hiddenPicker" style="position:absolute; visibility:hidden; width:0; height:0;">
         </div>
-        <div class="
+        <div class="btn-row">
+             <input type="file" id="fileIn" accept="image/*" style="display:none">
+             <button style="background:#f39c1
