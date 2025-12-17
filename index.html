@@ -2,8 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔖pass pass</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>冰箱小管家</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
@@ -11,7 +11,10 @@
       @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
       #loginSection { max-width: 350px; margin: 40px auto; background: white; padding: 40px 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
       h2 { margin-top: 0; color: #2c3e50; }
+      
+      /* 優化輸入框樣式 */
       input, button, select { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
+      
       button { background: #3498db; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
       button:active { transform: scale(0.98); }
       button.secondary { background: white; color: #3498db; border: 2px dashed #3498db; }
@@ -22,7 +25,7 @@
       .card { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 8px; display: flex; align-items: center; background: #fff; }
       
       .card img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 10px; background: #f0f0f0; cursor: zoom-in; transition: transform 0.2s; }
-      .card img:hover { transform: scale(1.05); }
+      .card img:active { transform: scale(0.95); }
 
       .tag { font-size: 12px; padding: 2px 6px; border-radius: 4px; color: white; display: inline-block; margin-top: 4px; }
       .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
@@ -34,40 +37,14 @@
       #sync-status { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #aaa; background: rgba(255,255,255,0.8); padding: 2px 5px; border-radius: 4px; pointer-events: none; }
       #debug-status { text-align: center; padding: 10px; margin-bottom: 20px; font-weight: bold; border-radius: 8px; background: #ffecec; color: red; border: 2px solid red; display:none; }
 
-      #imageModal { 
-          display: none; 
-          position: fixed; 
-          top: 0; left: 0; 
-          width: 100%; height: 100%; 
-          background: rgba(0,0,0,0.85); 
-          z-index: 10000; 
-          justify-content: center; 
-          align-items: center; 
-          flex-direction: column;
-          backdrop-filter: blur(5px);
-      }
-      #imageModal img { 
-          max-width: 90%; 
-          max-height: 80vh; 
-          border-radius: 8px; 
-          box-shadow: 0 0 20px rgba(0,0,0,0.5); 
-          object-fit: contain;
-      }
-      #modalClose { 
-          margin-top: 20px; 
-          color: white; 
-          background: rgba(255,255,255,0.2); 
-          border: 1px solid white; 
-          padding: 8px 20px; 
-          border-radius: 20px; 
-          cursor: pointer; 
-      }
+      #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; backdrop-filter: blur(5px); }
+      #imageModal img { max-width: 95%; max-height: 80vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); object-fit: contain; }
+      #modalClose { margin-top: 20px; color: white; background: rgba(255,255,255,0.2); border: 1px solid white; padding: 8px 20px; border-radius: 20px; cursor: pointer; }
     </style>
 
     <script>
         window.onerror = function(msg, url, line) {
             // alert("❌ 錯誤: " + msg + "\n第 " + line + " 行"); 
-            // 為了美觀，正式版可以把 alert 註解掉，或保留給自己除錯用
             return false;
         };
     </script>
@@ -84,7 +61,7 @@
     </div>
 
     <div id="loginSection">
-        <h2>🔖pass pass</h2> 
+        <h2>📦 冰箱小管家</h2>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase;">
         <button id="btnLogin" onclick="doLogin()">🚀 登入</button>
         <button class="secondary" id="btnRegister" onclick="doRegister()">🎲 產生新代碼</button>
@@ -92,13 +69,15 @@
 
     <div id="appSection">
         <div class="header">
-            <div>我的庫存 <span id="myCode" class="code-tag"></span></div>
+            <div>我的冰箱 <span id="myCode" class="code-tag"></span></div>
             <button id="btnLogout" onclick="doLogout()" style="width:auto; padding:5px 12px; margin:0; background:#e74c3c; font-size:13px;">登出</button>
         </div>
-        <input type="text" id="inName" placeholder="🆔️物品名稱">
-        <input type="text" id="inLoc" placeholder="📍放置位置">
+        <input type="text" id="inName" placeholder="🍎 食品名稱">
+        <input type="text" id="inLoc" placeholder="🧊 放置位置 (例如: 冷凍庫)">
         <div class="date-group">
-            <input type="text" id="inDate" placeholder="📅 到期日 (例如: 20250230)" maxlength="10" oninput="fullSmartFix(this)">
+            
+            <input type="tel" inputmode="numeric" id="inDate" placeholder="📅 到期日 (例如: 20250230)" maxlength="10" oninput="fullSmartFix(this)">
+            
             <button class="date-btn" onclick="openDatePicker()">📅</button>
             <input type="date" id="hiddenPicker" min="2000-01-01" max="2100-12-31" style="position:absolute; visibility:hidden; width:0; height:0;" onchange="syncDate(this)">
         </div>
@@ -124,7 +103,12 @@
         const API_URL = urlParts.join("");
 
         function fullSmartFix(el) {
+            // 1. 強制移除任何非數字 (包含英文亂碼)
             var val = el.value.replace(/\D/g, '');
+            
+            // 2. 如果使用者正在打英文，這個動作會瞬間把字消掉
+            // 但因為我們改了 type="tel"，使用者根本打不出英文了 XD
+            
             if (val.length === 8) {
                 var y = parseInt(val.substring(0, 4));
                 var m = parseInt(val.substring(4, 6));
@@ -322,4 +306,3 @@
     </script>
 </body>
 </html>
-
