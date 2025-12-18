@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>冰箱小管家 v9.4</title>
+    <title>冰箱小管家 v9.5</title>
     
     <script>
+        // 錯誤攔截：如果發生錯誤，會彈出視窗提示
         window.onerror = function(msg, url, line) {
-            alert("❌ 系統錯誤: " + msg); // 讓錯誤彈出來，方便除錯
+            console.error("系統錯誤: " + msg);
             return false;
         };
     </script>
@@ -85,7 +86,7 @@
     </div>
 
     <div id="loginSection">
-        <h2>📦 冰箱小管家 <span>v9.4</span></h2>
+        <h2>📦 冰箱小管家 <span>v9.5</span></h2>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase;">
         <button onclick="doLogin()">🚀 登入</button>
         <button class="secondary" onclick="doRegister()">🎲 產生新代碼</button>
@@ -122,7 +123,7 @@
     </div>
 
     <script>
-        // ✅ 這裡換回 fetch 的網址結構
+        // ✅ ⚠️請務必檢查這行網址是否為最新部署的網址！⚠️
         var urlParts = [
             "https://script.google.com/macros/s/AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV/exec"
         ];
@@ -135,7 +136,7 @@
         function showLoader(t) { document.getElementById("loader").style.display="flex"; document.getElementById("loaderText").innerText=t; }
         function hideLoader() { document.getElementById("loader").style.display="none"; }
 
-        // ✅ 使用 fetch 呼叫後端 (這樣 GitHub Pages 才能連線)
+        // ✅ 使用 fetch 確保 GitHub Pages 可連線
         function callApi(action, payload, cb) {
             payload.action = action;
             fetch(API_URL, {
@@ -148,7 +149,10 @@
                   try {
                       var data = JSON.parse(txt);
                       cb(data);
-                  } catch(e) { alert("API 回傳錯誤：\n" + e.message + "\n" + txt); }
+                  } catch(e) { 
+                      alert("API 回傳錯誤：\n" + e.message); 
+                      console.log(txt);
+                  }
               })
               .catch(function(err){
                   if(!payload.silent) hideLoader();
@@ -178,9 +182,18 @@
         }
 
         function enterApp(code, useCache) {
+            // 🔥 防呆：如果代碼是 undefined，強迫登出
+            if (!code || code === "undefined" || code === "null") {
+                alert("⚠️ 登入資料異常，請重新登入！");
+                localStorage.removeItem("pass_code");
+                location.reload();
+                return;
+            }
+
             document.getElementById("loginSection").style.display = "none";
             document.getElementById("appSection").style.display = "block";
             document.getElementById("myCode").innerText = code;
+            
             if(!useCache) refreshList(code); else renderList();
         }
 
@@ -204,7 +217,7 @@
               return;
             }
 
-            // 更新選單
+            // 更新智慧選單
             if(creator) {
                 var dl = document.getElementById("creatorHistory");
                 var exists = false;
@@ -218,7 +231,6 @@
 
             showLoader("儲存中...");
             
-            // ✅ 正確傳送 creator 參數
             var pl = { code: code, name: name, loc: loc, date: date, creator: creator, image: "" };
             
             if(file) {
@@ -258,7 +270,7 @@
                 var cacheKey = "fridge_data_" + c;
                 localStorage.setItem(cacheKey, JSON.stringify(allData));
                 
-                // 🔥 重新整理購買人清單 (智慧記憶)
+                // 🔥 更新智慧記憶選單
                 updateCreatorHistory(allData);
                 
                 renderList();
@@ -267,22 +279,13 @@
             });
         }
 
-        // 🔥 新增：從資料中提取所有購買人，更新 datalist
+        // 🔥 更新購買人選單
         function updateCreatorHistory(data) {
             var dl = document.getElementById("creatorHistory");
             var history = new Set();
+            for(var i=0; i<dl.options.length; i++) history.add(dl.options[i].value);
+            data.forEach(item => { if(item.creator) history.add(item.creator); });
             
-            // 收集現有的 options
-            for(var i=0; i<dl.options.length; i++) {
-                history.add(dl.options[i].value);
-            }
-            
-            // 從資料中收集新的
-            data.forEach(item => {
-                if(item.creator) history.add(item.creator);
-            });
-            
-            // 重建 datalist
             dl.innerHTML = "";
             history.forEach(c => {
                 var op = document.createElement("option");
@@ -316,7 +319,7 @@
                 var img = item.imgUrl ? `<img src="${item.imgUrl}" onclick="showLargeImg('${item.imgUrl}')">` : `<div style="width:60px;height:60px;background:#eee;margin-right:12px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;">無圖</div>`;
                 var delBtn = `<button style="width:auto;background:none;color:#aaa;padding:5px;" onclick="deleteItem(${item.rowId})">✕</button>`;
                 
-                // 🔥 購買人標籤
+                // 🔥 購買人顯示區 (紫色標籤)
                 var creatorHtml = item.creator ? `<span class="creator-tag">👤 ${item.creator}</span>` : "";
 
                 list.innerHTML += `
@@ -340,18 +343,22 @@
 
         window.onload = function() {
             try {
+                // 🔥 自動修復：檢查是否有壞掉的登入資料
                 var savedCode = localStorage.getItem("pass_code");
+                if (savedCode === "undefined" || savedCode === "null") {
+                    localStorage.removeItem("pass_code");
+                    savedCode = null;
+                }
+
                 if (savedCode) {
-                    // 自動登入也使用 fetch
                     showLoader("自動登入中...");
                     callApi("checkCode", {code: savedCode}, function(res) {
                         if (res && res.valid) enterApp(savedCode);
                         else { localStorage.removeItem("pass_code"); hideLoader(); }
                     });
                 }
-            } catch (e) { alert("啟動錯誤: " + e.message); }
+            } catch (e) { console.error("Start Error: " + e.message); }
         };
     </script>
 </body>
 </html>
-
