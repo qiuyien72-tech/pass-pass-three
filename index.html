@@ -106,12 +106,12 @@
         
         <div class="date-group">
             <input type="date" id="inDate" onkeydown="return false;" onclick="try{this.showPicker()}catch(e){}" required>
-            <div style="font-size:12px; color:#999; margin-top:5px; text-align:center;">🚫 禁止手打，請點擊上方選取日期</div>
+            <div style="font-size:12px; color:#999; margin-top:5px; text-align:center;">請點擊上方選取日期</div>
         </div>
         
         <div class="btn-row">
              <input type="file" id="fileIn" accept="image/*" style="display:none" onchange="previewImg(this)">
-             <button style="background:#f39c12;" onclick="document.getElementById('fileIn').click()">📷 拍照</button>
+             <button style="background:#f39c12;" onclick="document.getElementById('fileIn').click()">📷 照片</button>
              <button onclick="doAdd()">🚀 加入清單</button>
         </div>
         <div id="imgPreview" style="font-size:12px; color:#aaa; text-align:center; margin-bottom:10px;"></div>
@@ -360,3 +360,4 @@
     </script>
 </body>
 </html>
+
