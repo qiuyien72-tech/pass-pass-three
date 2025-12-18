@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🔖pass pass</title>
+    <title>冰箱小管家</title>
     
     <script>
         window.onerror = function(msg, url, line) {
@@ -55,7 +55,7 @@
     </div>
 
     <div id="loginSection">
-        <h2>🔖pass pass</h2>
+        <h2>📦 冰箱小管家</h2>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase;">
         <button onclick="doLogin()">🚀 登入</button>
         <button class="secondary" onclick="doRegister()">🎲 產生新代碼</button>
@@ -63,14 +63,14 @@
 
     <div id="appSection">
         <div class="header">
-            <div>我的庫存 <span id="myCode" class="code-tag"></span></div>
+            <div>我的冰箱 <span id="myCode" class="code-tag"></span></div>
             <button onclick="doLogout()" style="width:auto; padding:5px 12px; margin:0; background:#e74c3c; font-size:13px;">登出</button>
         </div>
-        <input type="text" id="inName" placeholder="🆔️物品名稱">
-        <input type="text" id="inLoc" placeholder="📍放置位置">
+        <input type="text" id="inName" placeholder="🍎 食品名稱">
+        <input type="text" id="inLoc" placeholder="🧊 放置位置 (例如: 冷凍庫)">
         
         <div class="date-group">
-            <input type="text" inputmode="numeric" id="inDate" placeholder="📅 範例: 2025821" maxlength="10" oninput="handleInput(this)" onblur="applyCorrection(this)">
+            <input type="text" inputmode="numeric" id="inDate" placeholder="📅 範例: 20250821 (限8碼)" maxlength="10" oninput="handleInput(this)" onblur="applyCorrection(this)" onfocus="removeFormat(this)">
             <button class="date-btn" onclick="openDatePicker()">📅</button>
             <input type="date" id="hiddenPicker" min="2000-01-01" max="2100-12-31" style="position:absolute; visibility:hidden; width:0; height:0;" onchange="syncDate(this)">
         </div>
@@ -97,28 +97,45 @@
         ];
         var API_URL = urlParts.join("");
 
+        // 🔥 1. 輸入時：強制變成純數字，並嚴格限制 8 碼
         function handleInput(el) {
-            var val = el.value.replace(/\D/g, ''); 
+            var val = el.value.replace(/\D/g, ''); // 移除所有非數字 (包含橫線)
+            
+            // 🛑 這裡就是您要的限制：只能打 8 個字
             if(val.length > 8) val = val.substring(0, 8);
+            
+            // 將處理過的純數字寫回輸入框 (這會讓輸入時看不到橫線)
+            el.value = val;
+
+            // 計算預覽
             var parsed = parseDateString(val);
             var preview = document.getElementById("date-preview");
             if (parsed) {
-                preview.innerText = "將變成： " + parsed;
+                preview.innerText = "預覽： " + parsed;
                 preview.style.color = "#3498db";
             } else {
                 preview.innerText = "";
             }
         }
 
+        // 🔥 2. 點擊輸入框時 (Focus)：把橫線拿掉，變回純數字，讓您好修改
+        function removeFormat(el) {
+            var val = el.value.replace(/\D/g, '');
+            if(val.length > 8) val = val.substring(0, 8);
+            el.value = val;
+        }
+
+        // 🔥 3. 離開輸入框時 (Blur)：把純數字變成標準格式 (例如 2025-08-21)
         function applyCorrection(el) {
             var val = el.value.replace(/\D/g, '');
             var corrected = parseDateString(val);
             if (corrected) {
-                el.value = corrected;
-                document.getElementById("date-preview").innerText = "";
+                el.value = corrected; // 填入標準格式
+                document.getElementById("date-preview").innerText = ""; 
             }
         }
 
+        // 智慧解析核心
         function parseDateString(raw) {
             if (!raw || raw.length < 6) return null;
 
@@ -230,6 +247,7 @@
             var loc = document.getElementById("inLoc").value;
             var dateEl = document.getElementById("inDate");
             
+            // 🔥 加入前，再做一次修正確保萬無一失
             applyCorrection(dateEl);
             var date = dateEl.value;
 
@@ -311,7 +329,7 @@
                 list.innerHTML += `<div class="card">${img}<div style="flex:1"><div style="font-weight:bold">${item.name}</div><div style="font-size:13px;color:#666">📍 ${item.location}</div><div class="tag ${cls}">${txt}</div><div style="font-size:12px;color:#aaa">${item.date}</div></div>${delBtn}</div>`;
             });
 
-            if (!hasData) list.innerHTML = `<div style="text-align:center; padding:30px; color:#aaa;">📭 找不到相關物品</div>`;
+            if (!hasData) list.innerHTML = `<div style="text-align:center; padding:30px; color:#aaa;">📭 找不到相關食材</div>`;
         }
 
         window.onload = function() {
