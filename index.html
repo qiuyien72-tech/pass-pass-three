@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>冰箱小管家 v9.0</title>
+    <title>冰箱小管家 v9.1</title>
     
     <script>
         window.onerror = function(msg, url, line) {
@@ -22,11 +22,11 @@
       
       input, button, select { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
       
-      /* 🔥 強制日曆輸入框的特殊樣式：讓它看起來像個按鈕 */
+      /* 🔥 強制日曆輸入框樣式 */
       input[type="date"] {
           background-color: #fff;
-          cursor: pointer; /* 滑鼠移過去變手指 */
-          caret-color: transparent; /* 隱藏打字游標 */
+          cursor: pointer; 
+          caret-color: transparent;
       }
 
       button { background: #3498db; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
@@ -47,6 +47,7 @@
       
       .search-wrapper { position: relative; margin-bottom: 15px; }
       #search { border-radius: 30px !important; border: 2px solid #3498db !important; background-color: #f0f8ff !important; padding-left: 20px; margin-bottom: 0; color: #333; font-weight: bold; }
+      
       #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; backdrop-filter: blur(5px); }
       #imageModal img { max-width: 95%; max-height: 80vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); object-fit: contain; }
       #modalClose { margin-top: 20px; color: white; background: rgba(255,255,255,0.2); border: 1px solid white; padding: 8px 20px; border-radius: 20px; cursor: pointer; }
@@ -75,6 +76,10 @@
             <div>我的冰箱 <span id="myCode" class="code-tag"></span></div>
             <button onclick="doLogout()" style="width:auto; padding:5px 12px; margin:0; background:#e74c3c; font-size:13px;">登出</button>
         </div>
+        
+        <input type="text" id="inCreator" list="creatorHistory" placeholder="👤 購買人 (例: 媽媽)">
+        <datalist id="creatorHistory"></datalist>
+
         <input type="text" id="inName" placeholder="🍎 食品名稱">
         <input type="text" id="inLoc" placeholder="🧊 放置位置 (例如: 冷凍庫)">
         
@@ -157,6 +162,24 @@
             document.getElementById("appSection").style.display = "block";
             document.getElementById("myCode").innerText = code;
             if(!useCache) refreshList(code); else renderList();
+            
+            // 🔥 登入後載入「購買人歷史紀錄」
+            loadCreators(code);
+        }
+
+        // 🔥 載入歷史購買人
+        function loadCreators(code) {
+            callApi("getCreatorHistory", {code: code}, function(list){
+                if(list && Array.isArray(list)) {
+                    var dl = document.getElementById("creatorHistory");
+                    dl.innerHTML = "";
+                    list.forEach(function(c){
+                        var op = document.createElement("option");
+                        op.value = c;
+                        dl.appendChild(op);
+                    });
+                }
+            });
         }
 
         function doLogout() {
@@ -164,23 +187,36 @@
         }
 
         function doAdd() {
+            var creator = document.getElementById("inCreator").value.trim(); // 取得購買人
             var name = document.getElementById("inName").value;
             var loc = document.getElementById("inLoc").value;
-            var date = document.getElementById("inDate").value; // 直接取原生日期值
+            var date = document.getElementById("inDate").value; 
             var file = document.getElementById("fileIn").files[0];
             var code = document.getElementById("myCode").innerText;
 
             if(!name || !date) return alert("請填寫名稱與日期");
             
-            // v9.0 簡單防呆：確保年份不要太離譜 (有些日曆選單可以一直滑)
             var year = parseInt(date.split('-')[0]);
             if (year < 2000 || year > 2100) {
               alert("日期範圍限制在 2000~2100 年");
               return;
             }
 
+            // 🔥 即時更新選單 (讓使用者剛輸入的新名字也能馬上被記住)
+            if(creator) {
+                var dl = document.getElementById("creatorHistory");
+                var exists = false;
+                for(var i=0; i<dl.options.length; i++) { if(dl.options[i].value == creator) exists = true; }
+                if(!exists) {
+                    var op = document.createElement("option");
+                    op.value = creator;
+                    dl.appendChild(op);
+                }
+            }
+
             showLoader("儲存中...");
-            var pl = { code: code, name: name, loc: loc, date: date, image: "" };
+            // 🔥 payload 加入 creator
+            var pl = { code: code, name: name, loc: loc, date: date, creator: creator, image: "" };
             
             if(file) {
                 var reader = new FileReader();
@@ -194,10 +230,12 @@
 
         function sendAdd(pl) {
             callApi("add", pl, function(res){
+                // 清空欄位
                 document.getElementById("inName").value = "";
                 document.getElementById("inDate").value = "";
                 document.getElementById("fileIn").value = "";
                 document.getElementById("imgPreview").innerText = "";
+                // 購買人欄位不一定清空，方便連續輸入，看您喜好 (這裡先保留不清空)
                 refreshList(pl.code);
             });
         }
@@ -237,7 +275,9 @@
             allData.forEach(function(item){
                 var n = String(item.name || "").toLowerCase();
                 var l = String(item.location || "").toLowerCase();
-                if(key && !n.includes(key) && !l.includes(key)) return;
+                var c = String(item.creator || "").toLowerCase(); // 搜尋也包含購買人
+                
+                if(key && !n.includes(key) && !l.includes(key) && !c.includes(key)) return;
                 
                 hasData = true;
                 var d = new Date(item.date);
@@ -247,7 +287,10 @@
                 var img = item.imgUrl ? `<img src="${item.imgUrl}" onclick="showLargeImg('${item.imgUrl}')">` : `<div style="width:60px;height:60px;background:#eee;margin-right:10px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;">無圖</div>`;
                 var delBtn = `<button style="width:auto;background:none;color:#aaa;padding:5px;" onclick="deleteItem(${item.rowId})">✕</button>`;
                 
-                list.innerHTML += `<div class="card">${img}<div style="flex:1"><div style="font-weight:bold">${item.name}</div><div style="font-size:13px;color:#666">📍 ${item.location}</div><div class="tag ${cls}">${txt}</div><div style="font-size:12px;color:#aaa">${item.date}</div></div>${delBtn}</div>`;
+                // 🔥 顯示購買人標籤
+                var creatorTag = item.creator ? `<span style="font-size:12px;background:#eef;color:#55a;padding:2px 6px;border-radius:4px;margin-left:5px;">👤 ${item.creator}</span>` : "";
+
+                list.innerHTML += `<div class="card">${img}<div style="flex:1"><div style="font-weight:bold">${item.name}${creatorTag}</div><div style="font-size:13px;color:#666">📍 ${item.location}</div><div class="tag ${cls}">${txt}</div><div style="font-size:12px;color:#aaa">${item.date}</div></div>${delBtn}</div>`;
             });
 
             if (!hasData) list.innerHTML = `<div style="text-align:center; padding:30px; color:#aaa;">📭 找不到相關食材</div>`;
