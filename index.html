@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>冰箱小管家 v9.1</title>
+    <title>冰箱小管家 v9.2</title>
     
     <script>
         window.onerror = function(msg, url, line) {
@@ -22,7 +22,7 @@
       
       input, button, select { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
       
-      /* 🔥 強制日曆輸入框樣式 */
+      /* 強制日曆輸入框樣式 */
       input[type="date"] {
           background-color: #fff;
           cursor: pointer; 
@@ -36,24 +36,32 @@
       .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
       .code-tag { background: #eee; padding: 4px 8px; border-radius: 4px; font-size: 14px; font-weight: bold; color: #555; }
       .btn-row { display: flex; gap: 10px; }
-      .card { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 8px; display: flex; align-items: center; background: #fff; }
-      .card img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 10px; background: #f0f0f0; cursor: zoom-in; transition: transform 0.2s; }
+      
+      /* 卡片樣式優化 */
+      .card { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 12px; display: flex; align-items: center; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+      .card img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-right: 12px; background: #f0f0f0; cursor: zoom-in; transition: transform 0.2s; }
       .card img:active { transform: scale(0.95); }
-      .tag { font-size: 12px; padding: 2px 6px; border-radius: 4px; color: white; display: inline-block; margin-top: 4px; }
+      
+      .tag { font-size: 12px; padding: 3px 8px; border-radius: 10px; color: white; display: inline-block; margin-top: 4px; font-weight: bold; }
       .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
       
-      /* 🔥 新增：建立者標籤樣式 */
+      /* 🔥 購買人標籤樣式 (更明顯、更美觀) */
       .creator-tag {
           display: inline-block;
-          font-size: 0.8rem;
-          color: #555;
-          background-color: #eef;
-          padding: 2px 8px;
-          border-radius: 10px;
-          margin-left: 5px;
-          border: 1px solid #dde;
-          vertical-align: middle;
+          font-size: 0.85rem;
+          color: #6c5ce7;
+          background-color: #f0f0ff; /* 淺紫色背景 */
+          padding: 3px 8px;
+          border-radius: 8px;
+          margin-left: 0px; 
+          margin-bottom: 4px;
+          border: 1px solid #d1d8ff;
+          font-weight: bold;
       }
+      
+      /* 讓購買人單獨一行或明顯一點 */
+      .food-name-row { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin-bottom: 2px; }
+      .food-name-text { font-size: 1.1rem; font-weight: bold; color: #2c3e50; }
 
       .date-group { margin-bottom: 15px; }
       .date-group input { margin-bottom: 0; width: 100%; }
@@ -78,7 +86,7 @@
     </div>
 
     <div id="loginSection">
-        <h2>📦 冰箱小管家 <span>v9.1</span></h2>
+        <h2>📦 冰箱小管家 <span>v9.2</span></h2>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase;">
         <button onclick="doLogin()">🚀 登入</button>
         <button class="secondary" onclick="doRegister()">🎲 產生新代碼</button>
@@ -115,7 +123,7 @@
     </div>
 
     <script>
-        // ✅ 網址分段 (防斷行)
+        // ✅ 網址分段
         var urlParts = [
             "https://script.google.com/macros/s/",
             "AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV",
@@ -177,11 +185,10 @@
             document.getElementById("myCode").innerText = code;
             if(!useCache) refreshList(code); else renderList();
             
-            // 🔥 登入後載入「購買人歷史紀錄」
+            // 🔥 載入歷史購買人
             loadCreators(code);
         }
 
-        // 🔥 載入歷史購買人
         function loadCreators(code) {
             callApi("getCreatorHistory", {code: code}, function(list){
                 if(list && Array.isArray(list)) {
@@ -216,7 +223,7 @@
               return;
             }
 
-            // 即時更新選單 (讓使用者剛輸入的新名字也能馬上被記住)
+            // 更新選單
             if(creator) {
                 var dl = document.getElementById("creatorHistory");
                 var exists = false;
@@ -229,7 +236,7 @@
             }
 
             showLoader("儲存中...");
-            // 🔥 payload 加入 creator
+            // 🔥 傳送 Creator 欄位
             var pl = { code: code, name: name, loc: loc, date: date, creator: creator, image: "" };
             
             if(file) {
@@ -244,12 +251,11 @@
 
         function sendAdd(pl) {
             callApi("add", pl, function(res){
-                // 清空欄位
+                // 清空
                 document.getElementById("inName").value = "";
                 document.getElementById("inDate").value = "";
                 document.getElementById("fileIn").value = "";
                 document.getElementById("imgPreview").innerText = "";
-                // 購買人欄位不一定清空，方便連續輸入
                 refreshList(pl.code);
             });
         }
@@ -289,7 +295,7 @@
             allData.forEach(function(item){
                 var n = String(item.name || "").toLowerCase();
                 var l = String(item.location || "").toLowerCase();
-                var c = String(item.creator || "").toLowerCase(); // 搜尋也包含購買人
+                var c = String(item.creator || "").toLowerCase(); 
                 
                 if(key && !n.includes(key) && !l.includes(key) && !c.includes(key)) return;
                 
@@ -298,16 +304,30 @@
                 var diff = Math.ceil((d - today)/86400000);
                 var cls = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
                 var txt = diff < 0 ? "過期 "+Math.abs(diff)+" 天" : "剩 "+diff+" 天";
-                var img = item.imgUrl ? `<img src="${item.imgUrl}" onclick="showLargeImg('${item.imgUrl}')">` : `<div style="width:60px;height:60px;background:#eee;margin-right:10px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;">無圖</div>`;
+                var img = item.imgUrl ? `<img src="${item.imgUrl}" onclick="showLargeImg('${item.imgUrl}')">` : `<div style="width:60px;height:60px;background:#eee;margin-right:12px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;">無圖</div>`;
                 var delBtn = `<button style="width:auto;background:none;color:#aaa;padding:5px;" onclick="deleteItem(${item.rowId})">✕</button>`;
                 
-                // 🔥 顯示購買人標籤 (這裡樣式會生效)
-                var creatorTag = item.creator ? `<span class="creator-tag">👤 ${item.creator}</span>` : "";
+                // 🔥🔥🔥 這裡就是顯示購買人的關鍵！
+                // 如果有購買人資料 (item.creator)，就顯示紫色標籤
+                var creatorHtml = item.creator ? `<span class="creator-tag">👤 ${item.creator}</span>` : "";
 
-                list.innerHTML += `<div class="card">${img}<div style="flex:1"><div style="font-weight:bold">${item.name}${creatorTag}</div><div style="font-size:13px;color:#666">📍 ${item.location}</div><div class="tag ${cls}">${txt}</div><div style="font-size:12px;color:#aaa">${item.date}</div></div>${delBtn}</div>`;
+                list.innerHTML += `
+                <div class="card">
+                    ${img}
+                    <div style="flex:1">
+                        <div class="food-name-row">
+                            <span class="food-name-text">${item.name}</span>
+                            ${creatorHtml}
+                        </div>
+                        <div style="font-size:13px;color:#666">📍 ${item.location}</div>
+                        <div class="tag ${cls}">${txt}</div>
+                        <div style="font-size:12px;color:#aaa;margin-top:2px;">${item.date}</div>
+                    </div>
+                    ${delBtn}
+                </div>`;
             });
 
-            if (!hasData) list.innerHTML = `<div style="text-align:center; padding:30px; color:#aaa;">📭 找不到相關食材</div>`;
+            if (!hasData) list.innerHTML = `<div style="text-align:center; padding:30px; color:#aaa;">📭 找不到相關食材<br>(請試著新增一筆有「購買人」的資料)</div>`;
         }
 
         window.onload = function() {
