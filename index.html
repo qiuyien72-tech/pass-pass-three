@@ -6,7 +6,7 @@
     <title>pass pass</title>
     
     <script>
-        // 錯誤攔截：如果發生錯誤，會彈出視窗提示
+        // 錯誤攔截
         window.onerror = function(msg, url, line) {
             console.error("系統錯誤: " + msg);
             return false;
@@ -46,7 +46,7 @@
       .tag { font-size: 12px; padding: 3px 8px; border-radius: 10px; color: white; display: inline-block; margin-top: 4px; font-weight: bold; }
       .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
       
-      /* 🔥 購買人標籤樣式 */
+      /* 購買人標籤樣式 */
       .creator-tag {
           display: inline-block;
           font-size: 0.85rem;
@@ -86,7 +86,7 @@
     </div>
 
     <div id="loginSection">
-        <h2>pass pass<span>v9.5</span></h2>
+        <h2>pass pass</h2>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase;">
         <button onclick="doLogin()">🚀 登入</button>
         <button class="secondary" onclick="doRegister()">🎲 產生新代碼</button>
@@ -182,9 +182,8 @@
         }
 
         function enterApp(code, useCache) {
-            // 🔥 防呆：如果代碼是 undefined，強迫登出
+            // 自動修復登入狀態
             if (!code || code === "undefined" || code === "null") {
-                alert("⚠️ 登入資料異常，請重新登入！");
                 localStorage.removeItem("pass_code");
                 location.reload();
                 return;
@@ -270,7 +269,7 @@
                 var cacheKey = "fridge_data_" + c;
                 localStorage.setItem(cacheKey, JSON.stringify(allData));
                 
-                // 🔥 更新智慧記憶選單
+                // 更新智慧記憶選單
                 updateCreatorHistory(allData);
                 
                 renderList();
@@ -279,7 +278,6 @@
             });
         }
 
-        // 🔥 更新購買人選單
         function updateCreatorHistory(data) {
             var dl = document.getElementById("creatorHistory");
             var history = new Set();
@@ -319,7 +317,7 @@
                 var img = item.imgUrl ? `<img src="${item.imgUrl}" onclick="showLargeImg('${item.imgUrl}')">` : `<div style="width:60px;height:60px;background:#eee;margin-right:12px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;">無圖</div>`;
                 var delBtn = `<button style="width:auto;background:none;color:#aaa;padding:5px;" onclick="deleteItem(${item.rowId})">✕</button>`;
                 
-                // 🔥 購買人顯示區 (紫色標籤)
+                // 購買人顯示區
                 var creatorHtml = item.creator ? `<span class="creator-tag">👤 ${item.creator}</span>` : "";
 
                 list.innerHTML += `
@@ -343,7 +341,7 @@
 
         window.onload = function() {
             try {
-                // 🔥 自動修復：檢查是否有壞掉的登入資料
+                // 自動修復壞掉的登入資料
                 var savedCode = localStorage.getItem("pass_code");
                 if (savedCode === "undefined" || savedCode === "null") {
                     localStorage.removeItem("pass_code");
@@ -362,4 +360,3 @@
     </script>
 </body>
 </html>
-
