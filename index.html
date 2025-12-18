@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>冰箱小管家 v9.5</title>
+    <title>pass pass</title>
     
     <script>
         // 錯誤攔截：如果發生錯誤，會彈出視窗提示
@@ -86,7 +86,7 @@
     </div>
 
     <div id="loginSection">
-        <h2>📦 冰箱小管家 <span>v9.5</span></h2>
+        <h2>pass pass<span>v9.5</span></h2>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase;">
         <button onclick="doLogin()">🚀 登入</button>
         <button class="secondary" onclick="doRegister()">🎲 產生新代碼</button>
@@ -94,15 +94,15 @@
 
     <div id="appSection">
         <div class="header">
-            <div>我的冰箱 <span id="myCode" class="code-tag"></span></div>
+            <div>我的庫存 <span id="myCode" class="code-tag"></span></div>
             <button onclick="doLogout()" style="width:auto; padding:5px 12px; margin:0; background:#e74c3c; font-size:13px;">登出</button>
         </div>
         
         <input type="text" id="inCreator" list="creatorHistory" placeholder="👤 購買人 (例如: 媽媽, 小明)">
         <datalist id="creatorHistory"></datalist>
 
-        <input type="text" id="inName" placeholder="🍎 食品名稱">
-        <input type="text" id="inLoc" placeholder="🧊 放置位置 (例如: 冷凍庫)">
+        <input type="text" id="inName" placeholder="🆔️物品名稱">
+        <input type="text" id="inLoc" placeholder="📍放置位置">
         
         <div class="date-group">
             <input type="date" id="inDate" onkeydown="return false;" onclick="try{this.showPicker()}catch(e){}" required>
@@ -338,7 +338,7 @@
                 </div>`;
             });
 
-            if (!hasData) list.innerHTML = `<div style="text-align:center; padding:30px; color:#aaa;">📭 找不到相關食材</div>`;
+            if (!hasData) list.innerHTML = `<div style="text-align:center; padding:30px; color:#aaa;">📭 找不到相關物品</div>`;
         }
 
         window.onload = function() {
@@ -362,3 +362,4 @@
     </script>
 </body>
 </html>
+
