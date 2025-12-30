@@ -42,12 +42,12 @@
             <button onclick="doAdd()">🚀 加入清單</button>
         </div>
         <div id="pText" style="font-size:12px; color:#aaa; text-align:center; margin-bottom:10px;"></div>
-        <input type="text" id="search" placeholder="🔍 搜尋..." onkeyup="renderList()">
+        <input type="text" id="search" placeholder="🔍 搜尋名稱、位置、購買人..." onkeyup="renderList()">
         <div id="list"></div>
     </div>
 
-    <script>https:
-        var API_URL = "https://script.google.com/macros/s/AKfycby-JIXbbbjzSJ_4I_P2PUWPF1_Qaf7w84VneuO_ADHkLyxxQ6INQIi3UxVwvNOHFPfw/exec";
+    <script>
+        var API_URL = "https://script.google.com/macros/s/AKfycbxzPzTYknK48hnF72j18UH2AnTfcom-Cp7mTJ-P6jQU6WDmcSDIdKOENsNf3VDETzmH/exec";
         var allData = [];
 
         function showLoader() { document.getElementById("loader").style.display = "flex"; }
@@ -115,17 +115,15 @@
         window.onload = function() {
             var code = localStorage.getItem("pass_code");
             if(!code) return window.location.href = "index.html";
-            
-            // 💡 修正 147 行錯誤：確保 ID 對齊
             var codeEl = document.getElementById("displayCode");
             if(codeEl) codeEl.innerText = code;
 
             var cached = localStorage.getItem("cached_fridge_data");
             if(cached) {
                 try { allData = JSON.parse(cached); renderList(); } catch(e) { allData = []; }
-                refreshData(code, true); // 背景靜默更新
+                refreshData(code, true); // 🚀 速度關鍵：背景偷偷載入，不轉圈圈
             } else {
-                refreshData(code, false); // 強制更新
+                refreshData(code, false); 
             }
         };
     </script>
