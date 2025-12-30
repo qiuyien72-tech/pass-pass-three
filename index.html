@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://script.google.com">
     <title>冰箱小管家 - 登入</title>
     <style>
       body { font-family: -apple-system, sans-serif; background: #f4f7f6; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
@@ -18,7 +19,7 @@
     <div id="loader"><div class="spinner"></div></div>
     <div id="loginBox">
         <h2>📦 冰箱小管家</h2>
-        <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase;">
+        <input type="text" id="codeIn" placeholder="輸入專屬代碼" style="text-align:center; text-transform:uppercase;">
         <button onclick="doLogin()">🚀 登入</button>
         <button class="secondary" onclick="doRegister()">🎲 產生新代碼</button>
     </div>
@@ -34,6 +35,7 @@
             .then(r => r.json()).then(res => {
                 if(res.valid) {
                     localStorage.setItem("pass_code", code);
+                    // 🚀 優化：一次性把資料存入快取
                     if(res.data) localStorage.setItem("cached_fridge_data", JSON.stringify(res.data));
                     window.location.href = "main.html";
                 } else {
@@ -52,10 +54,6 @@
                 window.location.href = "main.html";
             });
         }
-
-        window.onload = function() {
-            if(localStorage.getItem("pass_code")) window.location.href = "main.html";
-        };
     </script>
 </body>
 </html>
