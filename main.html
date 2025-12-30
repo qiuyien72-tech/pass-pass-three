@@ -64,7 +64,6 @@
     </div>
 
     <script>
-        // 🚀 已更新為您的最新連結
         var API_URL = "https://script.google.com/macros/s/AKfycbyLfPZJis94_sHnG93ll4Mop4ud9cCxm0ZiGwzIEZU4sNdHZ33RGLT-kyF4mVkm3JOR/exec";
         var allData = [];
 
@@ -73,6 +72,7 @@
             document.getElementById("loader").style.display = "flex";
         }
         function hideLoader() { document.getElementById("loader").style.display = "none"; }
+        function wait(ms) { return new Promise(r => setTimeout(r, ms)); } // 等待函數
 
         function openModal(src) {
             document.getElementById("largeImgDisplay").src = src;
@@ -81,15 +81,29 @@
 
         function callApi(action, payload, cb, silent) {
             payload.action = action;
+            
+            // 🚀 核心邏輯：如果不是靜默模式，就強制等待 1 秒
             if(!silent) {
-                let msg = "系統處理中...";
+                let msg = "處理中...";
                 if(action === "add") msg = "正在上傳食材與照片...";
-                if(action === "delete") msg = "正在從冰箱移除食材...";
+                if(action === "delete") msg = "正在移除該項食材...";
                 if(action === "getList") msg = "正在同步最新清單...";
                 showLoader(msg);
+
+                Promise.all([
+                    fetch(API_URL, { method: "POST", body: JSON.stringify(payload) }).then(r => r.json()),
+                    wait(1000) // 強制看 1 秒動畫
+                ])
+                .then(([res, _]) => {
+                    hideLoader();
+                    cb(res);
+                })
+                .catch(e => { hideLoader(); console.error(e); });
+            } else {
+                // 靜默模式（背景同步）不需要延遲，越快越好
+                fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
+                .then(r => r.json()).then(res => cb(res)).catch(console.error);
             }
-            fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
-            .then(r => r.json()).then(res => { hideLoader(); cb(res); }).catch(e => hideLoader());
         }
 
         function doLogout() { localStorage.clear(); window.location.href = "index.html"; }
@@ -172,10 +186,11 @@
             var cached = localStorage.getItem("cached_fridge_data");
             if(cached) {
                 try { allData = JSON.parse(cached); renderList(); } catch(e){}
-                refreshData(code, true);
+                refreshData(code, true); // 背景同步 (不轉圈)
             } else {
+                // 首次載入，強制顯示 1 秒動畫
                 showLoader("正在連線 Google 資料庫...");
-                refreshData(code, false);
+                setTimeout(() => refreshData(code, false), 100); 
             }
         };
     </script>
