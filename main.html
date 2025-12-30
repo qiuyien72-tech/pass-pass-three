@@ -13,21 +13,27 @@
       button { background: #3498db; color: white; border: none; font-weight: bold; cursor: pointer; }
       .btn-row { display: flex; gap: 8px; }
       .card { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 12px; display: flex; align-items: center; background: #fff; position: relative; }
-      .card img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-right: 12px; background: #eee; cursor: pointer; }
+      .card img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-right: 12px; cursor: pointer; background: #eee; }
       .creator-tag { font-size: 12px; color: #6c5ce7; background: #f0f0ff; padding: 2px 6px; border-radius: 6px; font-weight: bold; }
       .tag { font-size: 11px; padding: 2px 6px; border-radius: 8px; color: white; margin-top: 4px; display: inline-block; }
       .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
       
-      /* 🚀 圖片燈箱 Modal 樣式 */
+      /* 🚀 圖片燈箱 */
       #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
       #imageModal img { max-width: 90%; max-height: 80vh; border-radius: 10px; }
       
-      #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index: 9999; }
-      .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 0.8s linear infinite; }
+      /* 🚀 強化版 Loader 與文字 */
+      #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 9999; }
+      .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 45px; height: 45px; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
+      #loaderText { color: #333; font-weight: bold; font-size: 16px; }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <div id="loader"><div class="spinner"></div></div>
+    <div id="loader">
+        <div class="spinner"></div>
+        <div id="loaderText">正在連線...</div>
+    </div>
     
     <div id="imageModal" onclick="this.style.display='none'">
         <img id="largeImgDisplay" src="">
@@ -44,7 +50,7 @@
         <datalist id="cHistory"></datalist>
         <input type="text" id="inName" placeholder="🍎 食品名稱">
         <input type="text" id="inLoc" placeholder="🧊 放置位置">
-        <input type="date" id="inDate" onkeydown="return false;">
+        <input type="date" id="inDate">
 
         <div class="btn-row">
             <input type="file" id="fileIn" accept="image/*" style="display:none" onchange="document.getElementById('pText').innerText='已選照片'">
@@ -61,9 +67,9 @@
         var API_URL = "https://script.google.com/macros/s/AKfycbyLfPZJis94_sHnG93ll4Mop4ud9cCxm0ZiGwzIEZU4sNdHZ33RGLT-kyF4mVkm3JOR/exec";
         var allData = [];
 
-        function showLoader() { 
-            document.getElementById("loader").style.display = "flex"; 
-            setTimeout(() => { if(allData.length > 0) hideLoader(); }, 1200);
+        function showLoader(text) {
+            document.getElementById("loaderText").innerText = text;
+            document.getElementById("loader").style.display = "flex";
         }
         function hideLoader() { document.getElementById("loader").style.display = "none"; }
 
@@ -74,7 +80,13 @@
 
         function callApi(action, payload, cb, silent) {
             payload.action = action;
-            if(!silent) showLoader();
+            if(!silent) {
+                let msg = "正在處理...";
+                if(action === "add") msg = "正在上傳食材與照片...";
+                if(action === "delete") msg = "正在從冰箱移除食材...";
+                if(action === "getList") msg = "正在同步最新清單...";
+                showLoader(msg);
+            }
             fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
             .then(r => r.json()).then(res => { hideLoader(); cb(res); }).catch(e => hideLoader());
         }
@@ -85,23 +97,30 @@
             var name = document.getElementById("inName").value.trim();
             var date = document.getElementById("inDate").value;
             if(!name || !date) return alert("必填項目未輸入");
-            showLoader();
+            
             var pl = { code: localStorage.getItem("pass_code"), name: name, loc: document.getElementById("inLoc").value, date: date, creator: document.getElementById("inCreator").value, image: "" };
             var f = document.getElementById("fileIn").files[0];
+            
             if(f) {
+                showLoader("正在編碼並準備上傳圖片..."); // 🚀 針對大圖片的特別提示
                 var r = new FileReader(); r.readAsDataURL(f);
-                r.onload = function(e) { pl.image = e.target.result.split(",")[1]; send(pl); };
+                r.onload = function(e) { 
+                    pl.image = e.target.result.split(",")[1]; 
+                    send(pl); 
+                };
             } else send(pl);
         }
-        function send(pl) { callApi("add", pl, () => { document.getElementById("inName").value=""; refreshData(pl.code, false); }); }
+        function send(pl) { callApi("add", pl, () => { 
+            document.getElementById("inName").value = ""; 
+            document.getElementById("pText").innerText = "";
+            refreshData(pl.code, false); 
+        }); }
 
         function renderList() {
             var listDiv = document.getElementById("list");
             var key = document.getElementById("search").value.toLowerCase();
             var today = new Date(); today.setHours(0,0,0,0);
             var html = "";
-            
-            // 🚀 關鍵修正：強制轉文字避免數字報錯
             var filtered = allData.filter(i => {
                 var s = String(i.name||"") + String(i.location||"") + String(i.creator||"");
                 return s.toLowerCase().includes(key);
@@ -126,7 +145,6 @@
 
         function doDel(id) { 
             if(confirm("確定要刪除嗎？")) {
-                showLoader();
                 callApi("delete", { id: id }, function(res) {
                     if(res.status === "Deleted") {
                         localStorage.removeItem("cached_fridge_data");
@@ -154,7 +172,10 @@
             if(cached) {
                 try { allData = JSON.parse(cached); renderList(); } catch(e){}
                 refreshData(code, true);
-            } else { refreshData(code, false); }
+            } else {
+                showLoader("正在連線 Google 資料庫...");
+                refreshData(code, false);
+            }
         };
     </script>
 </body>
