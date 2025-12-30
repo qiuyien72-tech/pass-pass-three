@@ -18,13 +18,12 @@
       .tag { font-size: 11px; padding: 2px 6px; border-radius: 8px; color: white; margin-top: 4px; display: inline-block; }
       .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
       
-      /* 🚀 重新加入圖片燈箱樣式 */
+      /* 🚀 圖片燈箱 Modal 樣式 */
       #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
-      #imageModal img { max-width: 90%; max-height: 80vh; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+      #imageModal img { max-width: 90%; max-height: 80vh; border-radius: 10px; }
       
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index: 9999; }
       .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 0.8s linear infinite; }
-      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -32,7 +31,7 @@
     
     <div id="imageModal" onclick="this.style.display='none'">
         <img id="largeImgDisplay" src="">
-        <p style="color:white; margin-top:15px;">點擊任何處關閉</p>
+        <p style="color:white; margin-top:15px; font-size:14px;">點擊任何處關閉</p>
     </div>
 
     <div id="appSection">
@@ -45,7 +44,7 @@
         <datalist id="cHistory"></datalist>
         <input type="text" id="inName" placeholder="🍎 食品名稱">
         <input type="text" id="inLoc" placeholder="🧊 放置位置">
-        <input type="date" id="inDate">
+        <input type="date" id="inDate" onkeydown="return false;">
 
         <div class="btn-row">
             <input type="file" id="fileIn" accept="image/*" style="display:none" onchange="document.getElementById('pText').innerText='已選照片'">
@@ -53,17 +52,17 @@
             <button onclick="doAdd()">🚀 加入清單</button>
         </div>
         <div id="pText" style="font-size:12px; color:#aaa; text-align:center; margin-bottom:10px;"></div>
+        
         <input type="text" id="search" placeholder="🔍 搜尋名稱、位置、購買人..." onkeyup="renderList()">
         <div id="list"></div>
     </div>
 
     <script>
-        var API_URL = "https://script.google.com/macros/s/AKfycbyC4eIGndGgeoXGjByTpoOT4tUTySWQ0hokdCQOXKKnSFUyMYXayz5879WnaZGf-_du/exec";
+        var API_URL = "https://script.google.com/macros/s/AKfycbyLfPZJis94_sHnG93ll4Mop4ud9cCxm0ZiGwzIEZU4sNdHZ33RGLT-kyF4mVkm3JOR/exec";
         var allData = [];
 
         function showLoader() { 
             document.getElementById("loader").style.display = "flex"; 
-            // 速度優化：如果 1.2 秒沒反應，且有快取，就先收起來
             setTimeout(() => { if(allData.length > 0) hideLoader(); }, 1200);
         }
         function hideLoader() { document.getElementById("loader").style.display = "none"; }
@@ -77,10 +76,7 @@
             payload.action = action;
             if(!silent) showLoader();
             fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
-            .then(r => r.json()).then(res => {
-                hideLoader();
-                cb(res);
-            }).catch(e => { hideLoader(); console.error(e); });
+            .then(r => r.json()).then(res => { hideLoader(); cb(res); }).catch(e => hideLoader());
         }
 
         function doLogout() { localStorage.clear(); window.location.href = "index.html"; }
@@ -88,7 +84,7 @@
         function doAdd() {
             var name = document.getElementById("inName").value.trim();
             var date = document.getElementById("inDate").value;
-            if(!name || !date) return alert("名稱與日期必填");
+            if(!name || !date) return alert("必填項目未輸入");
             showLoader();
             var pl = { code: localStorage.getItem("pass_code"), name: name, loc: document.getElementById("inLoc").value, date: date, creator: document.getElementById("inCreator").value, image: "" };
             var f = document.getElementById("fileIn").files[0];
@@ -97,20 +93,15 @@
                 r.onload = function(e) { pl.image = e.target.result.split(",")[1]; send(pl); };
             } else send(pl);
         }
-        function send(pl) { 
-            callApi("add", pl, () => {
-                // 清空輸入
-                document.getElementById("inName").value = "";
-                document.getElementById("pText").innerText = "";
-                refreshData(pl.code, false);
-            }); 
-        }
+        function send(pl) { callApi("add", pl, () => { document.getElementById("inName").value=""; refreshData(pl.code, false); }); }
 
         function renderList() {
             var listDiv = document.getElementById("list");
             var key = document.getElementById("search").value.toLowerCase();
             var today = new Date(); today.setHours(0,0,0,0);
             var html = "";
+            
+            // 🚀 關鍵修正：強制轉文字避免數字報錯
             var filtered = allData.filter(i => {
                 var s = String(i.name||"") + String(i.location||"") + String(i.creator||"");
                 return s.toLowerCase().includes(key);
@@ -127,23 +118,19 @@
                         <div style="font-size:13px; color:#666">📍 ${item.location}</div>
                         <div class="tag ${cls}">${diff < 0 ? '已過期' : '剩 '+diff+' 天'} (${item.date})</div>
                     </div>
-                    <button style="width:auto; background:none; color:#ccc; border:none; font-size:20px; padding:0 10px;" onclick="doDel(${item.rowId})">✕</button>
+                    <button style="width:auto; background:none; color:#ccc; border:none; font-size:20px;" onclick="doDel(${item.rowId})">✕</button>
                 </div>`;
             });
-            listDiv.innerHTML = html || "<p style='text-align:center;color:#999'>暫無食品資料</p>";
+            listDiv.innerHTML = html || "<p style='text-align:center;color:#999'>目前沒有食品資料</p>";
         }
 
-        // 🚀 修正刪除功能
         function doDel(id) { 
-            if(confirm("確定要刪除這項食材嗎？")) {
+            if(confirm("確定要刪除嗎？")) {
                 showLoader();
                 callApi("delete", { id: id }, function(res) {
                     if(res.status === "Deleted") {
-                        // 刪除成功後，強制清空快取並重新抓取
                         localStorage.removeItem("cached_fridge_data");
                         refreshData(localStorage.getItem("pass_code"), false);
-                    } else {
-                        alert("刪除失敗");
                     }
                 });
             }
@@ -154,7 +141,6 @@
                 allData = res.data || [];
                 localStorage.setItem("cached_fridge_data", JSON.stringify(allData));
                 renderList();
-                // 更新購買人智慧選單
                 var hist = [...new Set(allData.map(i => i.creator))].filter(c => c);
                 document.getElementById("cHistory").innerHTML = hist.map(c => `<option value="${c}">`).join("");
             }, silent);
@@ -164,14 +150,11 @@
             var code = localStorage.getItem("pass_code");
             if(!code) return window.location.href = "index.html";
             document.getElementById("displayCode").innerText = code;
-
             var cached = localStorage.getItem("cached_fridge_data");
             if(cached) {
                 try { allData = JSON.parse(cached); renderList(); } catch(e){}
-                refreshData(code, true); // 背景同步
-            } else {
-                refreshData(code, false);
-            }
+                refreshData(code, true);
+            } else { refreshData(code, false); }
         };
     </script>
 </body>
