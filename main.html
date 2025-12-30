@@ -47,7 +47,7 @@
     </div>
 
     <script>
-        var API_URL = "https://script.google.com/macros/s/AKfycbxzPzTYknK48hnF72j18UH2AnTfcom-Cp7mTJ-P6jQU6WDmcSDIdKOENsNf3VDETzmH/exec";
+        var API_URL = "https://script.google.com/macros/s/AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV/exec";
         var allData = [];
 
         function showLoader() { document.getElementById("loader").style.display = "flex"; }
@@ -65,7 +65,7 @@
         function doAdd() {
             var name = document.getElementById("inName").value.trim();
             var date = document.getElementById("inDate").value;
-            if(!name || !date) return alert("必填");
+            if(!name || !date) return alert("必填項目未輸入");
             showLoader();
             var pl = { code: localStorage.getItem("pass_code"), name: name, loc: document.getElementById("inLoc").value, date: date, creator: document.getElementById("inCreator").value, image: "" };
             var f = document.getElementById("fileIn").files[0];
@@ -97,10 +97,10 @@
                     <button style="width:auto; background:none; color:#ccc; border:none; font-size:18px;" onclick="doDel(${item.rowId})">✕</button>
                 </div>`;
             });
-            listDiv.innerHTML = html || "<p style='text-align:center;color:#999'>暫無食材</p>";
+            listDiv.innerHTML = html || "<p style='text-align:center;color:#999'>目前沒有資料</p>";
         }
 
-        function doDel(id) { if(confirm("確定？")) callApi("delete", {id: id}, () => refreshData(localStorage.getItem("pass_code"), false)); }
+        function doDel(id) { if(confirm("確定刪除？")) callApi("delete", {id: id}, () => refreshData(localStorage.getItem("pass_code"), false)); }
 
         function refreshData(code, silent) {
             callApi("getList", {code: code}, res => {
@@ -115,13 +115,18 @@
         window.onload = function() {
             var code = localStorage.getItem("pass_code");
             if(!code) return window.location.href = "index.html";
+            
+            // 💡 修正 147 行錯誤：加入安全性檢查
             var codeEl = document.getElementById("displayCode");
             if(codeEl) codeEl.innerText = code;
 
             var cached = localStorage.getItem("cached_fridge_data");
             if(cached) {
-                try { allData = JSON.parse(cached); renderList(); } catch(e) { allData = []; }
-                refreshData(code, true); // 🚀 速度關鍵：背景偷偷載入，不轉圈圈
+                try { 
+                    allData = JSON.parse(cached); 
+                    renderList(); 
+                } catch(e) { allData = []; }
+                refreshData(code, true); // 背景靜默更新
             } else {
                 refreshData(code, false); 
             }
