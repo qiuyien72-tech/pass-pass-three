@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://script.google.com">
     <title>冰箱小管家 - 登入</title>
     <style>
       body { font-family: -apple-system, sans-serif; background: #f4f7f6; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
@@ -11,13 +10,12 @@
       input, button { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
       button { background: #3498db; color: white; border: none; font-weight: bold; cursor: pointer; }
       .secondary { background: white; color: #3498db; border: 2px dashed #3498db; }
-      #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 100; }
-      .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin-bottom: 10px;}
-      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index: 100; }
+      .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; }
     </style>
 </head>
 <body>
-    <div id="loader"><div class="spinner"></div><div>處理中...</div></div>
+    <div id="loader"><div class="spinner"></div></div>
     <div id="loginBox">
         <h2>📦 冰箱小管家</h2>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase;">
@@ -32,12 +30,10 @@
             var code = document.getElementById("codeIn").value.toUpperCase().trim();
             if(!code) return alert("請輸入代碼");
             document.getElementById("loader").style.display="flex";
-            
             fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "checkCode", code: code }) })
             .then(r => r.json()).then(res => {
                 if(res.valid) {
                     localStorage.setItem("pass_code", code);
-                    // 🚀 速度優化：登入時同步儲存資料
                     if(res.data) localStorage.setItem("cached_fridge_data", JSON.stringify(res.data));
                     window.location.href = "main.html";
                 } else {
@@ -63,4 +59,3 @@
     </script>
 </body>
 </html>
-
