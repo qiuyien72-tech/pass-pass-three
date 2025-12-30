@@ -18,11 +18,11 @@
       .tag { font-size: 11px; padding: 2px 6px; border-radius: 8px; color: white; margin-top: 4px; display: inline-block; }
       .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
       
-      /* 🚀 圖片燈箱 */
+      /* 圖片燈箱 */
       #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
       #imageModal img { max-width: 90%; max-height: 80vh; border-radius: 10px; }
       
-      /* 🚀 強化版 Loader 與文字 */
+      /* 帶文字的 Loader */
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 9999; }
       .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 45px; height: 45px; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
       #loaderText { color: #333; font-weight: bold; font-size: 16px; }
@@ -64,6 +64,7 @@
     </div>
 
     <script>
+        // 🚀 已更新為您的最新連結
         var API_URL = "https://script.google.com/macros/s/AKfycbyLfPZJis94_sHnG93ll4Mop4ud9cCxm0ZiGwzIEZU4sNdHZ33RGLT-kyF4mVkm3JOR/exec";
         var allData = [];
 
@@ -81,7 +82,7 @@
         function callApi(action, payload, cb, silent) {
             payload.action = action;
             if(!silent) {
-                let msg = "正在處理...";
+                let msg = "系統處理中...";
                 if(action === "add") msg = "正在上傳食材與照片...";
                 if(action === "delete") msg = "正在從冰箱移除食材...";
                 if(action === "getList") msg = "正在同步最新清單...";
@@ -102,7 +103,7 @@
             var f = document.getElementById("fileIn").files[0];
             
             if(f) {
-                showLoader("正在編碼並準備上傳圖片..."); // 🚀 針對大圖片的特別提示
+                showLoader("正在編碼並準備上傳圖片...");
                 var r = new FileReader(); r.readAsDataURL(f);
                 r.onload = function(e) { 
                     pl.image = e.target.result.split(",")[1]; 
