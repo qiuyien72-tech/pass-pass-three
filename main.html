@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="preconnect" href="https://script.google.com">
     <title>冰箱小管家 - 主畫面</title>
     <style>
       body { font-family: -apple-system, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
@@ -45,15 +46,20 @@
         var API_URL = "https://script.google.com/macros/s/AKfycbyC4eIGndGgeoXGjByTpoOT4tUTySWQ0hokdCQOXKKnSFUyMYXayz5879WnaZGf-_du/exec";
         var allData = [];
 
+        function showLoader() { 
+            document.getElementById("loader").style.display="flex"; 
+            // 🚀 速度優化：強制 1.2 秒後收起轉圈圈
+            setTimeout(() => { if(allData.length > 0) document.getElementById("loader").style.display="none"; }, 1200);
+        }
+
         function callApi(action, payload, cb, silent) {
             payload.action = action;
-            if(!silent) document.getElementById("loader").style.display="flex";
+            if(!silent) showLoader();
             fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
             .then(r => r.json()).then(res => {
                 document.getElementById("loader").style.display="none";
-                console.log("API 回應 ["+action+"]:", res); // 🚀 加這行，讓您在 F12 看到後端傳什麼
                 cb(res);
-            }).catch(e => { console.error("API 錯誤:", e); document.getElementById("loader").style.display="none"; });
+            }).catch(e => { document.getElementById("loader").style.display="none"; });
         }
 
         function doLogout() { localStorage.clear(); window.location.href = "index.html"; }
@@ -76,14 +82,18 @@
             var key = document.getElementById("search").value.toLowerCase();
             var today = new Date(); today.setHours(0,0,0,0);
             var html = "";
-            var filtered = allData.filter(i => ((i.name||"")+(i.location||"")+(i.creator||"")).toLowerCase().includes(key));
-            console.log("正在渲染資料，數量:", filtered.length);
+            // 🚀 關鍵修正：強制轉為 String() 避免數字搜尋報錯
+            var filtered = allData.filter(i => {
+                var combinedStr = String(i.name || "") + String(i.location || "") + String(i.creator || "");
+                return combinedStr.toLowerCase().includes(key);
+            });
+            
             filtered.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(item => {
                 var d = new Date(item.date);
                 var diff = Math.ceil((d - today)/86400000);
                 var cls = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
                 html += `<div class="card">
-                    <img src="${item.imgUrl || ''}">
+                    <img src="${item.imgUrl || ''}" onclick="window.open(this.src)">
                     <div style="flex:1">
                         <div><b>${item.name}</b> <span style="font-size:12px;color:#6c5ce7">👤 ${item.creator || ''}</span></div>
                         <div style="font-size:13px; color:#666">📍 ${item.location}</div>
@@ -95,13 +105,13 @@
             listDiv.innerHTML = html || "<p style='text-align:center;color:#999'>目前沒有資料</p>";
         }
 
-        function doDel(id) { if(confirm("確定刪除？")) callApi("delete", {id: id}, () => refreshData(localStorage.getItem("pass_code"), false)); }
-
         function refreshData(code, silent) {
             callApi("getList", {code: code}, res => {
                 allData = res.data || [];
                 localStorage.setItem("cached_fridge_data", JSON.stringify(allData));
                 renderList();
+                var hist = [...new Set(allData.map(i => i.creator))].filter(c => c);
+                document.getElementById("cHistory").innerHTML = hist.map(c => `<option value="${c}">`).join("");
             }, silent);
         }
 
@@ -110,6 +120,7 @@
             if(!code) return window.location.href = "index.html";
             var el = document.getElementById("displayCode");
             if(el) el.innerText = code;
+            // 🚀 秒讀：優先抓快取顯示，再背景同步
             var cached = localStorage.getItem("cached_fridge_data");
             if(cached) { try { allData = JSON.parse(cached); renderList(); } catch(e){} refreshData(code, true); }
             else { refreshData(code, false); }
