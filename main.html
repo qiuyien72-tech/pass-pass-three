@@ -1,144 +1,146 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>冰箱小管家 - 主畫面</title>
-    <style>
-      /* 沿用原本 v9.6 的所有樣式 */
-      body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
-      #appSection { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; min-height: 80vh; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-      .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-      .code-tag { background: #eee; padding: 4px 8px; border-radius: 4px; font-size: 14px; font-weight: bold; }
-      input, button { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
-      input[type="date"] { background-color: #fff; cursor: pointer; caret-color: transparent; }
-      button { background: #3498db; color: white; border: none; font-weight: bold; cursor: pointer; }
-      .btn-row { display: flex; gap: 10px; }
-      .card { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 12px; display: flex; align-items: center; background: #fff; }
-      .card img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-right: 12px; }
-      .creator-tag { display: inline-block; font-size: 0.85rem; color: #6c5ce7; background-color: #f0f0ff; padding: 3px 8px; border-radius: 8px; border: 1px solid #d1d8ff; font-weight: bold; }
-      .tag { font-size: 12px; padding: 3px 8px; border-radius: 10px; color: white; display: inline-block; margin-top: 4px; }
-      .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
-      #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
-      #imageModal img { max-width: 90%; max-height: 80vh; }
-      #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 999; }
-      .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; }
-      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
-</head>
-<body>
-    <div id="loader"><div class="spinner"></div><div id="loaderText">載入中...</div></div>
-    
-    <div id="imageModal" onclick="this.style.display='none'"><img id="largeImgDisplay" src=""></div>
+<script>
+    var API_URL = "https://script.google.com/macros/s/AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV/exec";
+    var allData = [];
 
-    <div id="appSection">
-        <div class="header">
-            <div>我的冰箱 <span id="myCode" class="code-tag"></span></div>
-            <button onclick="doLogout()" style="width:auto; padding:5px 12px; margin:0; background:#e74c3c;">登出</button>
-        </div>
+    // 顯示載入動畫
+    function showLoader(t) { 
+        document.getElementById("loader").style.display="flex"; 
+    }
+    // 隱藏載入動畫
+    function hideLoader() { 
+        document.getElementById("loader").style.display="none"; 
+    }
+
+    // 優化後的 API 呼叫
+    function callApi(action, payload, cb, silent) {
+        payload.action = action;
+        if(!silent) showLoader(); 
         
-        <input type="text" id="inCreator" list="creatorHistory" placeholder="👤 購買人">
-        <datalist id="creatorHistory"></datalist>
-        <input type="text" id="inName" placeholder="🍎 食品名稱">
-        <input type="text" id="inLoc" placeholder="🧊 放置位置">
-        <input type="date" id="inDate" onkeydown="return false;" onclick="try{this.showPicker()}catch(e){}">
-        
-        <div class="btn-row">
-             <input type="file" id="fileIn" accept="image/*" style="display:none" onchange="document.getElementById('imgPreview').innerText='已選照片'">
-             <button style="background:#f39c12;" onclick="document.getElementById('fileIn').click()">📷 拍照</button>
-             <button onclick="doAdd()">🚀 加入清單</button>
-        </div>
-        <div id="imgPreview" style="font-size:12px; color:#aaa; text-align:center; margin-bottom:10px;"></div>
-        
-        <input type="text" id="search" placeholder="🔍 搜尋名稱、地點或購買人..." onkeyup="renderList()">
-        <div id="list"></div>
-    </div>
+        fetch(API_URL, { 
+            method: "POST", 
+            body: JSON.stringify(payload) 
+        })
+        .then(r => r.text())
+        .then(txt => {
+            if(!silent) hideLoader();
+            cb(JSON.parse(txt));
+        })
+        .catch(err => {
+            hideLoader();
+            console.error("連線超時，請檢查網路");
+        });
+    }
 
-    <script>
-        var API_URL = "https://script.google.com/macros/s/AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV/exec";
-        var allData = [];
+    function doLogout() { 
+        localStorage.removeItem("pass_code"); 
+        localStorage.removeItem("cached_fridge_data"); // 登出時清空快取
+        window.location.href = "index.html"; 
+    }
 
-        function showLoader(t) { document.getElementById("loader").style.display="flex"; document.getElementById("loaderText").innerText=t; }
-        function hideLoader() { document.getElementById("loader").style.display="none"; }
+    // 新增食品：優化為「不重整頁面」
+    function doAdd() {
+        var name = document.getElementById("inName").value;
+        var date = document.getElementById("inDate").value;
+        if(!name || !date) return alert("名稱與日期必填");
 
-        function callApi(action, payload, cb) {
-            payload.action = action;
-            fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
-            .then(r => r.text()).then(txt => { hideLoader(); cb(JSON.parse(txt)); });
-        }
-
-        function doLogout() { localStorage.removeItem("pass_code"); window.location.href = "index.html"; }
-
-        function doAdd() {
-            var name = document.getElementById("inName").value;
-            var date = document.getElementById("inDate").value;
-            if(!name || !date) return alert("請填寫名稱與日期");
-            
-            showLoader("上傳中...");
-            var pl = { 
-                code: localStorage.getItem("pass_code"), 
-                name: name, 
-                loc: document.getElementById("inLoc").value, 
-                date: date, 
-                creator: document.getElementById("inCreator").value,
-                image: "" 
-            };
-            
-            var file = document.getElementById("fileIn").files[0];
-            if(file) {
-                var reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = function(e) {
-                    pl.image = e.target.result.split(",")[1];
-                    callApi("add", pl, () => location.reload());
-                };
-            } else { callApi("add", pl, () => location.reload()); }
-        }
-
-        function renderList() {
-            var key = document.getElementById("search").value.toLowerCase();
-            var list = document.getElementById("list");
-            list.innerHTML = "";
-            var today = new Date(); today.setHours(0,0,0,0);
-            
-            allData.filter(item => 
-                (item.name+item.location+item.creator).toLowerCase().includes(key)
-            ).sort((a,b) => new Date(a.date) - new Date(b.date))
-            .forEach(item => {
-                var d = new Date(item.date);
-                var diff = Math.ceil((d - today)/86400000);
-                var cls = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
-                list.innerHTML += `
-                    <div class="card">
-                        <img src="${item.imgUrl || ''}" onclick="document.getElementById('largeImgDisplay').src=this.src; document.getElementById('imageModal').style.display='flex'">
-                        <div style="flex:1">
-                            <div><b>${item.name}</b> <span class="creator-tag">👤 ${item.creator || '未註記'}</span></div>
-                            <div style="font-size:13px;color:#666">📍 ${item.location}</div>
-                            <div class="tag ${cls}">${diff < 0 ? '已過期' : '剩 '+diff+' 天'} (${item.date})</div>
-                        </div>
-                        <button style="width:auto; background:none; color:#ccc;" onclick="deleteItem(${item.rowId})">✕</button>
-                    </div>`;
-            });
-        }
-
-        function deleteItem(id) { if(confirm("確定刪除？")) callApi("delete", {id: id}, () => location.reload()); }
-
-        window.onload = function() {
-            var code = localStorage.getItem("pass_code");
-            if(!code || code === "undefined") return window.location.href = "index.html";
-            document.getElementById("myCode").innerText = code;
-            showLoader("讀取清單...");
-            callApi("getList", {code: code}, res => { 
-                allData = res.data || []; 
-                renderList(); 
-                // 更新購買人選單
-                var dl = document.getElementById("creatorHistory");
-                [...new Set(allData.map(i => i.creator))].forEach(c => {
-                    if(c) dl.innerHTML += `<option value="${c}">`;
-                });
-            });
+        showLoader();
+        var pl = { 
+            code: localStorage.getItem("pass_code"), 
+            name: name, 
+            loc: document.getElementById("inLoc").value, 
+            date: date, 
+            creator: document.getElementById("inCreator").value,
+            image: "" 
         };
-    </script>
-</body>
 
-</html>
+        var file = document.getElementById("fileIn").files[0];
+        if(file) {
+            var reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = function(e) {
+                pl.image = e.target.result.split(",")[1];
+                sendData(pl);
+            };
+        } else sendData(pl);
+    }
+
+    function sendData(pl) {
+        callApi("add", pl, function(res) {
+            // 清空輸入框
+            document.getElementById("inName").value = "";
+            document.getElementById("fileIn").value = "";
+            document.getElementById("pText").innerText = "";
+            // 重新整理資料但不重刷頁面
+            refreshData(pl.code);
+        });
+    }
+
+    // 渲染清單 (保持原功能)
+    function renderList() {
+        var key = document.getElementById("search").value.toLowerCase();
+        var list = document.getElementById("list");
+        list.innerHTML = "";
+        var today = new Date(); today.setHours(0,0,0,0);
+
+        allData.filter(i => (i.name + i.location + i.creator).toLowerCase().includes(key))
+        .sort((a,b) => new Date(a.date) - new Date(b.date))
+        .forEach(item => {
+            var d = new Date(item.date);
+            var diff = Math.ceil((d - today)/86400000);
+            var cls = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
+            list.innerHTML += `
+                <div class="card">
+                    <img src="${item.imgUrl || ''}" onclick="window.open(this.src)">
+                    <div style="flex:1">
+                        <div><b>${item.name}</b> <span class="creator-tag">👤 ${item.creator || ''}</span></div>
+                        <div style="font-size:13px; color:#666">📍 ${item.location}</div>
+                        <div class="tag ${cls}">${diff < 0 ? '已過期' : '剩 '+diff+' 天'} (${item.date})</div>
+                    </div>
+                    <button style="width:auto; background:none; color:#ccc;" onclick="doDel(${item.rowId})">✕</button>
+                </div>`;
+        });
+    }
+
+    function doDel(id) { 
+        if(confirm("確定刪除？")) {
+            callApi("delete", {id: id}, function() {
+                refreshData(localStorage.getItem("pass_code"));
+            });
+        }
+    }
+
+    // 核心優化：從伺服器更新資料並存入快取
+    function refreshData(code, silent) {
+        callApi("getList", {code: code}, function(res) {
+            allData = res.data || [];
+            // 存入快取
+            localStorage.setItem("cached_fridge_data", JSON.stringify(allData));
+            renderList();
+            updateCreatorHistory();
+        }, silent);
+    }
+
+    function updateCreatorHistory() {
+        var hist = [...new Set(allData.map(i => i.creator))];
+        document.getElementById("cHistory").innerHTML = hist.map(c => `<option value="${c}">`).join("");
+    }
+
+    window.onload = function() {
+        var code = localStorage.getItem("pass_code");
+        if(!code || code === "undefined") return window.location.href = "index.html";
+        document.getElementById("displayCode").innerText = code;
+
+        // 🚀 速度關鍵：先讀取快取資料
+        var cached = localStorage.getItem("cached_fridge_data");
+        if(cached) {
+            allData = JSON.parse(cached);
+            renderList();
+            updateCreatorHistory();
+            // 在背景靜默更新，不顯示載入圈圈
+            refreshData(code, true);
+        } else {
+            // 若無快取，則顯示載入圈圈強制更新一次
+            refreshData(code, false);
+        }
+    };
+</script>
