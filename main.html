@@ -1,51 +1,51 @@
 <script>
     var API_URL = "https://script.google.com/macros/s/AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV/exec";
-    var allData = [];
+    var allData = []; // 確保初始是陣列
 
-    // 顯示載入動畫
-    function showLoader(t) { 
-        document.getElementById("loader").style.display="flex"; 
-    }
-    // 隱藏載入動畫
-    function hideLoader() { 
-        document.getElementById("loader").style.display="none"; 
-    }
+    function showLoader() { document.getElementById("loader").style.display="flex"; }
+    function hideLoader() { document.getElementById("loader").style.display="none"; }
 
-    // 優化後的 API 呼叫
+    // 核心 API 呼叫：增加錯誤捕獲
     function callApi(action, payload, cb, silent) {
         payload.action = action;
         if(!silent) showLoader(); 
         
         fetch(API_URL, { 
             method: "POST", 
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify(payload) 
         })
         .then(r => r.text())
         .then(txt => {
             if(!silent) hideLoader();
-            cb(JSON.parse(txt));
+            try {
+                var json = JSON.parse(txt);
+                cb(json);
+            } catch(e) {
+                console.error("解析失敗:", txt);
+                if(!silent) alert("系統回應異常，請稍後再試");
+            }
         })
         .catch(err => {
             hideLoader();
-            console.error("連線超時，請檢查網路");
+            console.error("網路連線失敗");
         });
     }
 
     function doLogout() { 
-        localStorage.removeItem("pass_code"); 
-        localStorage.removeItem("cached_fridge_data"); // 登出時清空快取
+        localStorage.clear(); 
         window.location.href = "index.html"; 
     }
 
-    // 新增食品：優化為「不重整頁面」
     function doAdd() {
-        var name = document.getElementById("inName").value;
+        var name = document.getElementById("inName").value.trim();
         var date = document.getElementById("inDate").value;
+        var code = localStorage.getItem("pass_code");
         if(!name || !date) return alert("名稱與日期必填");
 
         showLoader();
         var pl = { 
-            code: localStorage.getItem("pass_code"), 
+            code: code, 
             name: name, 
             loc: document.getElementById("inLoc").value, 
             date: date, 
@@ -61,7 +61,9 @@
                 pl.image = e.target.result.split(",")[1];
                 sendData(pl);
             };
-        } else sendData(pl);
+        } else {
+            sendData(pl);
+        }
     }
 
     function sendData(pl) {
@@ -70,25 +72,40 @@
             document.getElementById("inName").value = "";
             document.getElementById("fileIn").value = "";
             document.getElementById("pText").innerText = "";
-            // 重新整理資料但不重刷頁面
-            refreshData(pl.code);
+            // 成功後重新抓取資料
+            refreshData(pl.code, false); 
         });
     }
 
-    // 渲染清單 (保持原功能)
+    // 核心渲染：增加安全檢查避免頁面空白
     function renderList() {
+        var listDiv = document.getElementById("list");
+        if (!listDiv) return;
+        
         var key = document.getElementById("search").value.toLowerCase();
-        var list = document.getElementById("list");
-        list.innerHTML = "";
         var today = new Date(); today.setHours(0,0,0,0);
 
-        allData.filter(i => (i.name + i.location + i.creator).toLowerCase().includes(key))
-        .sort((a,b) => new Date(a.date) - new Date(b.date))
-        .forEach(item => {
+        // 確保 allData 是陣列
+        if (!Array.isArray(allData)) {
+            listDiv.innerHTML = "<p style='text-align:center; color:#999;'>尚無資料</p>";
+            return;
+        }
+
+        var html = "";
+        var filtered = allData.filter(i => 
+            ( (i.name||"") + (i.location||"") + (i.creator||"") ).toLowerCase().includes(key)
+        ).sort((a,b) => new Date(a.date) - new Date(b.date));
+
+        if (filtered.length === 0) {
+            listDiv.innerHTML = "<p style='text-align:center; color:#999;'>找不到符合的項目</p>";
+            return;
+        }
+
+        filtered.forEach(item => {
             var d = new Date(item.date);
             var diff = Math.ceil((d - today)/86400000);
             var cls = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
-            list.innerHTML += `
+            html += `
                 <div class="card">
                     <img src="${item.imgUrl || ''}" onclick="window.open(this.src)">
                     <div style="flex:1">
@@ -96,24 +113,23 @@
                         <div style="font-size:13px; color:#666">📍 ${item.location}</div>
                         <div class="tag ${cls}">${diff < 0 ? '已過期' : '剩 '+diff+' 天'} (${item.date})</div>
                     </div>
-                    <button style="width:auto; background:none; color:#ccc;" onclick="doDel(${item.rowId})">✕</button>
+                    <button style="width:auto; background:none; color:#ccc; border:none; font-size:18px;" onclick="doDel(${item.rowId})">✕</button>
                 </div>`;
         });
+        listDiv.innerHTML = html;
     }
 
     function doDel(id) { 
         if(confirm("確定刪除？")) {
             callApi("delete", {id: id}, function() {
-                refreshData(localStorage.getItem("pass_code"));
+                refreshData(localStorage.getItem("pass_code"), false);
             });
         }
     }
 
-    // 核心優化：從伺服器更新資料並存入快取
     function refreshData(code, silent) {
         callApi("getList", {code: code}, function(res) {
             allData = res.data || [];
-            // 存入快取
             localStorage.setItem("cached_fridge_data", JSON.stringify(allData));
             renderList();
             updateCreatorHistory();
@@ -121,7 +137,7 @@
     }
 
     function updateCreatorHistory() {
-        var hist = [...new Set(allData.map(i => i.creator))];
+        var hist = [...new Set(allData.map(i => i.creator))].filter(c => c);
         document.getElementById("cHistory").innerHTML = hist.map(c => `<option value="${c}">`).join("");
     }
 
@@ -130,17 +146,16 @@
         if(!code || code === "undefined") return window.location.href = "index.html";
         document.getElementById("displayCode").innerText = code;
 
-        // 🚀 速度關鍵：先讀取快取資料
         var cached = localStorage.getItem("cached_fridge_data");
         if(cached) {
-            allData = JSON.parse(cached);
-            renderList();
-            updateCreatorHistory();
-            // 在背景靜默更新，不顯示載入圈圈
-            refreshData(code, true);
+            try {
+                allData = JSON.parse(cached);
+                renderList();
+                updateCreatorHistory();
+            } catch(e) { allData = []; }
+            refreshData(code, true); // 背景靜默更新
         } else {
-            // 若無快取，則顯示載入圈圈強制更新一次
-            refreshData(code, false);
+            refreshData(code, false); // 強制更新
         }
     };
 </script>
