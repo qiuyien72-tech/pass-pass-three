@@ -13,7 +13,7 @@
       button:active { transform: scale(0.98); }
       .secondary { background: white; color: #3498db; border: 2px dashed #3498db; }
       
-      /* 帶文字的 Loader 樣式 */
+      /* Loader 樣式 */
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 1000; }
       .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 45px; height: 45px; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
       #loaderText { color: #555; font-weight: bold; font-size: 16px; letter-spacing: 1px; }
@@ -34,7 +34,6 @@
     </div>
 
     <script>
-        // 🚀 已更新為您的最新連結
         var API_URL = "https://script.google.com/macros/s/AKfycbyLfPZJis94_sHnG93ll4Mop4ud9cCxm0ZiGwzIEZU4sNdHZ33RGLT-kyF4mVkm3JOR/exec";
 
         function showLoader(text) {
@@ -43,30 +42,46 @@
         }
         function hideLoader() { document.getElementById("loader").style.display = "none"; }
 
+        // 🚀 建立一個承諾：至少等待 ms 毫秒
+        function wait(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
         function doLogin() {
             var code = document.getElementById("codeIn").value.toUpperCase().trim();
             if(!code) return alert("請輸入代碼");
             
             showLoader("正在驗證身份...");
-            fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "checkCode", code: code }) })
-            .then(r => r.json()).then(res => {
+
+            // 🚀 並行執行：請求資料 + 等待1秒
+            Promise.all([
+                fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "checkCode", code: code }) }).then(r => r.json()),
+                wait(1000) // 強制轉 1 秒
+            ])
+            .then(([res, _]) => {
                 if(res.valid) {
-                    showLoader("驗證成功，正在同步冰箱...");
+                    showLoader("驗證成功！正在開啟冰箱...");
                     localStorage.setItem("pass_code", code);
                     if(res.data) localStorage.setItem("cached_fridge_data", JSON.stringify(res.data));
-                    window.location.href = "main.html";
+                    // 再給使用者 0.5 秒看清楚「驗證成功」這行字，體驗更好
+                    setTimeout(() => window.location.href = "main.html", 500);
                 } else {
                     hideLoader();
                     alert("❌ 代碼錯誤");
                 }
-            }).catch(e => { hideLoader(); alert("連線失敗"); });
+            })
+            .catch(e => { hideLoader(); alert("連線失敗"); });
         }
 
         function doRegister() {
             showLoader("正在向 Google 申請新代碼...");
-            fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "register" }) })
-            .then(r => r.json()).then(res => {
-                showLoader("建立成功！準備開啟冰箱...");
+            
+            Promise.all([
+                fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "register" }) }).then(r => r.json()),
+                wait(1000)
+            ])
+            .then(([res, _]) => {
+                showLoader("建立成功！準備進入...");
                 localStorage.setItem("pass_code", res.code);
                 alert("註冊成功！您的專屬代碼是: " + res.code);
                 window.location.href = "main.html";
