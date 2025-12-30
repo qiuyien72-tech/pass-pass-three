@@ -2,172 +2,58 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>pass pass</title>
-    
-    <script>
-        // 錯誤攔截
-        window.onerror = function(msg, url, line) {
-            console.error("系統錯誤: " + msg);
-            return false;
-        };
-    </script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>冰箱小管家 - 登入</title>
     <style>
-      body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
-      #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; }
-      .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin-bottom:15px; }
-      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-      #loginSection { max-width: 350px; margin: 40px auto; background: white; padding: 40px 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+      body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f7f6; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
+      #loginSection { max-width: 350px; width: 90%; background: white; padding: 40px 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
       h2 { margin-top: 0; color: #2c3e50; }
-      
-      input, button, select { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
-      
-      /* 強制日曆輸入框樣式 */
-      input[type="date"] {
-          background-color: #fff;
-          cursor: pointer; 
-          caret-color: transparent;
-      }
-
+      input, button { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
       button { background: #3498db; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
       button:active { transform: scale(0.98); }
-      button.secondary { background: white; color: #3498db; border: 2px dashed #3498db; }
-      #appSection { display: none; max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; min-height: 80vh; }
-      .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-      .code-tag { background: #eee; padding: 4px 8px; border-radius: 4px; font-size: 14px; font-weight: bold; color: #555; }
-      .btn-row { display: flex; gap: 10px; }
-      
-      /* 卡片樣式 */
-      .card { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 12px; display: flex; align-items: center; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-      .card img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-right: 12px; background: #f0f0f0; cursor: zoom-in; transition: transform 0.2s; }
-      .card img:active { transform: scale(0.95); }
-      
-      .tag { font-size: 12px; padding: 3px 8px; border-radius: 10px; color: white; display: inline-block; margin-top: 4px; font-weight: bold; }
-      .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
-      
-      /* 購買人標籤樣式 */
-      .creator-tag {
-          display: inline-block;
-          font-size: 0.85rem;
-          color: #6c5ce7;
-          background-color: #f0f0ff;
-          padding: 3px 8px;
-          border-radius: 8px;
-          margin-left: 0px; 
-          margin-bottom: 4px;
-          border: 1px solid #d1d8ff;
-          font-weight: bold;
-      }
-      
-      .food-name-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 2px; }
-      .food-name-text { font-size: 1.1rem; font-weight: bold; color: #2c3e50; }
-
-      .date-group { margin-bottom: 15px; }
-      .date-group input { margin-bottom: 0; width: 100%; }
-      
-      .search-wrapper { position: relative; margin-bottom: 15px; }
-      #search { border-radius: 30px !important; border: 2px solid #3498db !important; background-color: #f0f8ff !important; padding-left: 20px; margin-bottom: 0; color: #333; font-weight: bold; }
-      
-      #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; backdrop-filter: blur(5px); }
-      #imageModal img { max-width: 95%; max-height: 80vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); object-fit: contain; }
-      #modalClose { margin-top: 20px; color: white; background: rgba(255,255,255,0.2); border: 1px solid white; padding: 8px 20px; border-radius: 20px; cursor: pointer; }
-      #sync-status { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #aaa; background: rgba(255,255,255,0.8); padding: 2px 5px; border-radius: 4px; pointer-events: none; }
+      .secondary { background: white; color: #3498db; border: 2px dashed #3498db; }
+      #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; flex-direction:column; }
+      .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin-bottom:15px; }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-
-    <div id="loader"><div class="spinner"></div><div id="loaderText">連線中...</div></div>
-    <div id="sync-status"></div>
-
-    <div id="imageModal" onclick="closeLargeImg()">
-        <img id="largeImgDisplay" src="">
-        <div id="modalClose">✕ 關閉圖片</div>
-    </div>
+    <div id="loader"><div class="spinner"></div><div id="loaderText">驗證中...</div></div>
 
     <div id="loginSection">
-        <h2>pass pass</h2>
+        <h2>📦 冰箱小管家</h2>
         <input type="text" id="codeIn" placeholder="輸入您的代碼" style="text-align:center; text-transform:uppercase;">
         <button onclick="doLogin()">🚀 登入</button>
         <button class="secondary" onclick="doRegister()">🎲 產生新代碼</button>
     </div>
 
-    <div id="appSection">
-        <div class="header">
-            <div>我的庫存 <span id="myCode" class="code-tag"></span></div>
-            <button onclick="doLogout()" style="width:auto; padding:5px 12px; margin:0; background:#e74c3c; font-size:13px;">登出</button>
-        </div>
-        
-        <input type="text" id="inCreator" list="creatorHistory" placeholder="👤 購買人 (例如: 媽媽, 小明)">
-        <datalist id="creatorHistory"></datalist>
-
-        <input type="text" id="inName" placeholder="🆔️物品名稱">
-        <input type="text" id="inLoc" placeholder="📍放置位置">
-        
-        <div class="date-group">
-            <input type="date" id="inDate" onkeydown="return false;" onclick="try{this.showPicker()}catch(e){}" required>
-            <div style="font-size:12px; color:#999; margin-top:5px; text-align:center;">請點擊上方選取日期</div>
-        </div>
-        
-        <div class="btn-row">
-             <input type="file" id="fileIn" accept="image/*" style="display:none" onchange="previewImg(this)">
-             <button style="background:#f39c12;" onclick="document.getElementById('fileIn').click()">📷 照片</button>
-             <button onclick="doAdd()">🚀 加入清單</button>
-        </div>
-        <div id="imgPreview" style="font-size:12px; color:#aaa; text-align:center; margin-bottom:10px;"></div>
-        <hr style="border:0; border-top:1px solid #eee; margin: 20px 0;">
-        <div class="search-wrapper">
-            <input type="text" id="search" placeholder="🔍 搜尋名稱或地點..." onkeyup="renderList()">
-        </div>
-        <div id="list"></div>
-    </div>
-
     <script>
-        // ✅ ⚠️請務必檢查這行網址是否為最新部署的網址！⚠️
-        var urlParts = [
-            "https://script.google.com/macros/s/AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV/exec"
-        ];
-        var API_URL = urlParts.join("");
+        // 請務必確認 API 網址正確
+        var API_URL = "https://script.google.com/macros/s/AKfycbxopM8pW0eTWY0cQPzhcYvsb8S27Uh3DITiEhq8wVU1JvbtIkte18hYvK49WdrNCGLV/exec";
 
-        // 系統功能
-        function showLargeImg(url) { if(!url) return; document.getElementById("largeImgDisplay").src = url; document.getElementById("imageModal").style.display = "flex"; }
-        function closeLargeImg() { document.getElementById("imageModal").style.display = "none"; }
-        function previewImg(i) { if(i.files[0]) document.getElementById("imgPreview").innerText = "已選: "+i.files[0].name; }
         function showLoader(t) { document.getElementById("loader").style.display="flex"; document.getElementById("loaderText").innerText=t; }
         function hideLoader() { document.getElementById("loader").style.display="none"; }
 
-        // ✅ 使用 fetch 確保 GitHub Pages 可連線
         function callApi(action, payload, cb) {
             payload.action = action;
             fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify(payload)
-            }).then(function(r){ return r.text(); })
-              .then(function(txt){
-                  if(!payload.silent) hideLoader();
-                  try {
-                      var data = JSON.parse(txt);
-                      cb(data);
-                  } catch(e) { 
-                      alert("API 回傳錯誤：\n" + e.message); 
-                      console.log(txt);
-                  }
-              })
-              .catch(function(err){
-                  if(!payload.silent) hideLoader();
-                  alert("連線失敗，請檢查網路。\n" + err);
-              });
+            }).then(r => r.text()).then(txt => {
+                hideLoader();
+                try { cb(JSON.parse(txt)); } catch(e) { alert("錯誤：" + txt); }
+            }).catch(err => { hideLoader(); alert("連線失敗"); });
         }
 
         function doLogin() {
             var code = document.getElementById("codeIn").value.toUpperCase().trim();
             if(!code) return alert("請輸入代碼");
-            showLoader("驗證中...");
+            showLoader("登入中...");
             callApi("checkCode", {code: code}, function(res){
                 if(res.valid) {
                     localStorage.setItem("pass_code", code);
-                    enterApp(code);
+                    window.location.href = "main.html"; // 跳轉至主畫面
                 } else alert("❌ 代碼錯誤");
             });
         }
@@ -176,188 +62,17 @@
             showLoader("註冊中...");
             callApi("register", {}, function(res){
                 localStorage.setItem("pass_code", res.code);
-                alert("代碼: " + res.code);
-                enterApp(res.code);
+                alert("您的代碼是: " + res.code);
+                window.location.href = "main.html";
             });
-        }
-
-        function enterApp(code, useCache) {
-            // 自動修復登入狀態
-            if (!code || code === "undefined" || code === "null") {
-                localStorage.removeItem("pass_code");
-                location.reload();
-                return;
-            }
-
-            document.getElementById("loginSection").style.display = "none";
-            document.getElementById("appSection").style.display = "block";
-            document.getElementById("myCode").innerText = code;
-            
-            if(!useCache) refreshList(code); else renderList();
-        }
-
-        function doLogout() {
-            if(confirm("登出？")) { localStorage.removeItem("pass_code"); location.reload(); }
-        }
-
-        function doAdd() {
-            var creator = document.getElementById("inCreator").value.trim();
-            var name = document.getElementById("inName").value;
-            var loc = document.getElementById("inLoc").value;
-            var date = document.getElementById("inDate").value; 
-            var file = document.getElementById("fileIn").files[0];
-            var code = document.getElementById("myCode").innerText;
-
-            if(!name || !date) return alert("請填寫名稱與日期");
-            
-            var year = parseInt(date.split('-')[0]);
-            if (year < 2000 || year > 2100) {
-              alert("日期範圍限制在 2000~2100 年");
-              return;
-            }
-
-            // 更新智慧選單
-            if(creator) {
-                var dl = document.getElementById("creatorHistory");
-                var exists = false;
-                for(var i=0; i<dl.options.length; i++) { if(dl.options[i].value == creator) exists = true; }
-                if(!exists) {
-                    var op = document.createElement("option");
-                    op.value = creator;
-                    dl.appendChild(op);
-                }
-            }
-
-            showLoader("儲存中...");
-            
-            var pl = { code: code, name: name, loc: loc, date: date, creator: creator, image: "" };
-            
-            if(file) {
-                var reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = function(e) {
-                    pl.image = e.target.result.split(",")[1];
-                    sendAdd(pl);
-                };
-            } else { sendAdd(pl); }
-        }
-
-        function sendAdd(pl) {
-            callApi("add", pl, function(res){
-                document.getElementById("inName").value = "";
-                document.getElementById("inDate").value = "";
-                document.getElementById("fileIn").value = "";
-                document.getElementById("imgPreview").innerText = "";
-                refreshList(pl.code);
-            });
-        }
-
-        function deleteItem(id) {
-            if(!confirm("刪除？")) return;
-            showLoader("刪除中...");
-            callApi("delete", {id: id}, function(){
-                 refreshList(document.getElementById("myCode").innerText);
-            });
-        }
-
-        function refreshList(code, isSilent) {
-            var c = code || document.getElementById("myCode").innerText;
-            if(isSilent) document.getElementById("sync-status").innerText = "🔄 更新中..."; else showLoader("讀取中...");
-
-            callApi("getList", {code: c, silent: isSilent}, function(res){
-                allData = res.data || [];
-                var cacheKey = "fridge_data_" + c;
-                localStorage.setItem(cacheKey, JSON.stringify(allData));
-                
-                // 更新智慧記憶選單
-                updateCreatorHistory(allData);
-                
-                renderList();
-                document.getElementById("sync-status").innerText = "✅ 已同步";
-                setTimeout(function(){ document.getElementById("sync-status").innerText = ""; }, 2000);
-            });
-        }
-
-        function updateCreatorHistory(data) {
-            var dl = document.getElementById("creatorHistory");
-            var history = new Set();
-            for(var i=0; i<dl.options.length; i++) history.add(dl.options[i].value);
-            data.forEach(item => { if(item.creator) history.add(item.creator); });
-            
-            dl.innerHTML = "";
-            history.forEach(c => {
-                var op = document.createElement("option");
-                op.value = c;
-                dl.appendChild(op);
-            });
-        }
-        
-        let allData = [];
-        function renderList() {
-            var key = document.getElementById("search").value.toLowerCase();
-            var list = document.getElementById("list");
-            list.innerHTML = "";
-            var today = new Date(); today.setHours(0,0,0,0);
-            var hasData = false; 
-
-            allData.sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
-
-            allData.forEach(function(item){
-                var n = String(item.name || "").toLowerCase();
-                var l = String(item.location || "").toLowerCase();
-                var c = String(item.creator || "").toLowerCase(); 
-                
-                if(key && !n.includes(key) && !l.includes(key) && !c.includes(key)) return;
-                
-                hasData = true;
-                var d = new Date(item.date);
-                var diff = Math.ceil((d - today)/86400000);
-                var cls = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
-                var txt = diff < 0 ? "過期 "+Math.abs(diff)+" 天" : "剩 "+diff+" 天";
-                var img = item.imgUrl ? `<img src="${item.imgUrl}" onclick="showLargeImg('${item.imgUrl}')">` : `<div style="width:60px;height:60px;background:#eee;margin-right:12px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;">無圖</div>`;
-                var delBtn = `<button style="width:auto;background:none;color:#aaa;padding:5px;" onclick="deleteItem(${item.rowId})">✕</button>`;
-                
-                // 購買人顯示區
-                var creatorHtml = item.creator ? `<span class="creator-tag">👤 ${item.creator}</span>` : "";
-
-                list.innerHTML += `
-                <div class="card">
-                    ${img}
-                    <div style="flex:1">
-                        <div class="food-name-row">
-                            <span class="food-name-text">${item.name}</span>
-                            ${creatorHtml}
-                        </div>
-                        <div style="font-size:13px;color:#666">📍 ${item.location}</div>
-                        <div class="tag ${cls}">${txt}</div>
-                        <div style="font-size:12px;color:#aaa;margin-top:2px;">${item.date}</div>
-                    </div>
-                    ${delBtn}
-                </div>`;
-            });
-
-            if (!hasData) list.innerHTML = `<div style="text-align:center; padding:30px; color:#aaa;">📭 找不到相關物品</div>`;
         }
 
         window.onload = function() {
-            try {
-                // 自動修復壞掉的登入資料
-                var savedCode = localStorage.getItem("pass_code");
-                if (savedCode === "undefined" || savedCode === "null") {
-                    localStorage.removeItem("pass_code");
-                    savedCode = null;
-                }
-
-                if (savedCode) {
-                    showLoader("自動登入中...");
-                    callApi("checkCode", {code: savedCode}, function(res) {
-                        if (res && res.valid) enterApp(savedCode);
-                        else { localStorage.removeItem("pass_code"); hideLoader(); }
-                    });
-                }
-            } catch (e) { console.error("Start Error: " + e.message); }
+            var savedCode = localStorage.getItem("pass_code");
+            if (savedCode && savedCode !== "undefined") {
+                window.location.href = "main.html"; // 已登入則直接跳轉
+            }
         };
     </script>
 </body>
 </html>
-
