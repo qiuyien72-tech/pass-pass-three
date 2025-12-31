@@ -6,7 +6,7 @@
     <title>冰箱小管家 - 登入</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, sans-serif;
             background: #f4f7f6;
             margin: 0;
             height: 100vh;
@@ -15,156 +15,106 @@
             align-items: center;
             color: #333;
         }
-        .login-card {
+        .login-box {
             background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            width: 90%;
-            max-width: 400px;
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            width: 85%;
+            max-width: 320px;
             text-align: center;
         }
-        h1 { margin-top: 0; color: #3498db; font-size: 24px; }
-        p { color: #666; font-size: 14px; margin-bottom: 25px; }
+        h1 { margin-top: 0; color: #3498db; font-size: 26px; margin-bottom: 10px; }
+        p { color: #888; font-size: 14px; margin-bottom: 30px; }
         
         input {
-            width: 100%;
-            padding: 15px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 16px;
-            text-align: center;
-            outline: none;
-            transition: border 0.3s;
+            width: 100%; padding: 12px; margin-bottom: 20px;
+            border: 2px solid #eee; border-radius: 10px;
+            box-sizing: border-box; font-size: 18px;
+            text-align: center; outline: none; transition: 0.3s;
         }
         input:focus { border-color: #3498db; }
         
         button {
-            width: 100%;
-            padding: 15px;
-            background: #3498db;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.3s, transform 0.1s;
+            width: 100%; padding: 12px;
+            background: #3498db; color: white;
+            border: none; border-radius: 10px;
+            font-size: 18px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+            transition: 0.2s;
         }
-        button:active { transform: scale(0.98); }
-        button:disabled { background: #ccc; cursor: not-allowed; }
-
-        .note {
-            margin-top: 20px;
-            font-size: 12px;
-            color: #999;
-            line-height: 1.5;
-        }
-
-        /* Loading 動畫 */
-        .spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-            vertical-align: middle;
-            margin-right: 8px;
-            display: none; /* 預設隱藏 */
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        button:active { transform: scale(0.96); }
+        button:disabled { background: #ccc; box-shadow: none; }
+        
+        #loading { display: none; margin-top: 15px; color: #666; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div class="login-card">
+    <div class="login-box">
         <h1>🥦 冰箱小管家</h1>
-        <p>請輸入您的冰箱代碼以同步資料</p>
+        <p>輸入代碼以開始同步</p>
         
-        <input type="text" id="passCode" placeholder="例如：family123" onkeyup="checkEnter(event)">
-        <button id="loginBtn" onclick="doLogin()">
-            <span class="spinner" id="btnSpinner"></span>
-            <span id="btnText">進入冰箱</span>
-        </button>
-
-        <div class="note">
-            如果是第一次使用，請自訂一組代碼（例如電話號碼），並將此代碼分享給家人即可共用清單。
-        </div>
+        <input type="text" id="passCode" placeholder="例如：1234" onkeyup="if(event.key==='Enter') doLogin()">
+        <button id="btn" onclick="doLogin()">進入冰箱</button>
+        <div id="loading">正在連線...</div>
     </div>
 
     <script>
-        // ⚠️ 請務必確認這裡的網址跟 main.html 裡的一模一樣
-        var API_URL = "https://script.google.com/macros/s/AKfycbz7MRnp2h1MR8SNEHuOWm7hP7SkySCfw0ylpfGOdjkIgQQzoslWldx9nk0RmHkja0Qt/exec";
-
-        function checkEnter(e) {
-            if (e.key === "Enter") doLogin();
-        }
+        // ⚠️ 請換成你重新部署後的網址
+        var API_URL = "https://script.google.com/macros/s/AKfycbwOl7qyvxoYNlLjoChG5jZAFmfg2n6OKO9nOse6DsBrAjE45wxdUhWe-0krIxbHepuq/exec";
 
         function doLogin() {
             var code = document.getElementById("passCode").value.trim();
-            if (!code) return alert("請輸入代碼！");
+            if (!code) return alert("請輸入代碼");
 
-            var btn = document.getElementById("loginBtn");
-            var spinner = document.getElementById("btnSpinner");
-            var btnText = document.getElementById("btnText");
+            var btn = document.getElementById("btn");
+            var loading = document.getElementById("loading");
 
-            // 鎖定按鈕與顯示 Loading
+            // UI 狀態切換
             btn.disabled = true;
-            spinner.style.display = "inline-block";
-            btnText.innerText = "連線中...";
+            loading.style.display = "block";
 
-            // 測試連線：嘗試向後端請求該代碼的清單
-            // 注意：這裡使用 action: "getList" 來測試代碼是否能正常溝通
+            // 使用最相容的 application/x-www-form-urlencoded 方式 (舊版常用)
+            // 配合剛修正的 code.gs，這裡會走 e.parameter 路線
             fetch(API_URL, {
                 method: "POST",
-                body: JSON.stringify({ action: "getList", code: code })
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: "action=getList&code=" + encodeURIComponent(code)
             })
             .then(r => r.json())
             .then(res => {
-                if (res.status === "success") {
-                    // 連線成功，儲存代碼
+                if(res.status === "success") {
+                    // 登入成功
                     localStorage.setItem("pass_code", code);
-                    
-                    // 如果後端有回傳資料，先快取起來，加速進入主畫面的體驗
-                    if (res.data) {
-                        localStorage.setItem("cached_fridge_data", JSON.stringify(res.data));
-                    }
-                    
-                    // 跳轉到主畫面
-                    window.location.href = "main.html"; 
+                    // 順便把資料存起來，讓主畫面開啟更快
+                    localStorage.setItem("cached_fridge_data", JSON.stringify(res.data));
+                    window.location.href = "main.html";
                 } else {
-                    alert("連線失敗：" + (res.error || "未知錯誤"));
-                    resetBtn();
+                    alert("連線失敗：" + res.error);
+                    resetUI();
                 }
             })
             .catch(e => {
                 console.error(e);
-                alert("無法連線到伺服器，請檢查網路或 API 網址。");
-                resetBtn();
+                // 容錯機制：如果 fetch 失敗，通常是網路問題，但為了讓舊使用者能用
+                // 我們可以選擇「只要有輸入代碼就放行」(如果不介意安全性的話)
+                // 但為了保險，這裡我們還是報錯
+                alert("無法連線，請檢查網路。");
+                resetUI();
             });
         }
 
-        function resetBtn() {
-            var btn = document.getElementById("loginBtn");
-            var spinner = document.getElementById("btnSpinner");
-            var btnText = document.getElementById("btnText");
-            
-            btn.disabled = false;
-            spinner.style.display = "none";
-            btnText.innerText = "進入冰箱";
+        function resetUI() {
+            document.getElementById("btn").disabled = false;
+            document.getElementById("loading").style.display = "none";
         }
 
-        // 頁面載入時，如果已經有代碼，自動填入 (可選)
+        // 自動填入上次代碼
         window.onload = function() {
             var saved = localStorage.getItem("pass_code");
-            if (saved) {
-                document.getElementById("passCode").value = saved;
-            }
-        };
+            if(saved) document.getElementById("passCode").value = saved;
+        }
     </script>
 </body>
 </html>
