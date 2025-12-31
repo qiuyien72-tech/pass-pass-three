@@ -22,7 +22,7 @@
       #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
       #imageModal img { max-width: 90%; max-height: 80vh; border-radius: 10px; }
       
-      /* Loader */
+      /* 極速 Loader */
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 9999; }
       .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 45px; height: 45px; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
       #loaderText { color: #333; font-weight: bold; font-size: 16px; }
@@ -32,7 +32,7 @@
 <body>
     <div id="loader">
         <div class="spinner"></div>
-        <div id="loaderText">正在連線...</div>
+        <div id="loaderText">連線中...</div>
     </div>
     
     <div id="imageModal" onclick="this.style.display='none'">
@@ -64,7 +64,6 @@
     </div>
 
     <script>
-        // 🚀 最新連結
         var API_URL = "https://script.google.com/macros/s/AKfycbyLfPZJis94_sHnG93ll4Mop4ud9cCxm0ZiGwzIEZU4sNdHZ33RGLT-kyF4mVkm3JOR/exec";
         var allData = [];
 
@@ -81,26 +80,15 @@
 
         function callApi(action, payload, cb, silent) {
             payload.action = action;
-            
-            // 🚀 極速邏輯：顯示Loader後，資料一回來立刻隱藏
             if(!silent) {
-                let msg = "系統處理中...";
-                if(action === "add") msg = "正在上傳...";
-                if(action === "delete") msg = "正在刪除...";
+                let msg = "處理中...";
+                if(action === "add") msg = "正在極速寫入...";
+                if(action === "delete") msg = "正在極速刪除...";
                 if(action === "getList") msg = "同步中...";
                 showLoader(msg);
             }
-            
             fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
-            .then(r => r.json())
-            .then(res => {
-                hideLoader(); // 收到回應，秒關閉
-                cb(res);
-            })
-            .catch(e => {
-                hideLoader();
-                console.error(e);
-            });
+            .then(r => r.json()).then(res => { hideLoader(); cb(res); }).catch(e => { hideLoader(); console.error(e); });
         }
 
         function doLogout() { localStorage.clear(); window.location.href = "index.html"; }
@@ -116,17 +104,36 @@
             if(f) {
                 showLoader("圖片編碼中...");
                 var r = new FileReader(); r.readAsDataURL(f);
-                r.onload = function(e) { 
-                    pl.image = e.target.result.split(",")[1]; 
-                    send(pl); 
-                };
+                r.onload = function(e) { pl.image = e.target.result.split(",")[1]; send(pl); };
             } else send(pl);
         }
-        function send(pl) { callApi("add", pl, () => { 
-            document.getElementById("inName").value = ""; 
-            document.getElementById("pText").innerText = "";
-            refreshData(pl.code, false); 
-        }); }
+
+        function send(pl) { 
+            // 🚀 加速邏輯：後端這次會直接回傳 data，不用再呼叫 refreshData
+            callApi("add", pl, (res) => { 
+                document.getElementById("inName").value = ""; 
+                document.getElementById("pText").innerText = "";
+                updateLocalData(res.data);
+            }); 
+        }
+
+        function doDel(id) { 
+            if(confirm("確定要刪除嗎？")) {
+                var code = localStorage.getItem("pass_code");
+                // 🚀 加速邏輯：直接把 code 傳給後端，後端刪完順便回傳新清單
+                callApi("delete", { id: id, code: code }, function(res) {
+                    updateLocalData(res.data);
+                });
+            }
+        }
+
+        function updateLocalData(newData) {
+            allData = newData || [];
+            localStorage.setItem("cached_fridge_data", JSON.stringify(allData));
+            renderList();
+            var hist = [...new Set(allData.map(i => i.creator))].filter(c => c);
+            document.getElementById("cHistory").innerHTML = hist.map(c => `<option value="${c}">`).join("");
+        }
 
         function renderList() {
             var listDiv = document.getElementById("list");
@@ -155,25 +162,8 @@
             listDiv.innerHTML = html || "<p style='text-align:center;color:#999'>目前沒有食品資料</p>";
         }
 
-        function doDel(id) { 
-            if(confirm("確定要刪除嗎？")) {
-                callApi("delete", { id: id }, function(res) {
-                    if(res.status === "Deleted") {
-                        localStorage.removeItem("cached_fridge_data");
-                        refreshData(localStorage.getItem("pass_code"), false);
-                    }
-                });
-            }
-        }
-
         function refreshData(code, silent) {
-            callApi("getList", {code: code}, res => {
-                allData = res.data || [];
-                localStorage.setItem("cached_fridge_data", JSON.stringify(allData));
-                renderList();
-                var hist = [...new Set(allData.map(i => i.creator))].filter(c => c);
-                document.getElementById("cHistory").innerHTML = hist.map(c => `<option value="${c}">`).join("");
-            }, silent);
+            callApi("getList", {code: code}, res => updateLocalData(res.data), silent);
         }
 
         window.onload = function() {
@@ -185,7 +175,7 @@
                 try { allData = JSON.parse(cached); renderList(); } catch(e){}
                 refreshData(code, true);
             } else {
-                refreshData(code, false); // 首次載入正常顯示轉圈
+                refreshData(code, false);
             }
         };
     </script>
