@@ -12,8 +12,13 @@
       input, button { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
       button { background: #3498db; color: white; border: none; font-weight: bold; cursor: pointer; }
       .btn-row { display: flex; gap: 8px; }
+      
+      /* 卡片樣式 */
       .card { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 12px; display: flex; align-items: center; background: #fff; position: relative; transition: all 0.3s ease; }
+      /* 臨時新增的卡片會有閃爍特效 */
+      .card.temp-item { border: 2px solid #f39c12; background: #fffdf5; }
       .card img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-right: 12px; cursor: pointer; background: #eee; }
+      
       .creator-tag { font-size: 12px; color: #6c5ce7; background: #f0f0ff; padding: 2px 6px; border-radius: 6px; font-weight: bold; }
       .tag { font-size: 11px; padding: 2px 6px; border-radius: 8px; color: white; margin-top: 4px; display: inline-block; }
       .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
@@ -22,7 +27,7 @@
       #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
       #imageModal img { max-width: 90%; max-height: 80vh; border-radius: 10px; }
       
-      /* Loader */
+      /* Loader (保留但只在非靜默模式顯示) */
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 9999; }
       .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 45px; height: 45px; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
       #loaderText { color: #333; font-weight: bold; font-size: 16px; }
@@ -78,7 +83,6 @@
             document.getElementById("imageModal").style.display = "flex";
         }
 
-        // 🚀 圖片壓縮核心函數
         function compressImage(file) {
             return new Promise((resolve) => {
                 var reader = new FileReader();
@@ -88,16 +92,13 @@
                     img.src = event.target.result;
                     img.onload = function() {
                         var canvas = document.createElement('canvas');
-                        var MAX_WIDTH = 800; // 限制最大寬度 800px (原圖可能 4000px)
+                        var MAX_WIDTH = 800; 
                         var scaleSize = MAX_WIDTH / img.width;
                         if (scaleSize > 1) scaleSize = 1;
-                        
                         canvas.width = img.width * scaleSize;
                         canvas.height = img.height * scaleSize;
-                        
                         var ctx = canvas.getContext("2d");
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        // 輸出品質設定為 0.7 (兼顧清晰度與大小)
                         resolve(canvas.toDataURL("image/jpeg", 0.7).split(",")[1]); 
                     }
                 }
@@ -108,9 +109,9 @@
             payload.action = action;
             if(!silent) {
                 let msg = "處理中...";
-                if(action === "add") msg = "正在極速上傳...";
                 if(action === "delete") msg = "正在同步...";
                 if(action === "getList") msg = "同步中...";
+                // 🚀 注意：新增動作改成 silent 模式了，所以這裡不會顯示 Loader
                 showLoader(msg);
             }
             fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
@@ -122,45 +123,65 @@
 
         function doLogout() { localStorage.clear(); window.location.href = "index.html"; }
 
+        // 🚀 核心優化：樂觀新增
         function doAdd() {
             var name = document.getElementById("inName").value.trim();
             var date = document.getElementById("inDate").value;
+            var loc = document.getElementById("inLoc").value;
+            var creator = document.getElementById("inCreator").value;
+            
             if(!name || !date) return alert("必填項目未輸入");
             
-            var pl = { code: localStorage.getItem("pass_code"), name: name, loc: document.getElementById("inLoc").value, date: date, creator: document.getElementById("inCreator").value, image: "" };
+            var pl = { code: localStorage.getItem("pass_code"), name: name, loc: loc, date: date, creator: creator, image: "" };
             var file = document.getElementById("fileIn").files[0];
             
+            // 定義一個內部函數來執行「先顯示、後上傳」
+            var executeAdd = (base64Img) => {
+                // 1. 準備一個「臨時物件」
+                var tempId = Date.now(); // 用時間當作臨時 ID
+                var tempItem = {
+                    rowId: tempId, 
+                    name: name, 
+                    location: loc, 
+                    date: date, 
+                    creator: creator, 
+                    imgUrl: base64Img ? "data:image/jpeg;base64," + base64Img : "", // 直接用 Base64 顯示
+                    isTemp: true // 標記為臨時
+                };
+
+                // 2. 立刻插入陣列最前面 (樂觀更新)
+                allData.unshift(tempItem);
+                renderList(); 
+                
+                // 3. 清空輸入框 (使用者覺得做完了)
+                document.getElementById("inName").value = ""; 
+                document.getElementById("pText").innerText = "";
+                document.getElementById("fileIn").value = "";
+
+                // 4. 背景偷偷上傳 (silent=true)
+                pl.image = base64Img || "";
+                callApi("add", pl, (res) => {
+                    // 5. 上傳成功後，用伺服器回傳的「正式資料」替換掉「臨時資料」
+                    updateLocalData(res.data);
+                }, true);
+            };
+
             if(file) {
-                showLoader("正在壓縮圖片..."); // 提示使用者正在壓縮
-                compressImage(file).then(base64 => {
-                    pl.image = base64;
-                    send(pl);
-                });
+                // 如果有圖片，這裡稍微會卡一下(壓縮)，但比上傳快多了
+                compressImage(file).then(base64 => executeAdd(base64));
             } else {
-                send(pl);
+                executeAdd("");
             }
         }
 
-        function send(pl) { 
-            callApi("add", pl, (res) => { 
-                document.getElementById("inName").value = ""; 
-                document.getElementById("pText").innerText = "";
-                // 成功後，更新全部資料
-                updateLocalData(res.data);
-            }); 
-        }
-
-        // 🚀 極速刪除：先刪畫面，再呼叫後端 (樂觀更新)
         function doDel(id) { 
             if(confirm("確定要刪除嗎？")) {
-                // 1. 先從本地陣列移除
+                // 樂觀刪除
                 allData = allData.filter(item => item.rowId !== id);
-                renderList(); // 立刻更新畫面 (使用者覺得秒刪)
+                renderList(); 
                 
-                // 2. 背景發送請求給 Google (靜默模式 silent=true)
                 var code = localStorage.getItem("pass_code");
                 callApi("delete", { id: id, code: code }, function(res) {
-                    // 後端確認刪除完畢，偷偷更新一次確保資料一致
                     updateLocalData(res.data);
                 }, true);
             }
@@ -188,14 +209,18 @@
                 var d = new Date(item.date);
                 var diff = Math.ceil((d - today)/86400000);
                 var cls = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
-                html += `<div class="card" id="card-${item.rowId}">
+                // 臨時項目加個橘色邊框特效
+                var tempClass = item.isTemp ? "temp-item" : "";
+                
+                html += `<div class="card ${tempClass}">
                     <img src="${item.imgUrl || ''}" onclick="openModal(this.src)">
                     <div style="flex:1">
                         <div><b>${item.name}</b> <span class="creator-tag">👤 ${item.creator || ''}</span></div>
                         <div style="font-size:13px; color:#666">📍 ${item.location}</div>
                         <div class="tag ${cls}">${diff < 0 ? '已過期' : '剩 '+diff+' 天'} (${item.date})</div>
                     </div>
-                    <button style="width:auto; background:none; color:#ccc; border:none; font-size:20px;" onclick="doDel(${item.rowId})">✕</button>
+                    ${item.isTemp ? '<span style="font-size:12px;color:#f39c12">同步中...</span>' : 
+                    `<button style="width:auto; background:none; color:#ccc; border:none; font-size:20px;" onclick="doDel(${item.rowId})">✕</button>`}
                 </div>`;
             });
             listDiv.innerHTML = html || "<p style='text-align:center;color:#999'>目前沒有食品資料</p>";
