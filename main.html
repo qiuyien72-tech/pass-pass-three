@@ -6,7 +6,7 @@
     <link rel="preconnect" href="https://script.google.com">
     <title>冰箱小管家 - 主畫面</title>
     <style>
-      body { font-family: -apple-system, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
+      body { font-family: -apple-system, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; padding-bottom: 80px; /* 為了讓底部按鈕不擋住內容 */ }
       #appSection { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); min-height: 400px; }
       .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
       input, button { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
@@ -16,6 +16,11 @@
       /* 卡片樣式 */
       .card { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 12px; display: flex; align-items: center; background: #fff; position: relative; transition: all 0.3s ease; }
       .card.temp-item { border: 2px solid #f39c12; background: #fffdf5; }
+      
+      /* ✨ 新增：勾選框樣式 */
+      .chk-wrapper { display: flex; align-items: center; padding-right: 10px; }
+      .del-checkbox { width: 24px; height: 24px; cursor: pointer; margin: 0; }
+
       .card img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-right: 12px; cursor: pointer; background: #eee; }
       
       .creator-tag { font-size: 12px; color: #6c5ce7; background: #f0f0ff; padding: 2px 6px; border-radius: 6px; font-weight: bold; }
@@ -32,36 +37,34 @@
       #loaderText { color: #333; font-weight: bold; font-size: 16px; }
       @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-      /* --- ✨ 新增：掃描特效 CSS (2.5秒) --- */
+      /* 掃描特效 CSS (2.5秒) */
       #scanOverlay {
           position: fixed; top: 0; left: 0; width: 100%; height: 100%;
           background: rgba(0,0,0,0.85); z-index: 10001;
-          display: none; /* 預設隱藏 */
-          flex-direction: column; justify-content: center; align-items: center;
+          display: none; flex-direction: column; justify-content: center; align-items: center;
       }
       .scan-box {
           width: 250px; height: 250px; border: 4px solid rgba(255,255,255,0.3);
           border-radius: 20px; position: relative; overflow: hidden;
-          background: url('https://media.istockphoto.com/id/1199736573/vector/qr-code-scanning-icon.jpg?s=612x612&w=0&k=20&c=X7t1ZkM_k_oBq_aXz2ok_o_k_o_k_o_k_o_k_o_k=') no-repeat center/cover; /* 示意圖背景 */
+          background: url('https://media.istockphoto.com/id/1199736573/vector/qr-code-scanning-icon.jpg?s=612x612&w=0&k=20&c=X7t1ZkM_k_oBq_aXz2ok_o_k_o_k_o_k_o_k_o_k=') no-repeat center/cover;
       }
-      /* 掃描線動畫 */
       .scan-line {
           width: 100%; height: 4px; background: #00ff00;
           box-shadow: 0 0 10px #00ff00;
           position: absolute; top: 0;
-          /* 這裡控制速度：2.5s */
           animation: scanMove 2.5s ease-in-out infinite; 
       }
-      .scan-text {
-          color: #00ff00; margin-top: 20px; font-size: 18px; font-weight: bold; letter-spacing: 2px;
-          text-shadow: 0 0 5px #00ff00;
-      }
+      .scan-text { color: #00ff00; margin-top: 20px; font-size: 18px; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 5px #00ff00; }
+      @keyframes scanMove { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
 
-      @keyframes scanMove {
-          0% { top: 0%; opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { top: 100%; opacity: 0; }
+      /* ✨ 新增：底部批量刪除按鈕 */
+      #bulkDelBtn {
+          position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+          background: #e74c3c; color: white; padding: 15px 30px;
+          border-radius: 30px; font-size: 16px; font-weight: bold;
+          box-shadow: 0 5px 20px rgba(231, 76, 60, 0.4);
+          display: none; /* 預設隱藏 */
+          z-index: 5000; width: auto; cursor: pointer;
       }
     </style>
 </head>
@@ -72,11 +75,11 @@
     </div>
     
     <div id="scanOverlay">
-        <div class="scan-box">
-            <div class="scan-line"></div>
-        </div>
+        <div class="scan-box"><div class="scan-line"></div></div>
         <div class="scan-text">正在掃描食品...</div>
     </div>
+
+    <button id="bulkDelBtn" onclick="doMultiDelete()">🗑️ 刪除選取項目 (0)</button>
 
     <div id="imageModal" onclick="this.style.display='none'">
         <img id="largeImgDisplay" src="">
@@ -107,7 +110,7 @@
     </div>
 
     <script>
-        var API_URL = "https://script.google.com/macros/s/AKfycbyLfPZJis94_sHnG93ll4Mop4ud9cCxm0ZiGwzIEZU4sNdHZ33RGLT-kyF4mVkm3JOR/exec";
+        var API_URL = "https://script.google.com/macros/s/AKfycbx0AQWFSvr0y2PjsvWh1loPLnndMLFxOZidXhPIufyZ9zqAeCcWLcUPfakdFxZOG00/exec";
         var allData = [];
 
         function showLoader(text) {
@@ -148,6 +151,7 @@
             if(!silent) {
                 let msg = "處理中...";
                 if(action === "delete") msg = "正在同步...";
+                if(action === "deleteMulti") msg = "正在批量刪除...";
                 if(action === "getList") msg = "同步中...";
                 showLoader(msg);
             }
@@ -160,7 +164,6 @@
 
         function doLogout() { localStorage.clear(); window.location.href = "index.html"; }
 
-        // --- 🚀 這裡進行了關鍵修改：加入掃描等待 ---
         function doAdd() {
             var name = document.getElementById("inName").value.trim();
             var date = document.getElementById("inDate").value;
@@ -172,23 +175,17 @@
             var pl = { code: localStorage.getItem("pass_code"), name: name, loc: loc, date: date, creator: creator, image: "" };
             var file = document.getElementById("fileIn").files[0];
 
-            // 顯示掃描特效
             var scanOverlay = document.getElementById("scanOverlay");
             scanOverlay.style.display = 'flex';
 
-            // 設定 2.5 秒 (2500ms) 後才真正執行加入動作
+            // 掃描特效 2.5 秒
             setTimeout(() => {
-                scanOverlay.style.display = 'none'; // 隱藏特效
+                scanOverlay.style.display = 'none';
 
-                // --- 原本的加入邏輯移到這裡 ---
                 var executeAdd = (base64Img) => {
                     var tempId = Date.now();
                     var tempItem = {
-                        rowId: tempId, 
-                        name: name, 
-                        location: loc, 
-                        date: date, 
-                        creator: creator, 
+                        rowId: tempId, name: name, location: loc, date: date, creator: creator, 
                         imgUrl: base64Img ? "data:image/jpeg;base64," + base64Img : "",
                         isTemp: true
                     };
@@ -200,21 +197,15 @@
                     document.getElementById("fileIn").value = "";
 
                     pl.image = base64Img || "";
-                    callApi("add", pl, (res) => {
-                        updateLocalData(res.data);
-                    }, true);
+                    callApi("add", pl, (res) => { updateLocalData(res.data); }, true);
                 };
 
-                if(file) {
-                    compressImage(file).then(base64 => executeAdd(base64));
-                } else {
-                    executeAdd("");
-                }
-                // --- 邏輯結束 ---
-
-            }, 2500); // 這裡是 2500 毫秒 = 2.5 秒
+                if(file) compressImage(file).then(base64 => executeAdd(base64));
+                else executeAdd("");
+            }, 2500); 
         }
 
+        // 單項刪除 (保留舊功能)
         function doDel(id) { 
             if(confirm("確定要刪除嗎？")) {
                 allData = allData.filter(item => item.rowId !== id);
@@ -223,6 +214,38 @@
                 callApi("delete", { id: id, code: code }, function(res) {
                     updateLocalData(res.data);
                 }, true);
+            }
+        }
+
+        // ✨ 新增：批量刪除邏輯
+        function doMultiDelete() {
+            // 找出所有被勾選的 checkbox
+            var checkboxes = document.querySelectorAll('.del-checkbox:checked');
+            var idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+            if (idsToDelete.length === 0) return;
+            if (!confirm("確定要刪除選取的 " + idsToDelete.length + " 項資料嗎？")) return;
+
+            // 樂觀刪除：先從畫面移除
+            allData = allData.filter(item => !idsToDelete.includes(item.rowId));
+            renderList();
+
+            // 呼叫後端 API
+            var code = localStorage.getItem("pass_code");
+            callApi("deleteMulti", { ids: idsToDelete, code: code }, function(res) {
+                updateLocalData(res.data);
+            }, true);
+        }
+
+        // ✨ 新增：檢查勾選狀態，控制按鈕顯示
+        function checkSelection() {
+            var count = document.querySelectorAll('.del-checkbox:checked').length;
+            var btn = document.getElementById("bulkDelBtn");
+            if (count > 0) {
+                btn.style.display = "block";
+                btn.innerText = "🗑️ 刪除選取項目 (" + count + ")";
+            } else {
+                btn.style.display = "none";
             }
         }
 
@@ -243,13 +266,20 @@
                 var s = String(i.name||"") + String(i.location||"") + String(i.creator||"");
                 return s.toLowerCase().includes(key);
             }).sort((a,b) => new Date(a.date) - new Date(b.date));
+            
             filtered.forEach(item => {
                 var d = new Date(item.date);
                 var diff = Math.ceil((d - today)/86400000);
                 var cls = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
                 var tempClass = item.isTemp ? "temp-item" : "";
                 
+                // ✨ 修改：加入 Checkbox
+                // 臨時項目(isTemp)不能勾選，因為還沒有 rowId
+                var checkHTML = item.isTemp ? "" : 
+                    `<div class="chk-wrapper"><input type="checkbox" class="del-checkbox" value="${item.rowId}" onchange="checkSelection()"></div>`;
+
                 html += `<div class="card ${tempClass}">
+                    ${checkHTML}
                     <img src="${item.imgUrl || ''}" onclick="openModal(this.src)">
                     <div style="flex:1">
                         <div><b>${item.name}</b> <span class="creator-tag">👤 ${item.creator || ''}</span></div>
@@ -260,7 +290,9 @@
                     `<button style="width:auto; background:none; color:#ccc; border:none; font-size:20px;" onclick="doDel(${item.rowId})">✕</button>`}
                 </div>`;
             });
+            
             listDiv.innerHTML = html || "<p style='text-align:center;color:#999'>目前沒有食品資料</p>";
+            checkSelection(); // 重新渲染後檢查按鈕狀態
         }
 
         function refreshData(code, silent) {
