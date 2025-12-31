@@ -14,21 +14,63 @@
       button:active { transform: scale(0.98); }
       .btn-row { display: flex; gap: 8px; }
       
-      /* 卡片樣式 */
-      .card { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 12px; display: flex; align-items: center; background: #fff; position: relative; transition: all 0.3s ease; }
+      /* --- 卡片樣式 (修改版) --- */
+      .card { border: 1px solid #eee; padding: 12px; margin-bottom: 0; border-radius: 12px; display: flex; align-items: center; background: #fff; position: relative; transition: all 0.3s ease; }
       .card.temp-item { border: 2px solid #f39c12; background: #fffdf5; }
-      
-      /* ✨ 新增：暫存區卡片樣式 (Waiting List) */
-      .card.pending-item { border: 2px dashed #3498db; background: #f0f8ff; opacity: 0.9; }
+      .card.pending-item { border: 2px dashed #3498db; background: #f0f8ff; opacity: 0.9; margin-bottom: 10px; }
       
       .chk-wrapper { display: flex; align-items: center; padding-right: 10px; }
       .del-checkbox { width: 24px; height: 24px; cursor: pointer; margin: 0; }
 
-      .card img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-right: 12px; cursor: pointer; background: #eee; }
+      .card img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin-right: 12px; cursor: pointer; background: #eee; }
       
       .creator-tag { font-size: 12px; color: #6c5ce7; background: #f0f0ff; padding: 2px 6px; border-radius: 6px; font-weight: bold; }
       .tag { font-size: 11px; padding: 2px 6px; border-radius: 8px; color: white; margin-top: 4px; display: inline-block; }
       .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
+
+      /* --- ✨ 新增：群組樣式 (Group Styles) --- */
+      .group-container {
+          background: #fff;
+          border-radius: 12px;
+          margin-bottom: 12px;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+          border: 1px solid #e0e0e0;
+          overflow: hidden;
+      }
+      /* 群組標題 (父層) */
+      .group-header {
+          padding: 15px;
+          background: #fdfdfd;
+          cursor: pointer;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-bottom: 1px solid transparent; /* 預設無底線 */
+          transition: background 0.2s;
+      }
+      .group-header:hover { background: #f5f5f5; }
+      .group-header.active {
+          background: #eef2f5;
+          border-bottom: 1px solid #ddd;
+      }
+      .group-title { font-weight: bold; font-size: 16px; display: flex; align-items: center; }
+      .group-info { font-size: 13px; text-align: right; color: #666; }
+      .arrow-icon { margin-right: 8px; transition: transform 0.3s; font-size: 12px; color: #888; }
+      .group-header.active .arrow-icon { transform: rotate(90deg); }
+
+      /* 群組內容 (子層) */
+      .group-body {
+          display: none; /* 預設隱藏 */
+          background: #fafafa;
+          padding: 10px;
+      }
+      .group-body .card {
+          margin-bottom: 8px; /* 子卡片之間的間距 */
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+          background: #fff;
+      }
+      .group-body .card:last-child { margin-bottom: 0; }
+      /* -------------------------------- */
       
       /* 圖片燈箱 */
       #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
@@ -128,7 +170,7 @@
     </div>
 
     <script>
-        var API_URL = "https://script.google.com/macros/s/AKfycbxLJBTIC6x40tI9xqs6SDpEWxcKIN3yKl-jsOJ3Qgq7J7bGr0Vg37AJ5VVDhFTLjzAa/exec";
+        var API_URL = "https://script.google.com/macros/s/AKfycbz7MRnp2h1MR8SNEHuOWm7hP7SkySCfw0ylpfGOdjkIgQQzoslWldx9nk0RmHkja0Qt/exec";
         var allData = [];
         var pendingData = []; // 用來存暫存資料
         var isBatchMode = false;
@@ -185,7 +227,6 @@
 
         function doLogout() { localStorage.clear(); window.location.href = "index.html"; }
 
-        // 切換批量模式
         function toggleBatchMode() {
             var checkbox = document.getElementById("batchModeToggle");
             isBatchMode = checkbox.checked;
@@ -216,31 +257,25 @@
 
             if(!name || !date) return alert("必填項目未輸入");
 
-            // 內部處理函式 (處理圖片後的動作)
             var processData = (base64Img) => {
                 var newItem = {
                     name: name, loc: loc, date: date, creator: creator, image: base64Img || ""
                 };
 
                 if (isBatchMode) {
-                    // --- 批量模式：只加到暫存 ---
                     pendingData.push(newItem);
                     renderPendingList();
-                    // 清空輸入
                     document.getElementById("inName").value = "";
                     document.getElementById("pText").innerText = "";
                     document.getElementById("fileIn").value = "";
-                    // 提示震動或小訊息
                     if(navigator.vibrate) navigator.vibrate(50);
                 } else {
-                    // --- 一般模式：直接上傳 (含掃描動畫) ---
                     var scanOverlay = document.getElementById("scanOverlay");
                     scanOverlay.style.display = 'flex';
                     
                     setTimeout(() => {
                         scanOverlay.style.display = 'none';
                         
-                        // 樂觀更新
                         var tempId = Date.now();
                         var tempItem = {
                             rowId: tempId, name: name, location: loc, date: date, creator: creator, 
@@ -264,7 +299,6 @@
             else processData("");
         }
 
-        // 渲染暫存區清單
         function renderPendingList() {
             var div = document.getElementById("pendingList");
             var btn = document.getElementById("bulkAddBtn");
@@ -294,22 +328,16 @@
             renderPendingList();
         }
 
-        // 批量上傳動作
         function doMultiAddUpload() {
             if(pendingData.length === 0) return;
             if(!confirm("確定要一次上傳這 " + pendingData.length + " 筆資料嗎？")) return;
 
-            // 顯示掃描動畫 (讓使用者感覺在處理)
             var scanOverlay = document.getElementById("scanOverlay");
             scanOverlay.style.display = 'flex';
             document.querySelector(".scan-text").innerText = "正在批量建檔...";
 
             setTimeout(() => {
-                // 2.5秒後才真正送出
-                // 這裡不隱藏 scanOverlay，直到後端回應，因為批量上傳圖片需要時間
-                
                 var code = localStorage.getItem("pass_code");
-                // 先在前端樂觀顯示所有項目
                 pendingData.forEach(item => {
                     var tempItem = {
                         rowId: Date.now() + Math.random(), 
@@ -321,21 +349,17 @@
                 });
                 renderList();
                 
-                // 呼叫後端
                 callApi("addMulti", { items: pendingData, code: code }, function(res) {
-                    scanOverlay.style.display = 'none'; // 隱藏動畫
-                    pendingData = []; // 清空暫存
+                    scanOverlay.style.display = 'none';
+                    pendingData = [];
                     renderPendingList();
                     updateLocalData(res.data);
                     alert("全部上傳成功！");
-                    // 恢復按鈕狀態
                     document.querySelector(".scan-text").innerText = "正在掃描食品...";
                 }, true); 
-                // 注意：這裡 silent=true 是為了不顯示白底 Loader，但我們已經有黑色掃描畫面了
             }, 2500);
         }
 
-        // 單項刪除
         function doDel(id) { 
             if(confirm("確定要刪除嗎？")) {
                 allData = allData.filter(item => item.rowId !== id);
@@ -345,7 +369,6 @@
             }
         }
 
-        // 批量刪除邏輯
         function doMultiDelete() {
             var checkboxes = document.querySelectorAll('.del-checkbox:checked');
             var idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value));
@@ -372,38 +395,120 @@
             document.getElementById("cHistory").innerHTML = hist.map(c => `<option value="${c}">`).join("");
         }
 
+        // --- ✨ 新增：切換群組展開/收合 ---
+        function toggleGroup(groupId) {
+            var body = document.getElementById('group-body-' + groupId);
+            var header = document.getElementById('group-header-' + groupId);
+            
+            if (body.style.display === "none" || body.style.display === "") {
+                body.style.display = "block";
+                header.classList.add("active");
+            } else {
+                body.style.display = "none";
+                header.classList.remove("active");
+            }
+        }
+
+        // --- ✨ 核心修改：分組渲染列表 ---
         function renderList() {
             var listDiv = document.getElementById("list");
             var key = document.getElementById("search").value.toLowerCase();
             var today = new Date(); today.setHours(0,0,0,0);
-            var html = "";
+            
+            // 1. 先過濾資料
             var filtered = allData.filter(i => {
                 var s = String(i.name||"") + String(i.location||"") + String(i.creator||"");
                 return s.toLowerCase().includes(key);
-            }).sort((a,b) => new Date(a.date) - new Date(b.date));
-            
-            filtered.forEach(item => {
-                var d = new Date(item.date);
-                var diff = Math.ceil((d - today)/86400000);
-                var cls = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
-                var tempClass = item.isTemp ? "temp-item" : "";
-                var checkHTML = item.isTemp ? "" : 
-                    `<div class="chk-wrapper"><input type="checkbox" class="del-checkbox" value="${item.rowId}" onchange="checkSelection()"></div>`;
+            });
 
-                html += `<div class="card ${tempClass}">
-                    ${checkHTML}
-                    <img src="${item.imgUrl || ''}" onclick="openModal(this.src)">
-                    <div style="flex:1">
-                        <div><b>${item.name}</b> <span class="creator-tag">👤 ${item.creator || ''}</span></div>
-                        <div style="font-size:13px; color:#666">📍 ${item.location}</div>
-                        <div class="tag ${cls}">${diff < 0 ? '已過期' : '剩 '+diff+' 天'} (${item.date})</div>
+            if (filtered.length === 0) {
+                listDiv.innerHTML = "<p style='text-align:center;color:#999'>沒有找到相符的食品</p>";
+                checkSelection();
+                return;
+            }
+
+            // 2. 將資料依名稱分組
+            var groups = {};
+            filtered.forEach(item => {
+                var nameKey = item.name || "未命名";
+                if(!groups[nameKey]) groups[nameKey] = [];
+                groups[nameKey].push(item);
+            });
+
+            var html = "";
+
+            // 3. 遍歷群組
+            // 先將群組依照「最快過期日」排序
+            var sortedGroupKeys = Object.keys(groups).sort((keyA, keyB) => {
+                var datesA = groups[keyA].map(i => new Date(i.date).getTime());
+                var datesB = groups[keyB].map(i => new Date(i.date).getTime());
+                return Math.min(...datesA) - Math.min(...datesB);
+            });
+
+            sortedGroupKeys.forEach((groupName, groupIndex) => {
+                var items = groups[groupName];
+                
+                // 該組內的項目也依日期排序
+                items.sort((a,b) => new Date(a.date) - new Date(b.date));
+
+                // 計算匯總資訊
+                var count = items.length;
+                var earliestDate = items[0].date;
+                
+                // 計算顏色標籤 (依照最早那筆)
+                var d = new Date(earliestDate);
+                var diff = Math.ceil((d - today)/86400000);
+                var statusColor = diff < 0 ? "#e74c3c" : (diff <= 7 ? "#f1c40f" : "#2ecc71");
+                var statusText = diff < 0 ? '已過期' : (diff <= 7 ? '快過期' : '正常');
+
+                // --- 產生 HTML ---
+                
+                // A. 子卡片列表 (預設隱藏在下拉區塊)
+                var subCardsHtml = items.map(item => {
+                    var iDate = new Date(item.date);
+                    var iDiff = Math.ceil((iDate - today)/86400000);
+                    var cls = iDiff < 0 ? "bg-red" : (iDiff <= 7 ? "bg-yellow" : "bg-green");
+                    
+                    var checkHTML = item.isTemp ? "" : 
+                        `<div class="chk-wrapper"><input type="checkbox" class="del-checkbox" value="${item.rowId}" onchange="checkSelection()"></div>`;
+                    
+                    return `
+                        <div class="card ${item.isTemp ? 'temp-item' : ''}">
+                            ${checkHTML}
+                            <img src="${item.imgUrl || ''}" onclick="event.stopPropagation(); openModal(this.src)">
+                            <div style="flex:1">
+                                <div><span class="creator-tag">👤 ${item.creator || '未知'}</span></div>
+                                <div style="font-size:13px; color:#666">📍 ${item.location}</div>
+                                <div class="tag ${cls}">${item.date} (${iDiff}天)</div>
+                            </div>
+                            ${item.isTemp ? '<span style="font-size:12px;color:#f39c12">同步中...</span>' : 
+                            `<button style="width:auto; background:none; color:#ccc; border:none; font-size:20px;" onclick="event.stopPropagation(); doDel(${item.rowId})">✕</button>`}
+                        </div>
+                    `;
+                }).join("");
+
+                // B. 父層容器 (顯示匯總)
+                html += `
+                    <div class="group-container">
+                        <div class="group-header" id="group-header-${groupIndex}" onclick="toggleGroup(${groupIndex})">
+                            <div class="group-title">
+                                <span class="arrow-icon">▶</span>
+                                <b>${groupName}</b>
+                                <span style="font-size:12px; background:#eee; padding:2px 6px; border-radius:10px; margin-left:8px; color:#555;">${count}</span>
+                            </div>
+                            <div class="group-info">
+                                <div style="color:${statusColor}; font-weight:bold;">${earliestDate}</div>
+                                <div>${statusText}</div>
+                            </div>
+                        </div>
+                        <div class="group-body" id="group-body-${groupIndex}">
+                            ${subCardsHtml}
+                        </div>
                     </div>
-                    ${item.isTemp ? '<span style="font-size:12px;color:#f39c12">同步中...</span>' : 
-                    `<button style="width:auto; background:none; color:#ccc; border:none; font-size:20px;" onclick="doDel(${item.rowId})">✕</button>`}
-                </div>`;
+                `;
             });
             
-            listDiv.innerHTML = html || "<p style='text-align:center;color:#999'>目前沒有食品資料</p>";
+            listDiv.innerHTML = html;
             checkSelection(); 
         }
 
