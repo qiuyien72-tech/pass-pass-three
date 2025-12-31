@@ -6,18 +6,21 @@
     <link rel="preconnect" href="https://script.google.com">
     <title>冰箱小管家 - 主畫面</title>
     <style>
-      body { font-family: -apple-system, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; padding-bottom: 80px; /* 為了讓底部按鈕不擋住內容 */ }
+      body { font-family: -apple-system, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; padding-bottom: 100px; }
       #appSection { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); min-height: 400px; }
       .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
       input, button { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
-      button { background: #3498db; color: white; border: none; font-weight: bold; cursor: pointer; }
+      button { background: #3498db; color: white; border: none; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+      button:active { transform: scale(0.98); }
       .btn-row { display: flex; gap: 8px; }
       
       /* 卡片樣式 */
       .card { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 12px; display: flex; align-items: center; background: #fff; position: relative; transition: all 0.3s ease; }
       .card.temp-item { border: 2px solid #f39c12; background: #fffdf5; }
       
-      /* ✨ 新增：勾選框樣式 */
+      /* ✨ 新增：暫存區卡片樣式 (Waiting List) */
+      .card.pending-item { border: 2px dashed #3498db; background: #f0f8ff; opacity: 0.9; }
+      
       .chk-wrapper { display: flex; align-items: center; padding-right: 10px; }
       .del-checkbox { width: 24px; height: 24px; cursor: pointer; margin: 0; }
 
@@ -37,7 +40,7 @@
       #loaderText { color: #333; font-weight: bold; font-size: 16px; }
       @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-      /* 掃描特效 CSS (2.5秒) */
+      /* 掃描特效 */
       #scanOverlay {
           position: fixed; top: 0; left: 0; width: 100%; height: 100%;
           background: rgba(0,0,0,0.85); z-index: 10001;
@@ -48,24 +51,26 @@
           border-radius: 20px; position: relative; overflow: hidden;
           background: url('https://media.istockphoto.com/id/1199736573/vector/qr-code-scanning-icon.jpg?s=612x612&w=0&k=20&c=X7t1ZkM_k_oBq_aXz2ok_o_k_o_k_o_k_o_k_o_k=') no-repeat center/cover;
       }
-      .scan-line {
-          width: 100%; height: 4px; background: #00ff00;
-          box-shadow: 0 0 10px #00ff00;
-          position: absolute; top: 0;
-          animation: scanMove 2.5s ease-in-out infinite; 
-      }
+      .scan-line { width: 100%; height: 4px; background: #00ff00; box-shadow: 0 0 10px #00ff00; position: absolute; top: 0; animation: scanMove 2.5s ease-in-out infinite; }
       .scan-text { color: #00ff00; margin-top: 20px; font-size: 18px; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 5px #00ff00; }
       @keyframes scanMove { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
 
-      /* ✨ 新增：底部批量刪除按鈕 */
-      #bulkDelBtn {
+      /* 浮動按鈕群 */
+      .float-btn {
           position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-          background: #e74c3c; color: white; padding: 15px 30px;
-          border-radius: 30px; font-size: 16px; font-weight: bold;
-          box-shadow: 0 5px 20px rgba(231, 76, 60, 0.4);
-          display: none; /* 預設隱藏 */
-          z-index: 5000; width: auto; cursor: pointer;
+          padding: 15px 30px; border-radius: 30px; font-size: 16px; font-weight: bold;
+          box-shadow: 0 5px 20px rgba(0,0,0, 0.3);
+          display: none; z-index: 5000; width: auto; cursor: pointer; color: white;
       }
+      #bulkDelBtn { background: #e74c3c; }
+      #bulkAddBtn { background: #2ecc71; }
+
+      /* 批量模式切換開關 */
+      .mode-switch {
+          display: flex; align-items: center; justify-content: flex-end; margin-bottom: 10px; font-size: 14px; color: #555;
+      }
+      .mode-switch input { width: auto; margin: 0 8px 0 0; }
+      .active-mode { color: #2ecc71; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -79,7 +84,8 @@
         <div class="scan-text">正在掃描食品...</div>
     </div>
 
-    <button id="bulkDelBtn" onclick="doMultiDelete()">🗑️ 刪除選取項目 (0)</button>
+    <button id="bulkDelBtn" class="float-btn" onclick="doMultiDelete()">🗑️ 刪除選取項目 (0)</button>
+    <button id="bulkAddBtn" class="float-btn" onclick="doMultiAddUpload()">📤 確認上傳 (0)</button>
 
     <div id="imageModal" onclick="this.style.display='none'">
         <img id="largeImgDisplay" src="">
@@ -92,6 +98,13 @@
             <button onclick="doLogout()" style="width:auto; padding:4px 10px; background:#e74c3c; font-size:12px;">登出</button>
         </div>
 
+        <div class="mode-switch">
+            <label style="display:flex;align-items:center;cursor:pointer">
+                <input type="checkbox" id="batchModeToggle" onchange="toggleBatchMode()">
+                <span id="modeText">📝 切換至批量輸入模式</span>
+            </label>
+        </div>
+
         <input type="text" id="inCreator" list="cHistory" placeholder="👤 購買人">
         <datalist id="cHistory"></datalist>
         <input type="text" id="inName" placeholder="🍎 食品名稱">
@@ -101,17 +114,24 @@
         <div class="btn-row">
             <input type="file" id="fileIn" accept="image/*" style="display:none" onchange="document.getElementById('pText').innerText='已選照片'">
             <button style="background:#f39c12;" onclick="document.getElementById('fileIn').click()">📷 拍照</button>
-            <button onclick="doAdd()">🚀 加入清單</button>
+            <button id="mainActionBtn" onclick="doAdd()">🚀 加入清單</button>
         </div>
         <div id="pText" style="font-size:12px; color:#aaa; text-align:center; margin-bottom:10px;"></div>
         
+        <div id="pendingArea" style="display:none; margin-bottom:20px;">
+            <div style="font-size:14px; color:#3498db; margin-bottom:5px; font-weight:bold;">📦 準備上傳的項目 (尚未儲存)</div>
+            <div id="pendingList"></div>
+        </div>
+
         <input type="text" id="search" placeholder="🔍 搜尋名稱、位置、購買人..." onkeyup="renderList()">
         <div id="list"></div>
     </div>
 
     <script>
-        var API_URL = "https://script.google.com/macros/s/AKfycbx0AQWFSvr0y2PjsvWh1loPLnndMLFxOZidXhPIufyZ9zqAeCcWLcUPfakdFxZOG00/exec";
+        var API_URL = "https://script.google.com/macros/s/AKfycbxLJBTIC6x40tI9xqs6SDpEWxcKIN3yKl-jsOJ3Qgq7J7bGr0Vg37AJ5VVDhFTLjzAa/exec";
         var allData = [];
+        var pendingData = []; // 用來存暫存資料
+        var isBatchMode = false;
 
         function showLoader(text) {
             document.getElementById("loaderText").innerText = text;
@@ -152,6 +172,7 @@
                 let msg = "處理中...";
                 if(action === "delete") msg = "正在同步...";
                 if(action === "deleteMulti") msg = "正在批量刪除...";
+                if(action === "addMulti") msg = "正在批量上傳...請稍候";
                 if(action === "getList") msg = "同步中...";
                 showLoader(msg);
             }
@@ -164,89 +185,183 @@
 
         function doLogout() { localStorage.clear(); window.location.href = "index.html"; }
 
+        // 切換批量模式
+        function toggleBatchMode() {
+            var checkbox = document.getElementById("batchModeToggle");
+            isBatchMode = checkbox.checked;
+            var btn = document.getElementById("mainActionBtn");
+            var txt = document.getElementById("modeText");
+            var pArea = document.getElementById("pendingArea");
+            
+            if(isBatchMode) {
+                btn.innerText = "➕ 加入暫存";
+                btn.style.background = "#2ecc71"; // 綠色
+                txt.classList.add("active-mode");
+                pArea.style.display = "block";
+            } else {
+                btn.innerText = "🚀 加入清單";
+                btn.style.background = "#3498db"; // 藍色
+                txt.classList.remove("active-mode");
+                if(pendingData.length === 0) pArea.style.display = "none";
+            }
+            renderPendingList();
+        }
+
         function doAdd() {
             var name = document.getElementById("inName").value.trim();
             var date = document.getElementById("inDate").value;
             var loc = document.getElementById("inLoc").value;
             var creator = document.getElementById("inCreator").value;
-            
-            if(!name || !date) return alert("必填項目未輸入");
-            
-            var pl = { code: localStorage.getItem("pass_code"), name: name, loc: loc, date: date, creator: creator, image: "" };
             var file = document.getElementById("fileIn").files[0];
 
-            var scanOverlay = document.getElementById("scanOverlay");
-            scanOverlay.style.display = 'flex';
+            if(!name || !date) return alert("必填項目未輸入");
 
-            // 掃描特效 2.5 秒
-            setTimeout(() => {
-                scanOverlay.style.display = 'none';
+            // 內部處理函式 (處理圖片後的動作)
+            var processData = (base64Img) => {
+                var newItem = {
+                    name: name, loc: loc, date: date, creator: creator, image: base64Img || ""
+                };
 
-                var executeAdd = (base64Img) => {
-                    var tempId = Date.now();
-                    var tempItem = {
-                        rowId: tempId, name: name, location: loc, date: date, creator: creator, 
-                        imgUrl: base64Img ? "data:image/jpeg;base64," + base64Img : "",
-                        isTemp: true
-                    };
-                    allData.unshift(tempItem);
-                    renderList(); 
-                    
+                if (isBatchMode) {
+                    // --- 批量模式：只加到暫存 ---
+                    pendingData.push(newItem);
+                    renderPendingList();
+                    // 清空輸入
                     document.getElementById("inName").value = "";
                     document.getElementById("pText").innerText = "";
                     document.getElementById("fileIn").value = "";
+                    // 提示震動或小訊息
+                    if(navigator.vibrate) navigator.vibrate(50);
+                } else {
+                    // --- 一般模式：直接上傳 (含掃描動畫) ---
+                    var scanOverlay = document.getElementById("scanOverlay");
+                    scanOverlay.style.display = 'flex';
+                    
+                    setTimeout(() => {
+                        scanOverlay.style.display = 'none';
+                        
+                        // 樂觀更新
+                        var tempId = Date.now();
+                        var tempItem = {
+                            rowId: tempId, name: name, location: loc, date: date, creator: creator, 
+                            imgUrl: base64Img ? "data:image/jpeg;base64," + base64Img : "",
+                            isTemp: true
+                        };
+                        allData.unshift(tempItem);
+                        renderList(); 
+                        
+                        document.getElementById("inName").value = "";
+                        document.getElementById("pText").innerText = "";
+                        document.getElementById("fileIn").value = "";
 
-                    pl.image = base64Img || "";
-                    callApi("add", pl, (res) => { updateLocalData(res.data); }, true);
-                };
+                        var pl = { code: localStorage.getItem("pass_code"), ...newItem };
+                        callApi("add", pl, (res) => { updateLocalData(res.data); }, true);
+                    }, 2500); 
+                }
+            };
 
-                if(file) compressImage(file).then(base64 => executeAdd(base64));
-                else executeAdd("");
-            }, 2500); 
+            if(file) compressImage(file).then(base64 => processData(base64));
+            else processData("");
         }
 
-        // 單項刪除 (保留舊功能)
+        // 渲染暫存區清單
+        function renderPendingList() {
+            var div = document.getElementById("pendingList");
+            var btn = document.getElementById("bulkAddBtn");
+            
+            if(pendingData.length > 0) {
+                btn.style.display = "block";
+                btn.innerText = "📤 確認上傳 (" + pendingData.length + ")";
+                
+                var html = pendingData.map((item, idx) => `
+                    <div class="card pending-item">
+                        <div style="flex:1">
+                            <div><b>${item.name}</b> <span style="font-size:12px;color:#666">(${item.date})</span></div>
+                            <div style="font-size:12px; color:#666">📍 ${item.location}</div>
+                        </div>
+                        <button style="width:auto; background:none; color:#e74c3c; border:none; font-size:20px;" onclick="removePending(${idx})">✕</button>
+                    </div>
+                `).join("");
+                div.innerHTML = html;
+            } else {
+                btn.style.display = "none";
+                div.innerHTML = "<div style='text-align:center;color:#aaa;font-size:12px;padding:10px;'>暫存區是空的</div>";
+            }
+        }
+
+        function removePending(idx) {
+            pendingData.splice(idx, 1);
+            renderPendingList();
+        }
+
+        // 批量上傳動作
+        function doMultiAddUpload() {
+            if(pendingData.length === 0) return;
+            if(!confirm("確定要一次上傳這 " + pendingData.length + " 筆資料嗎？")) return;
+
+            // 顯示掃描動畫 (讓使用者感覺在處理)
+            var scanOverlay = document.getElementById("scanOverlay");
+            scanOverlay.style.display = 'flex';
+            document.querySelector(".scan-text").innerText = "正在批量建檔...";
+
+            setTimeout(() => {
+                // 2.5秒後才真正送出
+                // 這裡不隱藏 scanOverlay，直到後端回應，因為批量上傳圖片需要時間
+                
+                var code = localStorage.getItem("pass_code");
+                // 先在前端樂觀顯示所有項目
+                pendingData.forEach(item => {
+                    var tempItem = {
+                        rowId: Date.now() + Math.random(), 
+                        name: item.name, location: item.loc, date: item.date, creator: item.creator, 
+                        imgUrl: item.image ? "data:image/jpeg;base64," + item.image : "",
+                        isTemp: true
+                    };
+                    allData.unshift(tempItem);
+                });
+                renderList();
+                
+                // 呼叫後端
+                callApi("addMulti", { items: pendingData, code: code }, function(res) {
+                    scanOverlay.style.display = 'none'; // 隱藏動畫
+                    pendingData = []; // 清空暫存
+                    renderPendingList();
+                    updateLocalData(res.data);
+                    alert("全部上傳成功！");
+                    // 恢復按鈕狀態
+                    document.querySelector(".scan-text").innerText = "正在掃描食品...";
+                }, true); 
+                // 注意：這裡 silent=true 是為了不顯示白底 Loader，但我們已經有黑色掃描畫面了
+            }, 2500);
+        }
+
+        // 單項刪除
         function doDel(id) { 
             if(confirm("確定要刪除嗎？")) {
                 allData = allData.filter(item => item.rowId !== id);
                 renderList(); 
                 var code = localStorage.getItem("pass_code");
-                callApi("delete", { id: id, code: code }, function(res) {
-                    updateLocalData(res.data);
-                }, true);
+                callApi("delete", { id: id, code: code }, function(res) { updateLocalData(res.data); }, true);
             }
         }
 
-        // ✨ 新增：批量刪除邏輯
+        // 批量刪除邏輯
         function doMultiDelete() {
-            // 找出所有被勾選的 checkbox
             var checkboxes = document.querySelectorAll('.del-checkbox:checked');
             var idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value));
-
             if (idsToDelete.length === 0) return;
             if (!confirm("確定要刪除選取的 " + idsToDelete.length + " 項資料嗎？")) return;
-
-            // 樂觀刪除：先從畫面移除
             allData = allData.filter(item => !idsToDelete.includes(item.rowId));
             renderList();
-
-            // 呼叫後端 API
             var code = localStorage.getItem("pass_code");
-            callApi("deleteMulti", { ids: idsToDelete, code: code }, function(res) {
-                updateLocalData(res.data);
-            }, true);
+            callApi("deleteMulti", { ids: idsToDelete, code: code }, function(res) { updateLocalData(res.data); }, true);
         }
 
-        // ✨ 新增：檢查勾選狀態，控制按鈕顯示
         function checkSelection() {
             var count = document.querySelectorAll('.del-checkbox:checked').length;
             var btn = document.getElementById("bulkDelBtn");
-            if (count > 0) {
-                btn.style.display = "block";
-                btn.innerText = "🗑️ 刪除選取項目 (" + count + ")";
-            } else {
-                btn.style.display = "none";
-            }
+            if (count > 0) { btn.style.display = "block"; btn.innerText = "🗑️ 刪除選取項目 (" + count + ")"; } 
+            else { btn.style.display = "none"; }
         }
 
         function updateLocalData(newData) {
@@ -272,9 +387,6 @@
                 var diff = Math.ceil((d - today)/86400000);
                 var cls = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
                 var tempClass = item.isTemp ? "temp-item" : "";
-                
-                // ✨ 修改：加入 Checkbox
-                // 臨時項目(isTemp)不能勾選，因為還沒有 rowId
                 var checkHTML = item.isTemp ? "" : 
                     `<div class="chk-wrapper"><input type="checkbox" class="del-checkbox" value="${item.rowId}" onchange="checkSelection()"></div>`;
 
@@ -292,7 +404,7 @@
             });
             
             listDiv.innerHTML = html || "<p style='text-align:center;color:#999'>目前沒有食品資料</p>";
-            checkSelection(); // 重新渲染後檢查按鈕狀態
+            checkSelection(); 
         }
 
         function refreshData(code, silent) {
