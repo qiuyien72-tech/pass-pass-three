@@ -15,7 +15,6 @@
       
       /* 卡片樣式 */
       .card { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 12px; display: flex; align-items: center; background: #fff; position: relative; transition: all 0.3s ease; }
-      /* 臨時新增的卡片會有閃爍特效 */
       .card.temp-item { border: 2px solid #f39c12; background: #fffdf5; }
       .card img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-right: 12px; cursor: pointer; background: #eee; }
       
@@ -27,11 +26,43 @@
       #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
       #imageModal img { max-width: 90%; max-height: 80vh; border-radius: 10px; }
       
-      /* Loader (保留但只在非靜默模式顯示) */
+      /* Loader */
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 9999; }
       .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 45px; height: 45px; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
       #loaderText { color: #333; font-weight: bold; font-size: 16px; }
       @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+      /* --- ✨ 新增：掃描特效 CSS (2.5秒) --- */
+      #scanOverlay {
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.85); z-index: 10001;
+          display: none; /* 預設隱藏 */
+          flex-direction: column; justify-content: center; align-items: center;
+      }
+      .scan-box {
+          width: 250px; height: 250px; border: 4px solid rgba(255,255,255,0.3);
+          border-radius: 20px; position: relative; overflow: hidden;
+          background: url('https://media.istockphoto.com/id/1199736573/vector/qr-code-scanning-icon.jpg?s=612x612&w=0&k=20&c=X7t1ZkM_k_oBq_aXz2ok_o_k_o_k_o_k_o_k_o_k=') no-repeat center/cover; /* 示意圖背景 */
+      }
+      /* 掃描線動畫 */
+      .scan-line {
+          width: 100%; height: 4px; background: #00ff00;
+          box-shadow: 0 0 10px #00ff00;
+          position: absolute; top: 0;
+          /* 這裡控制速度：2.5s */
+          animation: scanMove 2.5s ease-in-out infinite; 
+      }
+      .scan-text {
+          color: #00ff00; margin-top: 20px; font-size: 18px; font-weight: bold; letter-spacing: 2px;
+          text-shadow: 0 0 5px #00ff00;
+      }
+
+      @keyframes scanMove {
+          0% { top: 0%; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+      }
     </style>
 </head>
 <body>
@@ -40,6 +71,13 @@
         <div id="loaderText">連線中...</div>
     </div>
     
+    <div id="scanOverlay">
+        <div class="scan-box">
+            <div class="scan-line"></div>
+        </div>
+        <div class="scan-text">正在掃描食品...</div>
+    </div>
+
     <div id="imageModal" onclick="this.style.display='none'">
         <img id="largeImgDisplay" src="">
         <p style="color:white; margin-top:15px; font-size:14px;">點擊任何處關閉</p>
@@ -111,7 +149,6 @@
                 let msg = "處理中...";
                 if(action === "delete") msg = "正在同步...";
                 if(action === "getList") msg = "同步中...";
-                // 🚀 注意：新增動作改成 silent 模式了，所以這裡不會顯示 Loader
                 showLoader(msg);
             }
             fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
@@ -123,7 +160,7 @@
 
         function doLogout() { localStorage.clear(); window.location.href = "index.html"; }
 
-        // 🚀 核心優化：樂觀新增
+        // --- 🚀 這裡進行了關鍵修改：加入掃描等待 ---
         function doAdd() {
             var name = document.getElementById("inName").value.trim();
             var date = document.getElementById("inDate").value;
@@ -134,52 +171,54 @@
             
             var pl = { code: localStorage.getItem("pass_code"), name: name, loc: loc, date: date, creator: creator, image: "" };
             var file = document.getElementById("fileIn").files[0];
-            
-            // 定義一個內部函數來執行「先顯示、後上傳」
-            var executeAdd = (base64Img) => {
-                // 1. 準備一個「臨時物件」
-                var tempId = Date.now(); // 用時間當作臨時 ID
-                var tempItem = {
-                    rowId: tempId, 
-                    name: name, 
-                    location: loc, 
-                    date: date, 
-                    creator: creator, 
-                    imgUrl: base64Img ? "data:image/jpeg;base64," + base64Img : "", // 直接用 Base64 顯示
-                    isTemp: true // 標記為臨時
+
+            // 顯示掃描特效
+            var scanOverlay = document.getElementById("scanOverlay");
+            scanOverlay.style.display = 'flex';
+
+            // 設定 2.5 秒 (2500ms) 後才真正執行加入動作
+            setTimeout(() => {
+                scanOverlay.style.display = 'none'; // 隱藏特效
+
+                // --- 原本的加入邏輯移到這裡 ---
+                var executeAdd = (base64Img) => {
+                    var tempId = Date.now();
+                    var tempItem = {
+                        rowId: tempId, 
+                        name: name, 
+                        location: loc, 
+                        date: date, 
+                        creator: creator, 
+                        imgUrl: base64Img ? "data:image/jpeg;base64," + base64Img : "",
+                        isTemp: true
+                    };
+                    allData.unshift(tempItem);
+                    renderList(); 
+                    
+                    document.getElementById("inName").value = "";
+                    document.getElementById("pText").innerText = "";
+                    document.getElementById("fileIn").value = "";
+
+                    pl.image = base64Img || "";
+                    callApi("add", pl, (res) => {
+                        updateLocalData(res.data);
+                    }, true);
                 };
 
-                // 2. 立刻插入陣列最前面 (樂觀更新)
-                allData.unshift(tempItem);
-                renderList(); 
-                
-                // 3. 清空輸入框 (使用者覺得做完了)
-                document.getElementById("inName").value = ""; 
-                document.getElementById("pText").innerText = "";
-                document.getElementById("fileIn").value = "";
+                if(file) {
+                    compressImage(file).then(base64 => executeAdd(base64));
+                } else {
+                    executeAdd("");
+                }
+                // --- 邏輯結束 ---
 
-                // 4. 背景偷偷上傳 (silent=true)
-                pl.image = base64Img || "";
-                callApi("add", pl, (res) => {
-                    // 5. 上傳成功後，用伺服器回傳的「正式資料」替換掉「臨時資料」
-                    updateLocalData(res.data);
-                }, true);
-            };
-
-            if(file) {
-                // 如果有圖片，這裡稍微會卡一下(壓縮)，但比上傳快多了
-                compressImage(file).then(base64 => executeAdd(base64));
-            } else {
-                executeAdd("");
-            }
+            }, 2500); // 這裡是 2500 毫秒 = 2.5 秒
         }
 
         function doDel(id) { 
             if(confirm("確定要刪除嗎？")) {
-                // 樂觀刪除
                 allData = allData.filter(item => item.rowId !== id);
                 renderList(); 
-                
                 var code = localStorage.getItem("pass_code");
                 callApi("delete", { id: id, code: code }, function(res) {
                     updateLocalData(res.data);
@@ -204,12 +243,10 @@
                 var s = String(i.name||"") + String(i.location||"") + String(i.creator||"");
                 return s.toLowerCase().includes(key);
             }).sort((a,b) => new Date(a.date) - new Date(b.date));
-
             filtered.forEach(item => {
                 var d = new Date(item.date);
                 var diff = Math.ceil((d - today)/86400000);
                 var cls = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
-                // 臨時項目加個橘色邊框特效
                 var tempClass = item.isTemp ? "temp-item" : "";
                 
                 html += `<div class="card ${tempClass}">
