@@ -4,311 +4,279 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="preconnect" href="https://script.google.com">
-    <title>冰箱小管家 - 儀表板</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>冰箱小管家 - 筆記模式</title>
     <style>
-      /* --- 全域設定：居家溫馨配色 (Warm Grey) + 科技字體 --- */
+      /* --- 基礎風格：筆記本質感 --- */
       body { 
-          font-family: 'Noto Sans TC', sans-serif;
-          background: #f0f2f5; /* 柔和灰底 */
-          margin: 0; 
-          padding: 20px; 
-          color: #444; 
-          padding-bottom: 120px; 
+        font-family: 'Courier New', Courier, "PMingLiU", serif; /* 等寬字體帶出筆記感 */
+        background: #2b2e38; /* 深色桌面 */
+        margin: 0; 
+        padding: 10px; 
+        color: #333; 
+        padding-bottom: 100px; 
       }
-      
-      /* --- 主容器：移除白色卡片背景，改為透明佈局 --- */
+
+      /* --- 主要容器：筆記本內頁 --- */
       #appSection { 
-          max-width: 600px;
-          margin: 0 auto; 
-          background: transparent; /* 透明 */
-          padding: 0; 
-          min-height: 400px;
+        max-width: 600px;
+        margin: 0 auto; 
+        background: #fdfbf7; /* 紙張顏色 */
+        padding: 25px 20px; 
+        border-radius: 5px; 
+        box-shadow: 5px 5px 0px rgba(0,0,0,0.3); /* 硬陰影，不像浮動卡片 */
+        min-height: 80vh;
+        border-left: 6px solid #e74c3c; /* 筆記本左側紅線 */
+        position: relative;
+        /* 橫線背景 */
+        background-image: linear-gradient(#e5e5e5 1px, transparent 1px);
+        background-size: 100% 30px; /* 行高 */
+        line-height: 30px; /* 對齊行高 */
       }
 
-      /* --- 標頭與登出 --- */
+      /* --- Header --- */
       .header { 
-          display: flex; 
-          justify-content: space-between; 
-          align-items: center; 
-          margin-bottom: 25px; 
-          padding: 0 10px;
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 25px; 
+        padding-bottom: 10px;
+        border-bottom: 2px solid #333; /* 粗黑線 */
+        background: #fdfbf7; /* 蓋住橫線 */
       }
-      .header div { font-size: 24px; font-weight: 700; color: #2c3e50; }
-      #displayCode { 
-          background: #e0e5ec; padding: 2px 8px; border-radius: 6px; 
-          font-family: monospace; color: #666; font-size: 0.8em;
+      .header div { font-weight: 900; font-size: 20px; letter-spacing: 1px; }
+
+      /* --- 輸入元件風格 --- */
+      input, button { 
+        box-sizing: border-box; 
+        font-family: inherit; 
       }
       
-      /* --- 輸入控制台 (Input Console) --- */
-      /* 這是唯一保留"區塊感"的地方，但做得像控制面板 */
-      .input-console {
-          background: white;
-          padding: 20px;
-          border-radius: 20px;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05); /* 極淡陰影 */
-          margin-bottom: 30px;
-      }
-
-      input, button { 
-          width: 100%; 
-          padding: 12px 15px; 
-          margin-bottom: 12px; 
-          border-radius: 12px;
-          border: 1px solid #eee; 
-          background: #f9f9f9;
-          box-sizing: border-box; 
-          font-size: 15px;
-          transition: all 0.2s;
+      /* 輸入框：去除邊框，只留底線，半透明背景 */
+      input { 
+        width: 100%; 
+        padding: 8px 0; 
+        margin-bottom: 15px; 
+        background: rgba(255,255,255,0.8);
+        border: none;
+        border-bottom: 2px dashed #999;
+        font-size: 16px;
+        color: #333;
       }
       input:focus {
-          background: #fff;
-          border-color: #3498db;
-          outline: none;
+        outline: none;
+        border-bottom: 2px solid #3498db;
+        background: #fff;
       }
-
+      
+      /* 按鈕：黑底白字或高亮色 */
       button { 
-          border: none;
-          font-weight: 500; 
-          cursor: pointer; 
-          letter-spacing: 1px;
+        width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 0;
+        background: #333; color: white; border: 2px solid #333;
+        font-weight: bold; cursor: pointer; transition: all 0.2s; 
+        box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
       }
-      button:active { transform: scale(0.98); }
+      button:active { transform: translate(2px, 2px); box-shadow: none; }
       
-      .btn-row { display: flex; gap: 10px; }
+      .btn-row { display: flex; gap: 10px; margin-bottom: 20px; }
       
-      /* 主要按鈕樣式 - 溫馨色調 */
-      #mainActionBtn { background: #2c3e50; color: white; } /* 深藍灰 */
+      /* --- 列表項目：去卡片化 (No Cards) --- */
+      /* 這裡覆蓋原本的 .card 樣式 */
+      .card { 
+        border: none; /* 移除框線 */
+        border-bottom: 1px solid rgba(0,0,0,0.1); /* 僅留分隔線 */
+        padding: 10px 0; /* 調整間距 */
+        margin-bottom: 0; 
+        border-radius: 0; /* 移除圓角 */
+        display: flex; 
+        align-items: center; 
+        background: transparent; /* 透明背景融入筆記紙 */
+        position: relative; 
+      }
       
-      /* --- 核心修改：清單樣式 (非卡片) --- */
+      .card.temp-item { 
+        background: rgba(243, 156, 18, 0.1); /* 暫存項目稍微 highlight */
+        border-bottom: 2px dashed #f39c12;
+      }
+      .card.pending-item { 
+        background: rgba(52, 152, 219, 0.1); 
+        border: 1px dashed #3498db;
+        margin-bottom: 5px;
+      }
       
-      /* 搜尋列 - 懸浮感 */
-      #search {
-          border-radius: 50px;
-          padding-left: 20px;
-          border: none;
-          background: white;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-          margin-bottom: 25px;
+      .card img { 
+        width: 40px; height: 40px; 
+        object-fit: cover; 
+        border: 2px solid #333; /* 照片加黑框 */
+        margin-right: 15px; 
+        cursor: pointer; 
+        background: #eee; 
+        transform: rotate(-3deg); /* 照片隨意感 */
       }
 
-      /* 群組容器 - 去除邊框，僅留間距 */
+      /* 標籤樣式：螢光筆風格 */
+      .creator-tag { 
+        font-size: 12px;
+        color: #333; 
+        background: transparent; 
+        border: 1px solid #333;
+        padding: 0 4px; 
+        font-weight: normal;
+        border-radius: 0;
+      }
+      
+      /* 狀態標籤 */
+      .tag { 
+        font-size: 12px; padding: 0 5px; border-radius: 0; 
+        color: #000; font-weight: bold;
+        margin-top: 4px; display: inline-block;
+      }
+      .bg-green { background: #2ecc71; box-shadow: 2px 2px 0 #000; color:white; }
+      .bg-yellow { background: #f1c40f; box-shadow: 2px 2px 0 #000; }
+      .bg-red { background: #e74c3c; color: white; box-shadow: 2px 2px 0 #000; }
+
+      /* --- 群組樣式：章節分隔 --- */
       .group-container {
           background: transparent;
-          border: none;
-          box-shadow: none;
-          margin-bottom: 20px;
           border-radius: 0;
+          margin-bottom: 10px;
+          box-shadow: none;
+          border: none;
+          overflow: visible;
       }
-
-      /* 群組標題 - 簡約線條風 */
+      
       .group-header {
-          padding: 10px 5px;
-          background: transparent;
+          padding: 8px 5px;
+          background: transparent; /* 透明 */
           cursor: pointer;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          border-bottom: 2px solid #e0e5ec; /* 粗底線作為區隔 */
-          transition: all 0.2s;
-          color: #2c3e50;
+          border-bottom: 2px solid #333; /* 粗黑線分隔 */
+          margin-top: 15px;
       }
-      .group-header:hover { opacity: 0.7; }
-      .group-header.active { border-bottom-color: #3498db; } /* 展開時變色 */
+      .group-header:hover { background: rgba(0,0,0,0.03); }
+      
+      /* 選中的群組標題像被螢光筆劃過 */
+      .group-header.active .group-title b {
+          background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+          padding: 0 5px;
+      }
 
-      .group-title { font-weight: 700; font-size: 18px; display: flex; align-items: center; }
-      .arrow-icon { margin-right: 10px; font-size: 10px; color: #bbb; transition: 0.3s; }
-      .group-header.active .arrow-icon { transform: rotate(90deg); color: #3498db; }
-
-      /* 群組內容 - 平滑展開 */
+      .group-title { font-weight: bold; font-size: 18px; display: flex; align-items: center; }
+      .group-info { font-size: 12px; text-align: right; color: #555; font-family: sans-serif; }
+      .arrow-icon { margin-right: 8px; font-size: 10px; color: #333; }
+      
       .group-body {
           display: none;
           background: transparent;
           padding: 0;
-          margin-top: 5px;
       }
 
-      /* 單一項目 - 列 (Row) 設計，非卡片 */
-      .card { 
-          border: none;
-          border-bottom: 1px solid #eee; /* 僅保留底線 */
-          padding: 15px 5px; 
-          margin-bottom: 0; 
-          border-radius: 0; 
-          display: flex; 
-          align-items: center; 
-          background: transparent; 
-          position: relative; 
-          transition: background 0.2s;
-      }
-      /* Hover 效果：游標移過去時顯示淡淡的光棒 */
-      .card:hover {
-          background: rgba(255,255,255,0.6);
-      }
+      /* --- 功能按鈕區 --- */
+      .chk-wrapper { display: flex; align-items: center; padding-right: 10px; }
+      .del-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: #333; }
       
-      /* 暫存項目與刪除特效 */
-      .card.temp-item { background: rgba(243, 156, 18, 0.1); }
-      .card.pending-item { border: 1px dashed #3498db; background: #f0f8ff; border-radius: 10px; margin-bottom:10px;}
-      
-      .chk-wrapper { display: flex; align-items: center; padding-right: 15px; }
-      .del-checkbox { width: 20px; height: 20px; accent-color: #e74c3c; cursor: pointer; }
+      /* --- 浮動按鈕 (貼紙風格) --- */
+      .float-btn {
+          position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+          padding: 12px 25px; border-radius: 0; font-size: 16px; font-weight: bold;
+          box-shadow: 4px 4px 0 rgba(0,0,0,1); /* 復古硬陰影 */
+          display: none; z-index: 5000; width: auto; cursor: pointer; color: white;
+          border: 2px solid #fff;
+      }
+      #bulkDelBtn { background: #e74c3c; }
+      #bulkAddBtn { background: #2ecc71; color: #000; }
 
-      /* 圖片圓角化 - 像頭像一樣 */
-      .card img { 
-          width: 45px; height: 45px; 
-          object-fit: cover; 
-          border-radius: 50%; /* 圓形 */
-          margin-right: 15px; 
-          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-          cursor: pointer; 
-          background: #eee; 
-      }
-      
-      /* 文字標籤優化 */
-      .creator-tag { 
-          font-size: 12px; color: #888; 
-          background: transparent; 
-          padding: 0; font-weight: normal;
-          margin-right: 5px;
-      }
-      
-      /* 狀態燈號 (取代原本的長方形 Tag) */
-      .status-dot {
-          display: inline-block;
-          width: 8px; height: 8px;
-          border-radius: 50%;
-          margin-right: 5px;
-      }
-      .bg-green { background-color: #2ecc71; box-shadow: 0 0 5px #2ecc71; } /* 螢光綠光暈 */
-      .bg-yellow { background-color: #f1c40f; box-shadow: 0 0 5px #f1c40f; }
-      .bg-red { background-color: #e74c3c; box-shadow: 0 0 5px #e74c3c; }
-      
-      .date-text { font-size: 12px; color: #888; display: flex; align-items: center; margin-top: 4px;}
-
-      /* 隱藏舊的 Tag 樣式，改用上面的 .status-dot */
-      .tag { display: none; } 
-
-      /* --- 圖片燈箱 (維持深色酷炫感) --- */
-      #imageModal { 
-          display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-          background: rgba(0,0,0,0.95); z-index: 10000; 
-          justify-content: center; align-items: center; flex-direction: column;
-          backdrop-filter: blur(5px);
-      }
-      #imageModal img { max-width: 90%; max-height: 80vh; border-radius: 10px; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
-      
-      /* --- 掃描與 Loader 特效 (保持 Sci-Fi 感) --- */
-      #loader { 
-          position: fixed; top:0; left:0; width:100%; height:100%; 
-          background: rgba(255,255,255,0.8); backdrop-filter: blur(10px);
-          display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 9999; 
-      }
-      .spinner { 
-          border: 3px solid rgba(0,0,0,0.1); border-top: 3px solid #333; 
-          border-radius: 50%; width: 40px; height: 40px; 
-          animation: spin 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite; /* 更有彈性的動畫 */
-          margin-bottom: 15px; 
-      }
-      #loaderText { color: #333; font-weight: 500; letter-spacing: 1px; }
-      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
+      /* --- 掃描與特效 (保持酷炫) --- */
       #scanOverlay {
           position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-          background: rgba(10, 20, 30, 0.95); /* 深藍黑 */
-          z-index: 10001;
+          background: rgba(0,0,0,0.9); z-index: 10001;
           display: none; flex-direction: column; justify-content: center; align-items: center;
       }
       .scan-box {
-          width: 250px; height: 250px; 
-          border: 2px solid rgba(0, 255, 200, 0.3); /* 青色科技線 */
-          border-radius: 20px; position: relative; overflow: hidden;
+          width: 250px; height: 250px; border: 2px solid #0f0; /* 駭客綠 */
+          box-shadow: 0 0 20px #0f0, inset 0 0 20px #0f0;
+          border-radius: 10px; position: relative; overflow: hidden;
           background: url('https://media.istockphoto.com/id/1199736573/vector/qr-code-scanning-icon.jpg?s=612x612&w=0&k=20&c=X7t1ZkM_k_oBq_aXz2ok_o_k_o_k_o_k_o_k_o_k=') no-repeat center/cover;
-          box-shadow: 0 0 20px rgba(0, 255, 200, 0.1);
+          opacity: 0.8;
       }
-      .scan-line { 
-          width: 100%; height: 2px; background: #00ffc8; 
-          box-shadow: 0 0 15px #00ffc8;
-          position: absolute; top: 0; animation: scanMove 2s ease-in-out infinite; 
-      }
-      .scan-text { color: #00ffc8; margin-top: 25px; font-size: 16px; letter-spacing: 3px; }
-      @keyframes scanMove { 0% { top: 0%; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+      .scan-line { width: 100%; height: 2px; background: #0f0; box-shadow: 0 0 10px #0f0;
+          position: absolute; top: 0; animation: scanMove 1.5s ease-in-out infinite; }
+      .scan-text { color: #0f0; margin-top: 20px; font-family: monospace; font-size: 20px; font-weight: bold; text-shadow: 0 0 5px #0f0; }
+      
+      /* --- Loader --- */
+      #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(43,46,56,0.9); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 9999; }
+      .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #00ffcc; border-radius: 50%; width: 45px; height: 45px; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
+      #loaderText { color: #00ffcc; font-weight: bold; font-family: monospace; font-size: 16px; text-shadow: 0 0 5px #00ffcc; }
 
-      /* --- 浮動按鈕群 (Glassmorphism) --- */
-      .float-btn {
-          position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-          padding: 12px 25px; border-radius: 50px; font-size: 15px; font-weight: 500;
-          box-shadow: 0 10px 20px rgba(0,0,0, 0.15);
-          display: none; z-index: 5000; width: auto; cursor: pointer; color: white; border: none;
-          backdrop-filter: blur(5px);
-      }
-      #bulkDelBtn { background: rgba(231, 76, 60, 0.9); }
-      #bulkAddBtn { background: rgba(46, 204, 113, 0.9); }
+      /* --- Image Modal --- */
+      #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
+      #imageModal img { max-width: 90%; max-height: 80vh; border: 5px solid #fff; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
 
-      /* 批量模式切換 */
-      .mode-switch { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 10px; font-size: 13px; color: #888; }
-      .active-mode { color: #2ecc71; font-weight: bold; }
+      /* --- 模式切換 --- */
+      .mode-switch { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 10px; font-size: 14px; color: #555; }
+      .active-mode { color: #2ecc71; text-decoration: underline; font-weight: bold; }
     </style>
 </head>
 <body>
     <div id="loader">
         <div class="spinner"></div>
-        <div id="loaderText">讀取冰箱數據...</div>
+        <div id="loaderText">SYNCING...</div>
     </div>
     
     <div id="scanOverlay">
         <div class="scan-box"><div class="scan-line"></div></div>
-        <div class="scan-text">SCANNING...</div>
+        <div class="scan-text">SCANNING TARGET...</div>
     </div>
 
-    <button id="bulkDelBtn" class="float-btn" onclick="doMultiDelete()">🗑️ 刪除選取 (0)</button>
-    <button id="bulkAddBtn" class="float-btn" onclick="doMultiAddUpload()">📤 確認上傳 (0)</button>
+    <button id="bulkDelBtn" class="float-btn" onclick="doMultiDelete()">🗑️ ERASE SELECTED (0)</button>
+    <button id="bulkAddBtn" class="float-btn" onclick="doMultiAddUpload()">📤 UPLOAD BATCH (0)</button>
 
     <div id="imageModal" onclick="this.style.display='none'">
         <img id="largeImgDisplay" src="">
-        <p style="color:#aaa; margin-top:15px; font-size:12px; letter-spacing:1px;">TAP TO CLOSE</p>
+        <p style="color:#aaa; margin-top:15px; font-family:monospace;">[ TAP TO CLOSE ]</p>
     </div>
 
     <div id="appSection">
         <div class="header">
-            <div>My Fridge <span style="font-size:12px; color:#aaa; font-weight:normal;">/ Dashboard</span></div>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <b id="displayCode">...</b>
-                <button onclick="doLogout()" style="width:auto; padding:5px 12px; background:#eee; color:#666; font-size:12px; border-radius:20px; margin:0;">登出</button>
-            </div>
+            <div>📋 FRIDGE NOTES</div>
+            <div style="font-size:12px; font-family:monospace; color:#555;">ID: <span id="displayCode">...</span></div>
+            <button onclick="doLogout()" style="width:auto; margin:0; padding:4px 10px; background:#333; color:#fff; font-size:12px; border:none;">LOGOUT</button>
         </div>
 
-        <div class="input-console">
-            <div class="mode-switch">
-                <label style="display:flex;align-items:center;cursor:pointer">
-                    <input type="checkbox" id="batchModeToggle" onchange="toggleBatchMode()" style="width:auto; margin-right:5px;">
-                    <span id="modeText">批量模式</span>
-                </label>
-            </div>
-
-            <input type="text" id="inCreator" list="cHistory" placeholder="👤 購買人">
-            <datalist id="cHistory"></datalist>
-            <input type="text" id="inName" placeholder="🍎 食品名稱">
-            <input type="text" id="inLoc" placeholder="🧊 放置位置 (如: 上層)">
-            <input type="date" id="inDate">
-
-            <div class="btn-row">
-                <input type="file" id="fileIn" accept="image/*" style="display:none" onchange="document.getElementById('pText').innerText='✅ 已選取'">
-                <button style="background:#f39c12; color:white; flex:1;" onclick="document.getElementById('fileIn').click()">📷 拍照</button>
-                <button id="mainActionBtn" onclick="doAdd()" style="flex:2;">加入清單</button>
-            </div>
-            <div id="pText" style="font-size:12px; color:#2ecc71; text-align:center; margin-bottom:0; height:15px;"></div>
+        <div class="mode-switch">
+            <label style="display:flex;align-items:center;cursor:pointer">
+                 <input type="checkbox" id="batchModeToggle" onchange="toggleBatchMode()" style="width:auto; margin-right:5px; border-bottom:none;">
+                <span id="modeText">📝 批量模式 (Batch Mode)</span>
+            </label>
         </div>
+
+        <input type="text" id="inCreator" list="cHistory" placeholder="由誰購買 (Creator)...">
+        <datalist id="cHistory"></datalist>
+        <input type="text" id="inName" placeholder="食品名稱 (Item Name)...">
+        <input type="text" id="inLoc" placeholder="位置 (Location)...">
+        <input type="date" id="inDate" style="background:transparent;">
+
+        <div class="btn-row">
+            <input type="file" id="fileIn" accept="image/*" style="display:none" onchange="document.getElementById('pText').innerText='[ IMAGE SELECTED ]'">
+            <button style="background:#fff; color:#333; border:2px dashed #333;" onclick="document.getElementById('fileIn').click()">📷 PHOTO</button>
+            <button id="mainActionBtn" onclick="doAdd()">🚀 WRITE ENTRY</button>
+        </div>
+        <div id="pText" style="font-family:monospace; font-size:12px; color:#e74c3c; text-align:center; margin-bottom:10px;"></div>
         
-        <div id="pendingArea" style="display:none; margin-bottom:20px;">
-            <div style="font-size:14px; color:#3498db; margin-bottom:10px; font-weight:bold; padding-left:10px;">📦 暫存區</div>
+        <div id="pendingArea" style="display:none; margin-bottom:20px; border: 2px dashed #999; padding: 10px;">
+            <div style="font-size:14px; color:#333; margin-bottom:5px; font-weight:bold; text-decoration:underline;">📦 STAGING AREA (暫存)</div>
             <div id="pendingList"></div>
         </div>
 
-        <input type="text" id="search" placeholder="🔍 搜尋冰箱..." onkeyup="renderList()">
+        <input type="text" id="search" placeholder="🔍 SEARCH LOGS..." onkeyup="renderList()" style="border-bottom: 3px double #333; margin-top:20px;">
         <div id="list"></div>
     </div>
 
     <script>
+        // ----------------------------------------------------
+        // 以下 JavaScript 完全保留原樣，僅調整一些文字或邏輯相容
+        // ----------------------------------------------------
         var API_URL = "https://script.google.com/macros/s/AKfycby_sDF8GC1jTH1yUN_UM1s_AdIvr0CHgtwiQ-GYMCMj__De6OQAm-NtUQWDn3f8avbD/exec";
         var allData = [];
         var pendingData = []; 
@@ -350,11 +318,11 @@
         function callApi(action, payload, cb, silent) {
             payload.action = action;
             if(!silent) {
-                let msg = "處理中...";
-                if(action === "delete") msg = "同步中...";
-                if(action === "deleteMulti") msg = "批量刪除中...";
-                if(action === "addMulti") msg = "批量上傳中...";
-                if(action === "getList") msg = "同步冰箱數據...";
+                let msg = "PROCESSING...";
+                if(action === "delete") msg = "DELETING...";
+                if(action === "deleteMulti") msg = "BULK DELETE...";
+                if(action === "addMulti") msg = "UPLOADING...";
+                if(action === "getList") msg = "SYNCING...";
                 showLoader(msg);
             }
             fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
@@ -373,13 +341,15 @@
             var txt = document.getElementById("modeText");
             var pArea = document.getElementById("pendingArea");
             if(isBatchMode) {
-                btn.innerText = "➕ 加入暫存";
+                btn.innerText = "➕ ADD TO STAGE";
                 btn.style.background = "#2ecc71"; 
+                btn.style.color = "#000";
                 txt.classList.add("active-mode");
                 pArea.style.display = "block";
             } else {
-                btn.innerText = "加入清單";
-                btn.style.background = "#2c3e50"; 
+                btn.innerText = "🚀 WRITE ENTRY";
+                btn.style.background = "#333"; 
+                btn.style.color = "#fff";
                 txt.classList.remove("active-mode");
                 if(pendingData.length === 0) pArea.style.display = "none";
             }
@@ -392,7 +362,7 @@
             var loc = document.getElementById("inLoc").value;
             var creator = document.getElementById("inCreator").value;
             var file = document.getElementById("fileIn").files[0];
-            if(!name || !date) return alert("請輸入名稱與日期");
+            if(!name || !date) return alert("MISSING FIELDS (必填未填)");
 
             var processData = (base64Img) => {
                 var newItem = {
@@ -411,6 +381,7 @@
                     
                     setTimeout(() => {
                         scanOverlay.style.display = 'none';
+                        
                         var tempId = Date.now();
                         var tempItem = {
                             rowId: tempId, name: name, location: loc, date: date, creator: creator, 
@@ -419,13 +390,14 @@
                         };
                         allData.unshift(tempItem);
                         renderList(); 
+                        
                         document.getElementById("inName").value = "";
                         document.getElementById("pText").innerText = "";
                         document.getElementById("fileIn").value = "";
 
                         var pl = { code: localStorage.getItem("pass_code"), ...newItem };
                         callApi("add", pl, (res) => { updateLocalData(res.data); }, true);
-                    }, 2000); // 縮短掃描時間增加流暢感
+                    }, 2000); // Slightly faster animation
                 }
             };
 
@@ -439,21 +411,21 @@
             
             if(pendingData.length > 0) {
                 btn.style.display = "block";
-                btn.innerText = "📤 確認上傳 (" + pendingData.length + ")";
+                btn.innerText = "📤 UPLOAD BATCH (" + pendingData.length + ")";
                 
                 var html = pendingData.map((item, idx) => `
                     <div class="card pending-item">
                         <div style="flex:1">
-                            <div style="font-weight:bold; color:#2c3e50;">${item.name}</div>
-                            <div style="font-size:12px; color:#666">${item.date} / ${item.loc}</div>
+                            <div><b>${item.name}</b> <span style="font-size:12px;color:#666">(${item.date})</span></div>
+                            <div style="font-size:12px; color:#666">📍 ${item.location || 'N/A'}</div>
                         </div>
-                        <button style="width:auto; background:none; color:#e74c3c; border:none; font-size:18px;" onclick="removePending(${idx})">✕</button>
+                        <button style="width:auto; background:none; color:#e74c3c; border:none; font-size:20px; box-shadow:none;" onclick="removePending(${idx})">✕</button>
                     </div>
                  `).join("");
                 div.innerHTML = html;
             } else {
                 btn.style.display = "none";
-                div.innerHTML = "<div style='text-align:center;color:#ccc;font-size:12px;padding:10px;'>暫存區是空的</div>";
+                div.innerHTML = "<div style='text-align:center;color:#aaa;font-size:12px;padding:10px;'>- EMPTY -</div>";
             }
         }
 
@@ -464,7 +436,7 @@
 
         function doMultiAddUpload() {
             if(pendingData.length === 0) return;
-            if(!confirm("確定要一次上傳這 " + pendingData.length + " 筆資料嗎？")) return;
+            if(!confirm("Upload " + pendingData.length + " items?")) return;
 
             var scanOverlay = document.getElementById("scanOverlay");
             scanOverlay.style.display = 'flex';
@@ -487,13 +459,14 @@
                     pendingData = [];
                     renderPendingList();
                     updateLocalData(res.data);
-                    document.querySelector(".scan-text").innerText = "SCANNING...";
+                    alert("UPLOAD COMPLETE!");
+                    document.querySelector(".scan-text").innerText = "SCANNING TARGET...";
                 }, true);
             }, 2000);
         }
 
         function doDel(id) { 
-            if(confirm("確定要刪除嗎？")) {
+            if(confirm("Delete this entry?")) {
                 allData = allData.filter(item => item.rowId !== id);
                 renderList(); 
                 var code = localStorage.getItem("pass_code");
@@ -505,7 +478,7 @@
             var checkboxes = document.querySelectorAll('.del-checkbox:checked');
             var idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value));
             if (idsToDelete.length === 0) return;
-            if (!confirm("確定要刪除選取的 " + idsToDelete.length + " 項資料嗎？")) return;
+            if (!confirm("Delete " + idsToDelete.length + " selected items?")) return;
             allData = allData.filter(item => !idsToDelete.includes(item.rowId));
             renderList();
             var code = localStorage.getItem("pass_code");
@@ -516,7 +489,7 @@
             var count = document.querySelectorAll('.del-checkbox:checked').length;
             var btn = document.getElementById("bulkDelBtn");
             if (count > 0) { btn.style.display = "block";
-            btn.innerText = "🗑️ 刪除選取 (" + count + ")"; } 
+            btn.innerText = "🗑️ ERASE SELECTED (" + count + ")"; } 
             else { btn.style.display = "none";
             }
         }
@@ -552,14 +525,14 @@
                 return s.toLowerCase().includes(key);
             });
             if (filtered.length === 0) {
-                listDiv.innerHTML = "<p style='text-align:center;color:#ccc; margin-top:30px;'>— 冰箱是空的 —</p>";
+                listDiv.innerHTML = "<p style='text-align:center;color:#999;font-family:monospace;'>[ NO DATA FOUND ]</p>";
                 checkSelection();
                 return;
             }
 
             var groups = {};
             filtered.forEach(item => {
-                var nameKey = item.name || "未命名";
+                var nameKey = item.name || "UNNAMED";
                 if(!groups[nameKey]) groups[nameKey] = [];
                 groups[nameKey].push(item);
             });
@@ -570,44 +543,42 @@
                 var datesB = groups[keyB].map(i => new Date(i.date).getTime());
                 return Math.min(...datesA) - Math.min(...datesB);
             });
-            
             sortedGroupKeys.forEach((groupName, groupIndex) => {
                 var items = groups[groupName];
                 items.sort((a,b) => new Date(a.date) - new Date(b.date));
-      
+
                 var count = items.length;
                 var earliestDate = items[0].date;
-                
                 var d = new Date(earliestDate);
                 var diff = Math.ceil((d - today)/86400000);
-                // 使用 CSS class 定義的顏色變數，這裡只取狀態顏色文字供 Header 使用
-                var statusColor = diff < 0 ? "#e74c3c" : (diff <= 7 ? "#f1c40f" : "#2ecc71");
-                var statusText = diff < 0 ? '已過期' : (diff <= 7 ? '快過期' : '正常');
+                
+                // 調整顏色邏輯配合深色/筆記風格
+                var statusColor = diff < 0 ? "#e74c3c" : (diff <= 7 ? "#d35400" : "#27ae60");
+                var statusText = diff < 0 ? 'EXPIRED' : (diff <= 7 ? 'SOON' : 'OK');
 
                 var subCardsHtml = items.map(item => {
                     var iDate = new Date(item.date);
                     var iDiff = Math.ceil((iDate - today)/86400000);
-                    // 根據日期狀態決定小圓點的顏色 Class
-                    var dotClass = iDiff < 0 ? "bg-red" : (iDiff <= 7 ? "bg-yellow" : "bg-green");
+                    var cls = iDiff < 0 ? "bg-red" : (iDiff <= 7 ? "bg-yellow" : "bg-green");
                     
                     var checkHTML = item.isTemp ? "" : 
                         `<div class="chk-wrapper"><input type="checkbox" class="del-checkbox" value="${item.rowId}" onchange="checkSelection()"></div>`;
+                    
                     return `
                         <div class="card ${item.isTemp ? 'temp-item' : ''}">
                             ${checkHTML}
                             <img src="${item.imgUrl || ''}" onclick="event.stopPropagation(); openModal(this.src)" onerror="this.style.display='none'">
                             <div style="flex:1">
-                                <div style="display:flex; align-items:center;">
-                                    <span style="font-weight:500; font-size:16px; margin-right:8px;">${item.creator || '未知'}</span>
-                                    <span style="font-size:12px; color:#aaa; background:#f4f4f4; padding:2px 6px; border-radius:4px;">${item.location}</span>
+                                <div style="display:flex; justify-content:space-between;">
+                                    <span class="creator-tag">BY: ${item.creator || '?'}</span>
+                                    <span style="font-size:12px;color:#666">@ ${item.location || '_'}</span>
                                 </div>
-                                <div class="date-text">
-                                    <span class="status-dot ${dotClass}"></span>
-                                    ${item.date} (${iDiff}天)
+                                <div style="margin-top:2px;">
+                                    <span class="tag ${cls}">${item.date} (${iDiff}D)</span>
                                 </div>
                             </div>
                             ${item.isTemp ? '<span style="font-size:12px;color:#f39c12">SYNC...</span>' : 
-                            `<button style="width:auto; background:none; color:#ddd; border:none; font-size:18px;" onclick="event.stopPropagation(); doDel(${item.rowId})">✕</button>`}
+                            `<button style="width:auto; background:none; color:#ccc; border:none; font-size:16px; box-shadow:none;" onclick="event.stopPropagation(); doDel(${item.rowId})">✕</button>`}
                         </div>
                     `;
                 }).join("");
@@ -617,12 +588,11 @@
                         <div class="group-header" id="group-header-${groupIndex}" onclick="toggleGroup(${groupIndex})">
                             <div class="group-title">
                                 <span class="arrow-icon">▶</span>
-                                <span>${groupName}</span>
-                                <span style="font-size:12px; background:#f0f2f5; padding:2px 8px; border-radius:10px; margin-left:8px; color:#888;">${count}</span>
+                                <b>${groupName}</b>
+                                <span style="font-size:10px; border:1px solid #999; padding:0 4px; margin-left:8px; border-radius:50%;">${count}</span>
                             </div>
-                            <div style="text-align:right;">
-                                <div style="color:${statusColor}; font-weight:bold; font-size:13px;">${statusText}</div>
-                                <div style="color:#ccc; font-size:11px;">${earliestDate}</div>
+                            <div class="group-info">
+                                <span style="color:${statusColor}; font-weight:bold; border-bottom:2px solid ${statusColor};">${earliestDate}</span>
                             </div>
                         </div>
                         <div class="group-body" id="group-body-${groupIndex}">
