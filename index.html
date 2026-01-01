@@ -3,80 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>冰箱小管家 - 登入</title>
+    <title>冰箱小管家 - 入口</title>
     <style>
         body {
             font-family: -apple-system, sans-serif;
-            background: #f4f7f6;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #333;
+            background: #f4f7f6; margin: 0; height: 100vh;
+            display: flex; justify-content: center; align-items: center; color: #333;
         }
         .login-box {
-            background: white;
-            padding: 40px 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            width: 85%;
-            max-width: 320px;
-            text-align: center;
+            background: white; padding: 40px 30px; border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08); width: 85%; max-width: 320px; text-align: center;
         }
-        h1 { margin-top: 0; color: #3498db; font-size: 26px; margin-bottom: 10px; }
-        p { color: #888; font-size: 14px; margin-bottom: 30px; }
+        h1 { margin-top: 0; color: #2c3e50; font-size: 26px; margin-bottom: 5px; }
+        .subtitle { color: #95a5a6; font-size: 14px; margin-bottom: 30px; }
         
+        /* 輸入區塊 */
+        .input-group { margin-bottom: 25px; }
         input {
-            width: 100%; padding: 12px; margin-bottom: 20px;
-            border: 2px solid #eee; border-radius: 10px;
-            box-sizing: border-box; font-size: 18px;
-            text-align: center; outline: none; transition: 0.3s;
+            width: 100%; padding: 12px; margin-bottom: 10px;
+            border: 2px solid #ecf0f1; border-radius: 10px;
+            box-sizing: border-box; font-size: 18px; text-align: center;
+            outline: none; transition: 0.3s; letter-spacing: 2px; font-weight: bold;
+            text-transform: uppercase; /* 強制大寫 */
         }
         input:focus { border-color: #3498db; }
         
-        button {
-            width: 100%; padding: 12px;
-            background: #3498db; color: white;
-            border: none; border-radius: 10px;
-            font-size: 18px; font-weight: bold;
-            cursor: pointer; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
-            transition: 0.2s;
+        .btn {
+            width: 100%; padding: 12px; border: none; border-radius: 10px;
+            font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s;
         }
-        button:active { transform: scale(0.96); }
-        button:disabled { background: #ccc; box-shadow: none; }
+        .btn-primary { background: #3498db; color: white; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3); }
+        .btn-primary:active { transform: scale(0.96); }
         
+        /* 分隔線 */
+        .divider {
+            margin: 20px 0; border-top: 1px solid #eee; position: relative;
+        }
+        .divider span {
+            background: white; padding: 0 10px; color: #aaa; font-size: 12px;
+            position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+        }
+
+        .btn-outline {
+            background: white; border: 2px solid #2ecc71; color: #2ecc71;
+        }
+        .btn-outline:active { background: #2ecc71; color: white; }
+
         #loading { display: none; margin-top: 15px; color: #666; font-size: 14px; }
+        .error-msg { color: #e74c3c; font-size: 14px; margin-bottom: 10px; display: none; }
     </style>
 </head>
 <body>
 
     <div class="login-box">
         <h1>🥦 冰箱小管家</h1>
-        <p>輸入代碼以開始同步</p>
+        <div class="subtitle">輸入代碼或建立新冰箱</div>
         
-        <input type="text" id="passCode" placeholder="例如：1234" onkeyup="if(event.key==='Enter') doLogin()">
-        <button id="btn" onclick="doLogin()">進入冰箱</button>
-        <div id="loading">正在連線...</div>
+        <div class="input-group">
+            <input type="text" id="passCode" placeholder="輸入 6 位代碼" maxlength="6" onkeyup="handleKeyup(event)">
+            <div id="errorMsg" class="error-msg"></div>
+            <button id="loginBtn" class="btn btn-primary" onclick="doLogin()">進入冰箱</button>
+        </div>
+
+        <div class="divider"><span>或是</span></div>
+
+        <button id="createBtn" class="btn btn-outline" onclick="doCreate()">✨ 建立一個新的冰箱代碼</button>
+        
+        <div id="loading">連線中...</div>
     </div>
 
     <script>
-        // ⚠️ 請換成你重新部署後的網址
-        var API_URL = "https://script.google.com/macros/s/AKfycbwOl7qyvxoYNlLjoChG5jZAFmfg2n6OKO9nOse6DsBrAjE45wxdUhWe-0krIxbHepuq/exec";
+        // ⚠️ 請換成你的新部署網址
+        var API_URL = "https://script.google.com/macros/s/AKfycbysGqMnuI5ESdoPY4hju8hsWsEUVL2vhM3YPsHasjc-y6dGEyc9zQQZCViVMsQa0HSt/exec";
 
+        function handleKeyup(e) {
+            e.target.value = e.target.value.toUpperCase(); // 自動轉大寫
+            document.getElementById("errorMsg").style.display = 'none';
+            if(e.key === 'Enter') doLogin();
+        }
+
+        function setLoading(isLoading, text) {
+            var loadDiv = document.getElementById("loading");
+            var lBtn = document.getElementById("loginBtn");
+            var cBtn = document.getElementById("createBtn");
+            
+            if(isLoading) {
+                loadDiv.innerText = text || "連線中...";
+                loadDiv.style.display = "block";
+                lBtn.disabled = true; cBtn.disabled = true;
+                lBtn.style.opacity = 0.6; cBtn.style.opacity = 0.6;
+            } else {
+                loadDiv.style.display = "none";
+                lBtn.disabled = false; cBtn.disabled = false;
+                lBtn.style.opacity = 1; cBtn.style.opacity = 1;
+            }
+        }
+
+        // 登入邏輯
         function doLogin() {
-            var code = document.getElementById("passCode").value.trim();
-            if (!code) return alert("請輸入代碼");
+            var code = document.getElementById("passCode").value.trim().toUpperCase();
+            if (code.length < 6) return showError("請輸入完整的 6 位代碼");
 
-            var btn = document.getElementById("btn");
-            var loading = document.getElementById("loading");
+            setLoading(true, "驗證代碼中...");
 
-            // UI 狀態切換
-            btn.disabled = true;
-            loading.style.display = "block";
-
-            // 使用最相容的 application/x-www-form-urlencoded 方式 (舊版常用)
-            // 配合剛修正的 code.gs，這裡會走 e.parameter 路線
+            // 呼叫 getList 來驗證代碼是否有效
             fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -85,32 +115,65 @@
             .then(r => r.json())
             .then(res => {
                 if(res.status === "success") {
-                    // 登入成功
-                    localStorage.setItem("pass_code", code);
-                    // 順便把資料存起來，讓主畫面開啟更快
-                    localStorage.setItem("cached_fridge_data", JSON.stringify(res.data));
-                    window.location.href = "main.html";
+                    enterApp(code, res.data);
                 } else {
-                    alert("連線失敗：" + res.error);
-                    resetUI();
+                    showError(res.error || "代碼錯誤，請檢查或建立新的。");
+                    setLoading(false);
                 }
             })
             .catch(e => {
                 console.error(e);
-                // 容錯機制：如果 fetch 失敗，通常是網路問題，但為了讓舊使用者能用
-                // 我們可以選擇「只要有輸入代碼就放行」(如果不介意安全性的話)
-                // 但為了保險，這裡我們還是報錯
-                alert("無法連線，請檢查網路。");
-                resetUI();
+                showError("網路連線失敗");
+                setLoading(false);
             });
         }
 
-        function resetUI() {
-            document.getElementById("btn").disabled = false;
-            document.getElementById("loading").style.display = "none";
+        // 建立新代碼邏輯
+        function doCreate() {
+            if(!confirm("確定要建立一個新的冰箱嗎？\n系統將會給您一組新的隨機代碼。")) return;
+
+            setLoading(true, "正在產生代碼...");
+
+            fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: "action=create"
+            })
+            .then(r => r.json())
+            .then(res => {
+                if(res.status === "success" && res.data.code) {
+                    var newCode = res.data.code;
+                    alert("建立成功！您的新代碼是： " + newCode + "\n\n請記住這個代碼，分享給家人即可共用。");
+                    // 自動填入並進入
+                    document.getElementById("passCode").value = newCode;
+                    // 因為剛建立，清單通常只有歡迎訊息，不需要額外傳 data，讓 main.html 自己抓
+                    enterApp(newCode, null); 
+                } else {
+                    showError("建立失敗，請稍後再試。");
+                    setLoading(false);
+                }
+            })
+            .catch(e => {
+                showError("連線錯誤");
+                setLoading(false);
+            });
         }
 
-        // 自動填入上次代碼
+        function enterApp(code, data) {
+            localStorage.setItem("pass_code", code);
+            if(data) localStorage.setItem("cached_fridge_data", JSON.stringify(data));
+            window.location.href = "main.html";
+        }
+
+        function showError(msg) {
+            var el = document.getElementById("errorMsg");
+            el.innerText = msg;
+            el.style.display = "block";
+            // 震動提示
+            if(navigator.vibrate) navigator.vibrate(200);
+        }
+
+        // 自動填入
         window.onload = function() {
             var saved = localStorage.getItem("pass_code");
             if(saved) document.getElementById("passCode").value = saved;
