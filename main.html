@@ -6,113 +6,32 @@
     <link rel="preconnect" href="https://script.google.com">
     <title>冰箱小管家 - 主畫面</title>
     <style>
-      body { font-family: -apple-system, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; padding-bottom: 100px; }
+      body { font-family: -apple-system, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
       #appSection { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); min-height: 400px; }
       .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
       input, button { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
-      button { background: #3498db; color: white; border: none; font-weight: bold; cursor: pointer; transition: all 0.2s; }
-      button:active { transform: scale(0.98); }
+      button { background: #3498db; color: white; border: none; font-weight: bold; cursor: pointer; }
       .btn-row { display: flex; gap: 8px; }
       
-      /* --- 卡片樣式 (修改版) --- */
-      .card { border: 1px solid #eee; padding: 12px; margin-bottom: 0; border-radius: 12px; display: flex; align-items: center; background: #fff; position: relative; transition: all 0.3s ease; }
+      /* 卡片樣式 */
+      .card { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 12px; display: flex; align-items: center; background: #fff; position: relative; transition: all 0.3s ease; }
+      /* 臨時新增的卡片會有閃爍特效 */
       .card.temp-item { border: 2px solid #f39c12; background: #fffdf5; }
-      .card.pending-item { border: 2px dashed #3498db; background: #f0f8ff; opacity: 0.9; margin-bottom: 10px; }
-      
-      .chk-wrapper { display: flex; align-items: center; padding-right: 10px; }
-      .del-checkbox { width: 24px; height: 24px; cursor: pointer; margin: 0; }
-
-      .card img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin-right: 12px; cursor: pointer; background: #eee; }
+      .card img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-right: 12px; cursor: pointer; background: #eee; }
       
       .creator-tag { font-size: 12px; color: #6c5ce7; background: #f0f0ff; padding: 2px 6px; border-radius: 6px; font-weight: bold; }
       .tag { font-size: 11px; padding: 2px 6px; border-radius: 8px; color: white; margin-top: 4px; display: inline-block; }
       .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
-
-      /* --- ✨ 新增：群組樣式 (Group Styles) --- */
-      .group-container {
-          background: #fff;
-          border-radius: 12px;
-          margin-bottom: 12px;
-          box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-          border: 1px solid #e0e0e0;
-          overflow: hidden;
-      }
-      /* 群組標題 (父層) */
-      .group-header {
-          padding: 15px;
-          background: #fdfdfd;
-          cursor: pointer;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          border-bottom: 1px solid transparent; /* 預設無底線 */
-          transition: background 0.2s;
-      }
-      .group-header:hover { background: #f5f5f5; }
-      .group-header.active {
-          background: #eef2f5;
-          border-bottom: 1px solid #ddd;
-      }
-      .group-title { font-weight: bold; font-size: 16px; display: flex; align-items: center; }
-      .group-info { font-size: 13px; text-align: right; color: #666; }
-      .arrow-icon { margin-right: 8px; transition: transform 0.3s; font-size: 12px; color: #888; }
-      .group-header.active .arrow-icon { transform: rotate(90deg); }
-
-      /* 群組內容 (子層) */
-      .group-body {
-          display: none; /* 預設隱藏 */
-          background: #fafafa;
-          padding: 10px;
-      }
-      .group-body .card {
-          margin-bottom: 8px; /* 子卡片之間的間距 */
-          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-          background: #fff;
-      }
-      .group-body .card:last-child { margin-bottom: 0; }
-      /* -------------------------------- */
       
       /* 圖片燈箱 */
       #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
       #imageModal img { max-width: 90%; max-height: 80vh; border-radius: 10px; }
       
-      /* Loader */
+      /* Loader (保留但只在非靜默模式顯示) */
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 9999; }
       .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 45px; height: 45px; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
       #loaderText { color: #333; font-weight: bold; font-size: 16px; }
       @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-      /* 掃描特效 */
-      #scanOverlay {
-          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-          background: rgba(0,0,0,0.85); z-index: 10001;
-          display: none; flex-direction: column; justify-content: center; align-items: center;
-      }
-      .scan-box {
-          width: 250px; height: 250px; border: 4px solid rgba(255,255,255,0.3);
-          border-radius: 20px; position: relative; overflow: hidden;
-          background: url('https://media.istockphoto.com/id/1199736573/vector/qr-code-scanning-icon.jpg?s=612x612&w=0&k=20&c=X7t1ZkM_k_oBq_aXz2ok_o_k_o_k_o_k_o_k_o_k=') no-repeat center/cover;
-      }
-      .scan-line { width: 100%; height: 4px; background: #00ff00; box-shadow: 0 0 10px #00ff00; position: absolute; top: 0; animation: scanMove 2.5s ease-in-out infinite; }
-      .scan-text { color: #00ff00; margin-top: 20px; font-size: 18px; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 5px #00ff00; }
-      @keyframes scanMove { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
-
-      /* 浮動按鈕群 */
-      .float-btn {
-          position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-          padding: 15px 30px; border-radius: 30px; font-size: 16px; font-weight: bold;
-          box-shadow: 0 5px 20px rgba(0,0,0, 0.3);
-          display: none; z-index: 5000; width: auto; cursor: pointer; color: white;
-      }
-      #bulkDelBtn { background: #e74c3c; }
-      #bulkAddBtn { background: #2ecc71; }
-
-      /* 批量模式切換開關 */
-      .mode-switch {
-          display: flex; align-items: center; justify-content: flex-end; margin-bottom: 10px; font-size: 14px; color: #555;
-      }
-      .mode-switch input { width: auto; margin: 0 8px 0 0; }
-      .active-mode { color: #2ecc71; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -121,14 +40,6 @@
         <div id="loaderText">連線中...</div>
     </div>
     
-    <div id="scanOverlay">
-        <div class="scan-box"><div class="scan-line"></div></div>
-        <div class="scan-text">正在掃描食品...</div>
-    </div>
-
-    <button id="bulkDelBtn" class="float-btn" onclick="doMultiDelete()">🗑️ 刪除選取項目 (0)</button>
-    <button id="bulkAddBtn" class="float-btn" onclick="doMultiAddUpload()">📤 確認上傳 (0)</button>
-
     <div id="imageModal" onclick="this.style.display='none'">
         <img id="largeImgDisplay" src="">
         <p style="color:white; margin-top:15px; font-size:14px;">點擊任何處關閉</p>
@@ -140,13 +51,6 @@
             <button onclick="doLogout()" style="width:auto; padding:4px 10px; background:#e74c3c; font-size:12px;">登出</button>
         </div>
 
-        <div class="mode-switch">
-            <label style="display:flex;align-items:center;cursor:pointer">
-                <input type="checkbox" id="batchModeToggle" onchange="toggleBatchMode()">
-                <span id="modeText">📝 切換至批量輸入模式</span>
-            </label>
-        </div>
-
         <input type="text" id="inCreator" list="cHistory" placeholder="👤 購買人">
         <datalist id="cHistory"></datalist>
         <input type="text" id="inName" placeholder="🍎 食品名稱">
@@ -156,24 +60,17 @@
         <div class="btn-row">
             <input type="file" id="fileIn" accept="image/*" style="display:none" onchange="document.getElementById('pText').innerText='已選照片'">
             <button style="background:#f39c12;" onclick="document.getElementById('fileIn').click()">📷 拍照</button>
-            <button id="mainActionBtn" onclick="doAdd()">🚀 加入清單</button>
+            <button onclick="doAdd()">🚀 加入清單</button>
         </div>
         <div id="pText" style="font-size:12px; color:#aaa; text-align:center; margin-bottom:10px;"></div>
         
-        <div id="pendingArea" style="display:none; margin-bottom:20px;">
-            <div style="font-size:14px; color:#3498db; margin-bottom:5px; font-weight:bold;">📦 準備上傳的項目 (尚未儲存)</div>
-            <div id="pendingList"></div>
-        </div>
-
         <input type="text" id="search" placeholder="🔍 搜尋名稱、位置、購買人..." onkeyup="renderList()">
         <div id="list"></div>
     </div>
 
     <script>
-        var API_URL = "https://script.google.com/macros/s/AKfycbysGqMnuI5ESdoPY4hju8hsWsEUVL2vhM3YPsHasjc-y6dGEyc9zQQZCViVMsQa0HSt/exec";
+        var API_URL = "https://script.google.com/macros/s/AKfycby_sDF8GC1jTH1yUN_UM1s_AdIvr0CHgtwiQ-GYMCMj__De6OQAm-NtUQWDn3f8avbD/exec";
         var allData = [];
-        var pendingData = []; // 用來存暫存資料
-        var isBatchMode = false;
 
         function showLoader(text) {
             document.getElementById("loaderText").innerText = text;
@@ -213,9 +110,8 @@
             if(!silent) {
                 let msg = "處理中...";
                 if(action === "delete") msg = "正在同步...";
-                if(action === "deleteMulti") msg = "正在批量刪除...";
-                if(action === "addMulti") msg = "正在批量上傳...請稍候";
                 if(action === "getList") msg = "同步中...";
+                // 🚀 注意：新增動作改成 silent 模式了，所以這裡不會顯示 Loader
                 showLoader(msg);
             }
             fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
@@ -227,164 +123,68 @@
 
         function doLogout() { localStorage.clear(); window.location.href = "index.html"; }
 
-        function toggleBatchMode() {
-            var checkbox = document.getElementById("batchModeToggle");
-            isBatchMode = checkbox.checked;
-            var btn = document.getElementById("mainActionBtn");
-            var txt = document.getElementById("modeText");
-            var pArea = document.getElementById("pendingArea");
-            
-            if(isBatchMode) {
-                btn.innerText = "➕ 加入暫存";
-                btn.style.background = "#2ecc71"; // 綠色
-                txt.classList.add("active-mode");
-                pArea.style.display = "block";
-            } else {
-                btn.innerText = "🚀 加入清單";
-                btn.style.background = "#3498db"; // 藍色
-                txt.classList.remove("active-mode");
-                if(pendingData.length === 0) pArea.style.display = "none";
-            }
-            renderPendingList();
-        }
-
+        // 🚀 核心優化：樂觀新增
         function doAdd() {
             var name = document.getElementById("inName").value.trim();
             var date = document.getElementById("inDate").value;
             var loc = document.getElementById("inLoc").value;
             var creator = document.getElementById("inCreator").value;
-            var file = document.getElementById("fileIn").files[0];
-
+            
             if(!name || !date) return alert("必填項目未輸入");
-
-            var processData = (base64Img) => {
-                var newItem = {
-                    name: name, loc: loc, date: date, creator: creator, image: base64Img || ""
+            
+            var pl = { code: localStorage.getItem("pass_code"), name: name, loc: loc, date: date, creator: creator, image: "" };
+            var file = document.getElementById("fileIn").files[0];
+            
+            // 定義一個內部函數來執行「先顯示、後上傳」
+            var executeAdd = (base64Img) => {
+                // 1. 準備一個「臨時物件」
+                var tempId = Date.now(); // 用時間當作臨時 ID
+                var tempItem = {
+                    rowId: tempId, 
+                    name: name, 
+                    location: loc, 
+                    date: date, 
+                    creator: creator, 
+                    imgUrl: base64Img ? "data:image/jpeg;base64," + base64Img : "", // 直接用 Base64 顯示
+                    isTemp: true // 標記為臨時
                 };
 
-                if (isBatchMode) {
-                    pendingData.push(newItem);
-                    renderPendingList();
-                    document.getElementById("inName").value = "";
-                    document.getElementById("pText").innerText = "";
-                    document.getElementById("fileIn").value = "";
-                    if(navigator.vibrate) navigator.vibrate(50);
-                } else {
-                    var scanOverlay = document.getElementById("scanOverlay");
-                    scanOverlay.style.display = 'flex';
-                    
-                    setTimeout(() => {
-                        scanOverlay.style.display = 'none';
-                        
-                        var tempId = Date.now();
-                        var tempItem = {
-                            rowId: tempId, name: name, location: loc, date: date, creator: creator, 
-                            imgUrl: base64Img ? "data:image/jpeg;base64," + base64Img : "",
-                            isTemp: true
-                        };
-                        allData.unshift(tempItem);
-                        renderList(); 
-                        
-                        document.getElementById("inName").value = "";
-                        document.getElementById("pText").innerText = "";
-                        document.getElementById("fileIn").value = "";
+                // 2. 立刻插入陣列最前面 (樂觀更新)
+                allData.unshift(tempItem);
+                renderList(); 
+                
+                // 3. 清空輸入框 (使用者覺得做完了)
+                document.getElementById("inName").value = ""; 
+                document.getElementById("pText").innerText = "";
+                document.getElementById("fileIn").value = "";
 
-                        var pl = { code: localStorage.getItem("pass_code"), ...newItem };
-                        callApi("add", pl, (res) => { updateLocalData(res.data); }, true);
-                    }, 2500); 
-                }
+                // 4. 背景偷偷上傳 (silent=true)
+                pl.image = base64Img || "";
+                callApi("add", pl, (res) => {
+                    // 5. 上傳成功後，用伺服器回傳的「正式資料」替換掉「臨時資料」
+                    updateLocalData(res.data);
+                }, true);
             };
 
-            if(file) compressImage(file).then(base64 => processData(base64));
-            else processData("");
-        }
-
-        function renderPendingList() {
-            var div = document.getElementById("pendingList");
-            var btn = document.getElementById("bulkAddBtn");
-            
-            if(pendingData.length > 0) {
-                btn.style.display = "block";
-                btn.innerText = "📤 確認上傳 (" + pendingData.length + ")";
-                
-                var html = pendingData.map((item, idx) => `
-                    <div class="card pending-item">
-                        <div style="flex:1">
-                            <div><b>${item.name}</b> <span style="font-size:12px;color:#666">(${item.date})</span></div>
-                            <div style="font-size:12px; color:#666">📍 ${item.location}</div>
-                        </div>
-                        <button style="width:auto; background:none; color:#e74c3c; border:none; font-size:20px;" onclick="removePending(${idx})">✕</button>
-                    </div>
-                `).join("");
-                div.innerHTML = html;
+            if(file) {
+                // 如果有圖片，這裡稍微會卡一下(壓縮)，但比上傳快多了
+                compressImage(file).then(base64 => executeAdd(base64));
             } else {
-                btn.style.display = "none";
-                div.innerHTML = "<div style='text-align:center;color:#aaa;font-size:12px;padding:10px;'>暫存區是空的</div>";
+                executeAdd("");
             }
-        }
-
-        function removePending(idx) {
-            pendingData.splice(idx, 1);
-            renderPendingList();
-        }
-
-        function doMultiAddUpload() {
-            if(pendingData.length === 0) return;
-            if(!confirm("確定要一次上傳這 " + pendingData.length + " 筆資料嗎？")) return;
-
-            var scanOverlay = document.getElementById("scanOverlay");
-            scanOverlay.style.display = 'flex';
-            document.querySelector(".scan-text").innerText = "正在批量建檔...";
-
-            setTimeout(() => {
-                var code = localStorage.getItem("pass_code");
-                pendingData.forEach(item => {
-                    var tempItem = {
-                        rowId: Date.now() + Math.random(), 
-                        name: item.name, location: item.loc, date: item.date, creator: item.creator, 
-                        imgUrl: item.image ? "data:image/jpeg;base64," + item.image : "",
-                        isTemp: true
-                    };
-                    allData.unshift(tempItem);
-                });
-                renderList();
-                
-                callApi("addMulti", { items: pendingData, code: code }, function(res) {
-                    scanOverlay.style.display = 'none';
-                    pendingData = [];
-                    renderPendingList();
-                    updateLocalData(res.data);
-                    alert("全部上傳成功！");
-                    document.querySelector(".scan-text").innerText = "正在掃描食品...";
-                }, true); 
-            }, 2500);
         }
 
         function doDel(id) { 
             if(confirm("確定要刪除嗎？")) {
+                // 樂觀刪除
                 allData = allData.filter(item => item.rowId !== id);
                 renderList(); 
+                
                 var code = localStorage.getItem("pass_code");
-                callApi("delete", { id: id, code: code }, function(res) { updateLocalData(res.data); }, true);
+                callApi("delete", { id: id, code: code }, function(res) {
+                    updateLocalData(res.data);
+                }, true);
             }
-        }
-
-        function doMultiDelete() {
-            var checkboxes = document.querySelectorAll('.del-checkbox:checked');
-            var idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value));
-            if (idsToDelete.length === 0) return;
-            if (!confirm("確定要刪除選取的 " + idsToDelete.length + " 項資料嗎？")) return;
-            allData = allData.filter(item => !idsToDelete.includes(item.rowId));
-            renderList();
-            var code = localStorage.getItem("pass_code");
-            callApi("deleteMulti", { ids: idsToDelete, code: code }, function(res) { updateLocalData(res.data); }, true);
-        }
-
-        function checkSelection() {
-            var count = document.querySelectorAll('.del-checkbox:checked').length;
-            var btn = document.getElementById("bulkDelBtn");
-            if (count > 0) { btn.style.display = "block"; btn.innerText = "🗑️ 刪除選取項目 (" + count + ")"; } 
-            else { btn.style.display = "none"; }
         }
 
         function updateLocalData(newData) {
@@ -395,121 +195,35 @@
             document.getElementById("cHistory").innerHTML = hist.map(c => `<option value="${c}">`).join("");
         }
 
-        // --- ✨ 新增：切換群組展開/收合 ---
-        function toggleGroup(groupId) {
-            var body = document.getElementById('group-body-' + groupId);
-            var header = document.getElementById('group-header-' + groupId);
-            
-            if (body.style.display === "none" || body.style.display === "") {
-                body.style.display = "block";
-                header.classList.add("active");
-            } else {
-                body.style.display = "none";
-                header.classList.remove("active");
-            }
-        }
-
-        // --- ✨ 核心修改：分組渲染列表 ---
         function renderList() {
             var listDiv = document.getElementById("list");
             var key = document.getElementById("search").value.toLowerCase();
             var today = new Date(); today.setHours(0,0,0,0);
-            
-            // 1. 先過濾資料
+            var html = "";
             var filtered = allData.filter(i => {
                 var s = String(i.name||"") + String(i.location||"") + String(i.creator||"");
                 return s.toLowerCase().includes(key);
-            });
+            }).sort((a,b) => new Date(a.date) - new Date(b.date));
 
-            if (filtered.length === 0) {
-                listDiv.innerHTML = "<p style='text-align:center;color:#999'>沒有找到相符的食品</p>";
-                checkSelection();
-                return;
-            }
-
-            // 2. 將資料依名稱分組
-            var groups = {};
             filtered.forEach(item => {
-                var nameKey = item.name || "未命名";
-                if(!groups[nameKey]) groups[nameKey] = [];
-                groups[nameKey].push(item);
-            });
-
-            var html = "";
-
-            // 3. 遍歷群組
-            // 先將群組依照「最快過期日」排序
-            var sortedGroupKeys = Object.keys(groups).sort((keyA, keyB) => {
-                var datesA = groups[keyA].map(i => new Date(i.date).getTime());
-                var datesB = groups[keyB].map(i => new Date(i.date).getTime());
-                return Math.min(...datesA) - Math.min(...datesB);
-            });
-
-            sortedGroupKeys.forEach((groupName, groupIndex) => {
-                var items = groups[groupName];
-                
-                // 該組內的項目也依日期排序
-                items.sort((a,b) => new Date(a.date) - new Date(b.date));
-
-                // 計算匯總資訊
-                var count = items.length;
-                var earliestDate = items[0].date;
-                
-                // 計算顏色標籤 (依照最早那筆)
-                var d = new Date(earliestDate);
+                var d = new Date(item.date);
                 var diff = Math.ceil((d - today)/86400000);
-                var statusColor = diff < 0 ? "#e74c3c" : (diff <= 7 ? "#f1c40f" : "#2ecc71");
-                var statusText = diff < 0 ? '已過期' : (diff <= 7 ? '快過期' : '正常');
-
-                // --- 產生 HTML ---
+                var cls = diff < 0 ? "bg-red" : (diff <= 7 ? "bg-yellow" : "bg-green");
+                // 臨時項目加個橘色邊框特效
+                var tempClass = item.isTemp ? "temp-item" : "";
                 
-                // A. 子卡片列表 (預設隱藏在下拉區塊)
-                var subCardsHtml = items.map(item => {
-                    var iDate = new Date(item.date);
-                    var iDiff = Math.ceil((iDate - today)/86400000);
-                    var cls = iDiff < 0 ? "bg-red" : (iDiff <= 7 ? "bg-yellow" : "bg-green");
-                    
-                    var checkHTML = item.isTemp ? "" : 
-                        `<div class="chk-wrapper"><input type="checkbox" class="del-checkbox" value="${item.rowId}" onchange="checkSelection()"></div>`;
-                    
-                    return `
-                        <div class="card ${item.isTemp ? 'temp-item' : ''}">
-                            ${checkHTML}
-                            <img src="${item.imgUrl || ''}" onclick="event.stopPropagation(); openModal(this.src)">
-                            <div style="flex:1">
-                                <div><span class="creator-tag">👤 ${item.creator || '未知'}</span></div>
-                                <div style="font-size:13px; color:#666">📍 ${item.location}</div>
-                                <div class="tag ${cls}">${item.date} (${iDiff}天)</div>
-                            </div>
-                            ${item.isTemp ? '<span style="font-size:12px;color:#f39c12">同步中...</span>' : 
-                            `<button style="width:auto; background:none; color:#ccc; border:none; font-size:20px;" onclick="event.stopPropagation(); doDel(${item.rowId})">✕</button>`}
-                        </div>
-                    `;
-                }).join("");
-
-                // B. 父層容器 (顯示匯總)
-                html += `
-                    <div class="group-container">
-                        <div class="group-header" id="group-header-${groupIndex}" onclick="toggleGroup(${groupIndex})">
-                            <div class="group-title">
-                                <span class="arrow-icon">▶</span>
-                                <b>${groupName}</b>
-                                <span style="font-size:12px; background:#eee; padding:2px 6px; border-radius:10px; margin-left:8px; color:#555;">${count}</span>
-                            </div>
-                            <div class="group-info">
-                                <div style="color:${statusColor}; font-weight:bold;">${earliestDate}</div>
-                                <div>${statusText}</div>
-                            </div>
-                        </div>
-                        <div class="group-body" id="group-body-${groupIndex}">
-                            ${subCardsHtml}
-                        </div>
+                html += `<div class="card ${tempClass}">
+                    <img src="${item.imgUrl || ''}" onclick="openModal(this.src)">
+                    <div style="flex:1">
+                        <div><b>${item.name}</b> <span class="creator-tag">👤 ${item.creator || ''}</span></div>
+                        <div style="font-size:13px; color:#666">📍 ${item.location}</div>
+                        <div class="tag ${cls}">${diff < 0 ? '已過期' : '剩 '+diff+' 天'} (${item.date})</div>
                     </div>
-                `;
+                    ${item.isTemp ? '<span style="font-size:12px;color:#f39c12">同步中...</span>' : 
+                    `<button style="width:auto; background:none; color:#ccc; border:none; font-size:20px;" onclick="doDel(${item.rowId})">✕</button>`}
+                </div>`;
             });
-            
-            listDiv.innerHTML = html;
-            checkSelection(); 
+            listDiv.innerHTML = html || "<p style='text-align:center;color:#999'>目前沒有食品資料</p>";
         }
 
         function refreshData(code, silent) {
@@ -531,5 +245,3 @@
     </script>
 </body>
 </html>
-
-
