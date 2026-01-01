@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="preconnect" href="https://script.google.com">
     <title>冰箱小管家 - 主畫面</title>
     <style>
       body { font-family: -apple-system, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; padding-bottom: 100px; }
@@ -13,65 +14,136 @@
       button:active { transform: scale(0.98); }
       .btn-row { display: flex; gap: 8px; }
       
-      /* 卡片與群組樣式 */
+      /* --- 卡片樣式 (修改版) --- */
       .card { border: 1px solid #eee; padding: 12px; margin-bottom: 0; border-radius: 12px; display: flex; align-items: center; background: #fff; position: relative; transition: all 0.3s ease; }
       .card.temp-item { border: 2px solid #f39c12; background: #fffdf5; }
       .card.pending-item { border: 2px dashed #3498db; background: #f0f8ff; opacity: 0.9; margin-bottom: 10px; }
       
       .chk-wrapper { display: flex; align-items: center; padding-right: 10px; }
       .del-checkbox { width: 24px; height: 24px; cursor: pointer; margin: 0; }
+
       .card img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin-right: 12px; cursor: pointer; background: #eee; }
+      
       .creator-tag { font-size: 12px; color: #6c5ce7; background: #f0f0ff; padding: 2px 6px; border-radius: 6px; font-weight: bold; }
       .tag { font-size: 11px; padding: 2px 6px; border-radius: 8px; color: white; margin-top: 4px; display: inline-block; }
       .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-red { background: #e74c3c; }
 
-      /* --- 群組 (手風琴) 樣式 --- */
-      .group-container { background: #fff; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; overflow: hidden; }
-      .group-header { padding: 15px; background: #fdfdfd; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid transparent; transition: background 0.2s; }
+      /* --- ✨ 新增：群組樣式 (Group Styles) --- */
+      .group-container {
+          background: #fff;
+          border-radius: 12px;
+          margin-bottom: 12px;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+          border: 1px solid #e0e0e0;
+          overflow: hidden;
+      }
+      /* 群組標題 (父層) */
+      .group-header {
+          padding: 15px;
+          background: #fdfdfd;
+          cursor: pointer;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-bottom: 1px solid transparent; /* 預設無底線 */
+          transition: background 0.2s;
+      }
       .group-header:hover { background: #f5f5f5; }
-      .group-header.active { background: #eef2f5; border-bottom: 1px solid #ddd; }
+      .group-header.active {
+          background: #eef2f5;
+          border-bottom: 1px solid #ddd;
+      }
       .group-title { font-weight: bold; font-size: 16px; display: flex; align-items: center; }
+      .group-info { font-size: 13px; text-align: right; color: #666; }
       .arrow-icon { margin-right: 8px; transition: transform 0.3s; font-size: 12px; color: #888; }
       .group-header.active .arrow-icon { transform: rotate(90deg); }
-      .group-body { display: none; background: #fafafa; padding: 10px; }
-      .group-body .card { margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); background: #fff; }
-      .group-body .card:last-child { margin-bottom: 0; }
 
-      /* 其他 UI 元件 */
+      /* 群組內容 (子層) */
+      .group-body {
+          display: none; /* 預設隱藏 */
+          background: #fafafa;
+          padding: 10px;
+      }
+      .group-body .card {
+          margin-bottom: 8px; /* 子卡片之間的間距 */
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+          background: #fff;
+      }
+      .group-body .card:last-child { margin-bottom: 0; }
+      /* -------------------------------- */
+      
+      /* 圖片燈箱 */
       #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
       #imageModal img { max-width: 90%; max-height: 80vh; border-radius: 10px; }
+      
+      /* Loader */
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 9999; }
       .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 45px; height: 45px; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
-      
-      #scanOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10001; display: none; flex-direction: column; justify-content: center; align-items: center; }
-      .scan-box { width: 250px; height: 250px; border: 4px solid rgba(255,255,255,0.3); border-radius: 20px; position: relative; overflow: hidden; background: url('https://media.istockphoto.com/id/1199736573/vector/qr-code-scanning-icon.jpg?s=612x612&w=0&k=20&c=X7t1ZkM_k_oBq_aXz2ok_o_k_o_k_o_k_o_k_o_k=') no-repeat center/cover; }
-      .scan-line { width: 100%; height: 4px; background: #00ff00; box-shadow: 0 0 10px #00ff00; position: absolute; top: 0; animation: scanMove 2.5s ease-in-out infinite; }
-      .scan-text { color: #00ff00; margin-top: 20px; font-size: 18px; font-weight: bold; letter-spacing: 2px; }
-      @keyframes scanMove { 0% { top: 0%; opacity: 0; } 100% { top: 100%; opacity: 0; } }
+      #loaderText { color: #333; font-weight: bold; font-size: 16px; }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-      .float-btn { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 15px 30px; border-radius: 30px; font-size: 16px; font-weight: bold; box-shadow: 0 5px 20px rgba(0,0,0, 0.3); display: none; z-index: 5000; width: auto; cursor: pointer; color: white; }
-      #bulkDelBtn { background: #e74c3c; } #bulkAddBtn { background: #2ecc71; }
-      .mode-switch { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 10px; font-size: 14px; color: #555; }
+      /* 掃描特效 */
+      #scanOverlay {
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.85); z-index: 10001;
+          display: none; flex-direction: column; justify-content: center; align-items: center;
+      }
+      .scan-box {
+          width: 250px; height: 250px; border: 4px solid rgba(255,255,255,0.3);
+          border-radius: 20px; position: relative; overflow: hidden;
+          background: url('https://media.istockphoto.com/id/1199736573/vector/qr-code-scanning-icon.jpg?s=612x612&w=0&k=20&c=X7t1ZkM_k_oBq_aXz2ok_o_k_o_k_o_k_o_k_o_k=') no-repeat center/cover;
+      }
+      .scan-line { width: 100%; height: 4px; background: #00ff00; box-shadow: 0 0 10px #00ff00; position: absolute; top: 0; animation: scanMove 2.5s ease-in-out infinite; }
+      .scan-text { color: #00ff00; margin-top: 20px; font-size: 18px; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 5px #00ff00; }
+      @keyframes scanMove { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+
+      /* 浮動按鈕群 */
+      .float-btn {
+          position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+          padding: 15px 30px; border-radius: 30px; font-size: 16px; font-weight: bold;
+          box-shadow: 0 5px 20px rgba(0,0,0, 0.3);
+          display: none; z-index: 5000; width: auto; cursor: pointer; color: white;
+      }
+      #bulkDelBtn { background: #e74c3c; }
+      #bulkAddBtn { background: #2ecc71; }
+
+      /* 批量模式切換開關 */
+      .mode-switch {
+          display: flex; align-items: center; justify-content: flex-end; margin-bottom: 10px; font-size: 14px; color: #555;
+      }
+      .mode-switch input { width: auto; margin: 0 8px 0 0; }
       .active-mode { color: #2ecc71; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div id="loader"><div class="spinner"></div><div id="loaderText">連線中...</div></div>
-    <div id="scanOverlay"><div class="scan-box"><div class="scan-line"></div></div><div class="scan-text">正在掃描食品...</div></div>
+    <div id="loader">
+        <div class="spinner"></div>
+        <div id="loaderText">連線中...</div>
+    </div>
+    
+    <div id="scanOverlay">
+        <div class="scan-box"><div class="scan-line"></div></div>
+        <div class="scan-text">正在掃描食品...</div>
+    </div>
+
     <button id="bulkDelBtn" class="float-btn" onclick="doMultiDelete()">🗑️ 刪除選取項目 (0)</button>
     <button id="bulkAddBtn" class="float-btn" onclick="doMultiAddUpload()">📤 確認上傳 (0)</button>
-    <div id="imageModal" onclick="this.style.display='none'"><img id="largeImgDisplay" src=""><p style="color:white;margin-top:15px;font-size:14px;">點擊關閉</p></div>
+
+    <div id="imageModal" onclick="this.style.display='none'">
+        <img id="largeImgDisplay" src="">
+        <p style="color:white; margin-top:15px; font-size:14px;">點擊任何處關閉</p>
+    </div>
 
     <div id="appSection">
         <div class="header">
-            <div>我的冰箱 <b id="displayCode">...</b></div>
+            <div>我的冰箱 <b id="displayCode">讀取中...</b></div>
             <button onclick="doLogout()" style="width:auto; padding:4px 10px; background:#e74c3c; font-size:12px;">登出</button>
         </div>
 
         <div class="mode-switch">
             <label style="display:flex;align-items:center;cursor:pointer">
                 <input type="checkbox" id="batchModeToggle" onchange="toggleBatchMode()">
-                <span id="modeText">📝 切換至批量模式</span>
+                <span id="modeText">📝 切換至批量輸入模式</span>
             </label>
         </div>
 
@@ -89,25 +161,30 @@
         <div id="pText" style="font-size:12px; color:#aaa; text-align:center; margin-bottom:10px;"></div>
         
         <div id="pendingArea" style="display:none; margin-bottom:20px;">
-            <div style="font-size:14px; color:#3498db; margin-bottom:5px; font-weight:bold;">📦 暫存項目</div>
+            <div style="font-size:14px; color:#3498db; margin-bottom:5px; font-weight:bold;">📦 準備上傳的項目 (尚未儲存)</div>
             <div id="pendingList"></div>
         </div>
 
-        <input type="text" id="search" placeholder="🔍 搜尋..." onkeyup="renderList()">
+        <input type="text" id="search" placeholder="🔍 搜尋名稱、位置、購買人..." onkeyup="renderList()">
         <div id="list"></div>
     </div>
 
     <script>
-        // ⚠️ 請替換成你的 Google Apps Script 網址 ⚠️
-        var API_URL = "https://script.google.com/macros/s/AKfycbwGbWTq0hWB-__LAlkg_3MxlBWoeVAkBc1nHt7jlf6-2SFphSc-6jNPtna7V2uxE0sx/exec";
-        
+        var API_URL = "https://script.google.com/macros/s/AKfycbzCEMspx-rMM-evz16IYOyeit1KVhvbH4kAnYWdP3ZK-wKN42tFfS1jf7xtXnwINNs/exec";
         var allData = [];
-        var pendingData = [];
+        var pendingData = []; // 用來存暫存資料
         var isBatchMode = false;
 
-        function showLoader(text) { document.getElementById("loaderText").innerText = text; document.getElementById("loader").style.display = "flex"; }
+        function showLoader(text) {
+            document.getElementById("loaderText").innerText = text;
+            document.getElementById("loader").style.display = "flex";
+        }
         function hideLoader() { document.getElementById("loader").style.display = "none"; }
-        function openModal(src) { document.getElementById("largeImgDisplay").src = src; document.getElementById("imageModal").style.display = "flex"; }
+
+        function openModal(src) {
+            document.getElementById("largeImgDisplay").src = src;
+            document.getElementById("imageModal").style.display = "flex";
+        }
 
         function compressImage(file) {
             return new Promise((resolve) => {
@@ -118,7 +195,8 @@
                     img.src = event.target.result;
                     img.onload = function() {
                         var canvas = document.createElement('canvas');
-                        var scaleSize = 800 / img.width;
+                        var MAX_WIDTH = 800; 
+                        var scaleSize = MAX_WIDTH / img.width;
                         if (scaleSize > 1) scaleSize = 1;
                         canvas.width = img.width * scaleSize;
                         canvas.height = img.height * scaleSize;
@@ -132,7 +210,14 @@
 
         function callApi(action, payload, cb, silent) {
             payload.action = action;
-            if(!silent) showLoader("處理中...");
+            if(!silent) {
+                let msg = "處理中...";
+                if(action === "delete") msg = "正在同步...";
+                if(action === "deleteMulti") msg = "正在批量刪除...";
+                if(action === "addMulti") msg = "正在批量上傳...請稍候";
+                if(action === "getList") msg = "同步中...";
+                showLoader(msg);
+            }
             fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
             .then(r => r.json()).then(res => {
                 if(!silent) hideLoader();
@@ -143,16 +228,20 @@
         function doLogout() { localStorage.clear(); window.location.href = "index.html"; }
 
         function toggleBatchMode() {
-            isBatchMode = document.getElementById("batchModeToggle").checked;
+            var checkbox = document.getElementById("batchModeToggle");
+            isBatchMode = checkbox.checked;
             var btn = document.getElementById("mainActionBtn");
             var txt = document.getElementById("modeText");
             var pArea = document.getElementById("pendingArea");
             
             if(isBatchMode) {
-                btn.innerText = "➕ 加入暫存"; btn.style.background = "#2ecc71";
-                txt.classList.add("active-mode"); pArea.style.display = "block";
+                btn.innerText = "➕ 加入暫存";
+                btn.style.background = "#2ecc71"; // 綠色
+                txt.classList.add("active-mode");
+                pArea.style.display = "block";
             } else {
-                btn.innerText = "🚀 加入清單"; btn.style.background = "#3498db";
+                btn.innerText = "🚀 加入清單";
+                btn.style.background = "#3498db"; // 藍色
                 txt.classList.remove("active-mode");
                 if(pendingData.length === 0) pArea.style.display = "none";
             }
@@ -165,10 +254,14 @@
             var loc = document.getElementById("inLoc").value;
             var creator = document.getElementById("inCreator").value;
             var file = document.getElementById("fileIn").files[0];
+
             if(!name || !date) return alert("必填項目未輸入");
 
             var processData = (base64Img) => {
-                var newItem = { name: name, loc: loc, date: date, creator: creator, image: base64Img || "" };
+                var newItem = {
+                    name: name, loc: loc, date: date, creator: creator, image: base64Img || ""
+                };
+
                 if (isBatchMode) {
                     pendingData.push(newItem);
                     renderPendingList();
@@ -177,71 +270,121 @@
                     document.getElementById("fileIn").value = "";
                     if(navigator.vibrate) navigator.vibrate(50);
                 } else {
-                    document.getElementById("scanOverlay").style.display = 'flex';
+                    var scanOverlay = document.getElementById("scanOverlay");
+                    scanOverlay.style.display = 'flex';
+                    
                     setTimeout(() => {
-                        document.getElementById("scanOverlay").style.display = 'none';
-                        var tempItem = { rowId: Date.now(), name: name, location: loc, date: date, creator: creator, imgUrl: base64Img ? "data:image/jpeg;base64," + base64Img : "", isTemp: true };
+                        scanOverlay.style.display = 'none';
+                        
+                        var tempId = Date.now();
+                        var tempItem = {
+                            rowId: tempId, name: name, location: loc, date: date, creator: creator, 
+                            imgUrl: base64Img ? "data:image/jpeg;base64," + base64Img : "",
+                            isTemp: true
+                        };
                         allData.unshift(tempItem);
                         renderList(); 
+                        
                         document.getElementById("inName").value = "";
                         document.getElementById("pText").innerText = "";
                         document.getElementById("fileIn").value = "";
+
                         var pl = { code: localStorage.getItem("pass_code"), ...newItem };
                         callApi("add", pl, (res) => { updateLocalData(res.data); }, true);
                     }, 2500); 
                 }
             };
-            if(file) compressImage(file).then(base64 => processData(base64)); else processData("");
+
+            if(file) compressImage(file).then(base64 => processData(base64));
+            else processData("");
         }
 
         function renderPendingList() {
             var div = document.getElementById("pendingList");
             var btn = document.getElementById("bulkAddBtn");
+            
             if(pendingData.length > 0) {
-                btn.style.display = "block"; btn.innerText = "📤 確認上傳 (" + pendingData.length + ")";
-                div.innerHTML = pendingData.map((item, idx) => `<div class="card pending-item"><div style="flex:1"><div><b>${item.name}</b></div></div><button style="width:auto;background:none;color:red;border:none;" onclick="pendingData.splice(${idx},1);renderPendingList()">✕</button></div>`).join("");
+                btn.style.display = "block";
+                btn.innerText = "📤 確認上傳 (" + pendingData.length + ")";
+                
+                var html = pendingData.map((item, idx) => `
+                    <div class="card pending-item">
+                        <div style="flex:1">
+                            <div><b>${item.name}</b> <span style="font-size:12px;color:#666">(${item.date})</span></div>
+                            <div style="font-size:12px; color:#666">📍 ${item.location}</div>
+                        </div>
+                        <button style="width:auto; background:none; color:#e74c3c; border:none; font-size:20px;" onclick="removePending(${idx})">✕</button>
+                    </div>
+                `).join("");
+                div.innerHTML = html;
             } else {
-                btn.style.display = "none"; div.innerHTML = "<div style='text-align:center;color:#aaa;'>暫存區是空的</div>";
+                btn.style.display = "none";
+                div.innerHTML = "<div style='text-align:center;color:#aaa;font-size:12px;padding:10px;'>暫存區是空的</div>";
             }
         }
 
+        function removePending(idx) {
+            pendingData.splice(idx, 1);
+            renderPendingList();
+        }
+
         function doMultiAddUpload() {
-            if(pendingData.length === 0 || !confirm("確定要上傳嗎？")) return;
-            document.getElementById("scanOverlay").style.display = 'flex';
-            document.querySelector(".scan-text").innerText = "批量建檔中...";
+            if(pendingData.length === 0) return;
+            if(!confirm("確定要一次上傳這 " + pendingData.length + " 筆資料嗎？")) return;
+
+            var scanOverlay = document.getElementById("scanOverlay");
+            scanOverlay.style.display = 'flex';
+            document.querySelector(".scan-text").innerText = "正在批量建檔...";
+
             setTimeout(() => {
                 var code = localStorage.getItem("pass_code");
                 pendingData.forEach(item => {
-                    allData.unshift({ rowId: Date.now()+Math.random(), name: item.name, location: item.loc, date: item.date, creator: item.creator, imgUrl: "", isTemp: true });
+                    var tempItem = {
+                        rowId: Date.now() + Math.random(), 
+                        name: item.name, location: item.loc, date: item.date, creator: item.creator, 
+                        imgUrl: item.image ? "data:image/jpeg;base64," + item.image : "",
+                        isTemp: true
+                    };
+                    allData.unshift(tempItem);
                 });
                 renderList();
+                
                 callApi("addMulti", { items: pendingData, code: code }, function(res) {
-                    document.getElementById("scanOverlay").style.display = 'none';
-                    pendingData = []; renderPendingList(); updateLocalData(res.data);
-                    alert("上傳成功！");
+                    scanOverlay.style.display = 'none';
+                    pendingData = [];
+                    renderPendingList();
+                    updateLocalData(res.data);
+                    alert("全部上傳成功！");
                     document.querySelector(".scan-text").innerText = "正在掃描食品...";
                 }, true); 
             }, 2500);
         }
 
         function doDel(id) { 
-            if(confirm("確定刪除？")) {
-                allData = allData.filter(item => item.rowId !== id); renderList();
-                callApi("delete", { id: id, code: localStorage.getItem("pass_code") }, res => updateLocalData(res.data), true);
+            if(confirm("確定要刪除嗎？")) {
+                allData = allData.filter(item => item.rowId !== id);
+                renderList(); 
+                var code = localStorage.getItem("pass_code");
+                callApi("delete", { id: id, code: code }, function(res) { updateLocalData(res.data); }, true);
             }
         }
 
         function doMultiDelete() {
-            var ids = Array.from(document.querySelectorAll('.del-checkbox:checked')).map(cb => parseInt(cb.value));
-            if (ids.length === 0 || !confirm("確定刪除選取項目？")) return;
-            allData = allData.filter(item => !ids.includes(item.rowId)); renderList();
-            callApi("deleteMulti", { ids: ids, code: localStorage.getItem("pass_code") }, res => updateLocalData(res.data), true);
+            var checkboxes = document.querySelectorAll('.del-checkbox:checked');
+            var idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            if (idsToDelete.length === 0) return;
+            if (!confirm("確定要刪除選取的 " + idsToDelete.length + " 項資料嗎？")) return;
+            allData = allData.filter(item => !idsToDelete.includes(item.rowId));
+            renderList();
+            var code = localStorage.getItem("pass_code");
+            callApi("deleteMulti", { ids: idsToDelete, code: code }, function(res) { updateLocalData(res.data); }, true);
         }
 
         function checkSelection() {
             var count = document.querySelectorAll('.del-checkbox:checked').length;
             var btn = document.getElementById("bulkDelBtn");
-            if (count > 0) { btn.style.display = "block"; btn.innerText = "🗑️ 刪除 (" + count + ")"; } else { btn.style.display = "none"; }
+            if (count > 0) { btn.style.display = "block"; btn.innerText = "🗑️ 刪除選取項目 (" + count + ")"; } 
+            else { btn.style.display = "none"; }
         }
 
         function updateLocalData(newData) {
@@ -252,25 +395,39 @@
             document.getElementById("cHistory").innerHTML = hist.map(c => `<option value="${c}">`).join("");
         }
 
+        // --- ✨ 新增：切換群組展開/收合 ---
         function toggleGroup(groupId) {
             var body = document.getElementById('group-body-' + groupId);
             var header = document.getElementById('group-header-' + groupId);
+            
             if (body.style.display === "none" || body.style.display === "") {
-                body.style.display = "block"; header.classList.add("active");
+                body.style.display = "block";
+                header.classList.add("active");
             } else {
-                body.style.display = "none"; header.classList.remove("active");
+                body.style.display = "none";
+                header.classList.remove("active");
             }
         }
 
+        // --- ✨ 核心修改：分組渲染列表 ---
         function renderList() {
             var listDiv = document.getElementById("list");
             var key = document.getElementById("search").value.toLowerCase();
             var today = new Date(); today.setHours(0,0,0,0);
             
-            var filtered = allData.filter(i => (String(i.name)+String(i.location)+String(i.creator)).toLowerCase().includes(key));
-            if (filtered.length === 0) { listDiv.innerHTML = "<p style='text-align:center;color:#999'>無資料</p>"; checkSelection(); return; }
+            // 1. 先過濾資料
+            var filtered = allData.filter(i => {
+                var s = String(i.name||"") + String(i.location||"") + String(i.creator||"");
+                return s.toLowerCase().includes(key);
+            });
 
-            // 分組邏輯
+            if (filtered.length === 0) {
+                listDiv.innerHTML = "<p style='text-align:center;color:#999'>沒有找到相符的食品</p>";
+                checkSelection();
+                return;
+            }
+
+            // 2. 將資料依名稱分組
             var groups = {};
             filtered.forEach(item => {
                 var nameKey = item.name || "未命名";
@@ -279,25 +436,42 @@
             });
 
             var html = "";
+
+            // 3. 遍歷群組
+            // 先將群組依照「最快過期日」排序
             var sortedGroupKeys = Object.keys(groups).sort((keyA, keyB) => {
                 var datesA = groups[keyA].map(i => new Date(i.date).getTime());
                 var datesB = groups[keyB].map(i => new Date(i.date).getTime());
                 return Math.min(...datesA) - Math.min(...datesB);
             });
 
-            sortedGroupKeys.forEach((groupName, idx) => {
+            sortedGroupKeys.forEach((groupName, groupIndex) => {
                 var items = groups[groupName];
+                
+                // 該組內的項目也依日期排序
                 items.sort((a,b) => new Date(a.date) - new Date(b.date));
+
+                // 計算匯總資訊
+                var count = items.length;
                 var earliestDate = items[0].date;
+                
+                // 計算顏色標籤 (依照最早那筆)
                 var d = new Date(earliestDate);
                 var diff = Math.ceil((d - today)/86400000);
                 var statusColor = diff < 0 ? "#e74c3c" : (diff <= 7 ? "#f1c40f" : "#2ecc71");
                 var statusText = diff < 0 ? '已過期' : (diff <= 7 ? '快過期' : '正常');
 
+                // --- 產生 HTML ---
+                
+                // A. 子卡片列表 (預設隱藏在下拉區塊)
                 var subCardsHtml = items.map(item => {
-                    var iDiff = Math.ceil((new Date(item.date) - today)/86400000);
+                    var iDate = new Date(item.date);
+                    var iDiff = Math.ceil((iDate - today)/86400000);
                     var cls = iDiff < 0 ? "bg-red" : (iDiff <= 7 ? "bg-yellow" : "bg-green");
-                    var checkHTML = item.isTemp ? "" : `<div class="chk-wrapper"><input type="checkbox" class="del-checkbox" value="${item.rowId}" onchange="checkSelection()"></div>`;
+                    
+                    var checkHTML = item.isTemp ? "" : 
+                        `<div class="chk-wrapper"><input type="checkbox" class="del-checkbox" value="${item.rowId}" onchange="checkSelection()"></div>`;
+                    
                     return `
                         <div class="card ${item.isTemp ? 'temp-item' : ''}">
                             ${checkHTML}
@@ -307,23 +481,39 @@
                                 <div style="font-size:13px; color:#666">📍 ${item.location}</div>
                                 <div class="tag ${cls}">${item.date} (${iDiff}天)</div>
                             </div>
-                            ${item.isTemp ? '' : `<button style="width:auto;background:none;color:#ccc;border:none;font-size:20px;" onclick="event.stopPropagation(); doDel(${item.rowId})">✕</button>`}
+                            ${item.isTemp ? '<span style="font-size:12px;color:#f39c12">同步中...</span>' : 
+                            `<button style="width:auto; background:none; color:#ccc; border:none; font-size:20px;" onclick="event.stopPropagation(); doDel(${item.rowId})">✕</button>`}
                         </div>
                     `;
                 }).join("");
 
+                // B. 父層容器 (顯示匯總)
                 html += `
                     <div class="group-container">
-                        <div class="group-header" id="group-header-${idx}" onclick="toggleGroup(${idx})">
-                            <div class="group-title"><span class="arrow-icon">▶</span> <b>${groupName}</b> <span style="font-size:12px;background:#eee;padding:2px 6px;border-radius:10px;margin-left:8px;color:#555;">${items.length}</span></div>
-                            <div style="font-size:13px;text-align:right;color:#666"><div style="color:${statusColor};font-weight:bold;">${earliestDate}</div><div>${statusText}</div></div>
+                        <div class="group-header" id="group-header-${groupIndex}" onclick="toggleGroup(${groupIndex})">
+                            <div class="group-title">
+                                <span class="arrow-icon">▶</span>
+                                <b>${groupName}</b>
+                                <span style="font-size:12px; background:#eee; padding:2px 6px; border-radius:10px; margin-left:8px; color:#555;">${count}</span>
+                            </div>
+                            <div class="group-info">
+                                <div style="color:${statusColor}; font-weight:bold;">${earliestDate}</div>
+                                <div>${statusText}</div>
+                            </div>
                         </div>
-                        <div class="group-body" id="group-body-${idx}">${subCardsHtml}</div>
+                        <div class="group-body" id="group-body-${groupIndex}">
+                            ${subCardsHtml}
+                        </div>
                     </div>
                 `;
             });
+            
             listDiv.innerHTML = html;
             checkSelection(); 
+        }
+
+        function refreshData(code, silent) {
+            callApi("getList", {code: code}, res => updateLocalData(res.data), silent);
         }
 
         window.onload = function() {
@@ -331,12 +521,13 @@
             if(!code) return window.location.href = "index.html";
             document.getElementById("displayCode").innerText = code;
             var cached = localStorage.getItem("cached_fridge_data");
-            if(cached) { try { allData = JSON.parse(cached); renderList(); } catch(e){} callApi("getList", {code:code}, res=>updateLocalData(res.data), true); }
-            else { callApi("getList", {code:code}, res=>updateLocalData(res.data), false); }
+            if(cached) {
+                try { allData = JSON.parse(cached); renderList(); } catch(e){}
+                refreshData(code, true);
+            } else {
+                refreshData(code, false);
+            }
         };
     </script>
 </body>
 </html>
-
-
-
