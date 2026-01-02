@@ -4,124 +4,293 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
-    <title>冰箱小管家 - 選單</title>
+    <title>冰箱小管家 - 已過期清單</title>
     <style>
       :root {
+         --bg-grid: #f4f4f4;
          --ink: #333;
+         --card-bg: #ffffff;
+         --alert-red: #e74c3c;
       }
+      
       body { 
         font-family: 'Courier Prime', 'Noto Sans TC', monospace;
         background-color: #fff;
-        /* 維持一致的網格紙背景 */
+        /* 統一的 50px 網格背景 */
         background-image: 
             linear-gradient(#e5e5e5 1px, transparent 1px),
             linear-gradient(90deg, #e5e5e5 1px, transparent 1px);
-        background-size: 20px 20px;
+        background-size: 50px 50px;
         margin: 0; 
-        padding: 0; 
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        overflow: hidden;
+        padding: 20px; 
+        color: var(--ink); 
+        padding-bottom: 120px; 
       }
 
-      /* 圖片容器 */
-      .menu-container {
-        position: relative;
-        width: 100%;
-        max-width: 800px; /* 限制最大寬度，避免圖片過大 */
+      .main-wrapper {
+        max-width: 850px;
         margin: 0 auto;
-      }
-
-      /* 背景圖 */
-      .bg-img {
         width: 100%;
-        height: auto;
-        display: block;
-        /* 稍微加一點陰影讓紙張浮起來 */
-        filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
       }
 
-      /* 按鈕共用樣式 */
-      .nav-btn {
-        position: absolute;
-        width: 28%; /* 根據圖片比例調整 */
-        height: 12%; /* 根據圖片比例調整 */
-        background: rgba(255, 255, 255, 0.0); /* 預設透明 */
-        border: 2px dashed transparent; 
-        cursor: pointer;
-        transition: all 0.2s;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-weight: bold;
-        font-size: 1.2rem;
-        color: transparent; /* 文字預設透明，滑鼠移過去才顯示 */
-        border-radius: 10px;
+      /* 紅色警示風格卡片 */
+      .panel-card {
+        background: var(--card-bg);
+        border: 2px solid var(--ink);
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 8px 8px 0 rgba(0,0,0,0.1); 
+        position: relative;
+        z-index: 10;
+        /* 頂部紅線 */
+        border-top: 5px solid var(--alert-red);
       }
 
-      /* 滑鼠經過時的效果：顯示虛線框與文字 */
-      .nav-btn:hover {
-        background: rgba(255, 255, 255, 0.8);
-        border-color: var(--ink);
-        color: var(--ink);
-        box-shadow: 5px 5px 0 rgba(0,0,0,0.1);
+      .header { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 15px;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 15px; 
       }
       
-      /* 手機版直接顯示框線，方便點擊 */
-      @media (max-width: 768px) {
-        .nav-btn {
-          background: rgba(255, 255, 255, 0.5);
-          border: 2px dashed #999;
-          color: #333;
-          font-size: 1rem;
-        }
+      .page-title {
+          font-weight: 700;
+          font-size: 1.4rem;
+          letter-spacing: -1px;
+          display: flex;
+          align-items: center;
+          color: var(--alert-red);
       }
 
-      /* --- 定位按鈕 (根據 1518.jpg 的方框位置推算) --- */
+      /* 返回按鈕 */
+      .back-btn {
+          padding: 8px 15px; 
+          background: var(--ink); 
+          color: #fff; 
+          border: 2px solid var(--ink); 
+          font-size: 14px; 
+          font-weight: bold;
+          cursor: pointer;
+          text-decoration: none;
+      }
+      .back-btn:active { transform: translate(2px, 2px); }
+
+      .subtitle {
+          font-size: 14px;
+          color: #666;
+          margin-bottom: 0;
+          font-family: monospace;
+      }
+
+      /* 列表樣式 */
+      #list { margin-top: 20px; }
+
+      .group-container { 
+          margin-bottom: 30px; 
+      }
       
-      /* 按鈕 1：已過期 (對應左上文字泡泡的描述) */
-      /* 假設放在方框的上半部 */
-      #btn-expired {
-        bottom: 35%; 
-        left: 6%;
+      .group-header {
+          padding: 10px 0;
+          border-bottom: 3px solid var(--alert-red);
+          margin-bottom: 10px;
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+      }
+      
+      .group-title { 
+          font-weight: 700; 
+          font-size: 20px; 
+          color: var(--alert-red);
+      }
+      
+      .card { 
+        border: none; 
+        border-bottom: 1px dashed #999; 
+        padding: 15px 10px; 
+        margin-bottom: 0; 
+        display: flex; 
+        align-items: center; 
+        background: rgba(231, 76, 60, 0.05); /* 淡淡紅底 */
+        transition: background 0.2s;
+      }
+      .card:hover { background: rgba(231, 76, 60, 0.1); }
+      
+      .card img { 
+        width: 55px; height: 55px; 
+        object-fit: cover; 
+        border: 2px solid var(--alert-red); 
+        margin-right: 20px; 
+        background: #eee; 
+        filter: grayscale(20%); 
+      }
+      
+      .info-box { flex: 1; }
+      .date-tag { 
+          color: #fff; 
+          background: var(--alert-red); 
+          padding: 2px 6px; 
+          font-size: 12px; 
+          font-weight: bold; 
+          display: inline-block;
+          margin-top: 5px;
       }
 
-      /* 按鈕 2：主選單/全部 (對應右邊文字泡泡的描述) */
-      /* 假設放在方框的下半部 */
-      #btn-all {
-        bottom: 20%; 
-        left: 6%;
+      /* 刪除按鈕 */
+      .del-btn {
+          background: transparent;
+          border: 2px solid var(--alert-red);
+          color: var(--alert-red);
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          font-weight: bold;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 16px;
+      }
+      .del-btn:hover {
+          background: var(--alert-red);
+          color: #fff;
       }
 
-      /* 登出按鈕 (右下角) */
-      .logout-btn {
-        position: absolute;
-        bottom: 20px;
-        right: 20px;
-        background: #333;
-        color: white;
-        border: none;
-        padding: 8px 15px;
-        font-family: inherit;
-        font-weight: bold;
-        cursor: pointer;
-        opacity: 0.8;
-      }
+      /* Loader */
+      #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 9999; }
+      .spinner { width: 50px; height: 50px; border: 4px solid var(--ink); animation: spin 1s linear infinite; }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      #loaderText { margin-top: 15px; font-weight: bold; }
 
     </style>
 </head>
 <body>
 
-    <div class="menu-container">
-        <img src="1518.jpg" alt="Menu" class="bg-img">
-
-        <a href="main.html" class="nav-btn" id="btn-expired">⚠️ 已過期清單</a>
-        <a href="main.html" class="nav-btn" id="btn-all">📦 全部物品</a>
+    <div id="loader">
+        <div class="spinner"></div>
+        <div id="loaderText">LOADING DATA...</div>
     </div>
 
-    <button class="logout-btn" onclick="localStorage.clear(); location.href='index.html'">EXIT</button>
+    <div class="main-wrapper">
+        <div class="panel-card">
+            <div class="header">
+                <div class="page-title">⚠️ EXPIRED LIST</div>
+                <a href="main.html" class="back-btn">BACK TO MAIN</a>
+            </div>
+            <div class="subtitle">下列物品已經過期，請儘快處理。</div>
+        </div>
 
+        <div id="list"></div>
+    </div>
+
+    <script>
+        // 設定 API 網址 (與 main.html 相同)
+        var API_URL = "https://script.google.com/macros/s/AKfycby_sDF8GC1jTH1yUN_UM1s_AdIvr0CHgtwiQ-GYMCMj__De6OQAm-NtUQWDn3f8avbD/exec";
+        var allData = [];
+
+        function showLoader(text) {
+            document.getElementById("loaderText").innerText = text;
+            document.getElementById("loader").style.display = "flex";
+        }
+        function hideLoader() { document.getElementById("loader").style.display = "none"; }
+
+        function callApi(action, payload, cb) {
+            payload.action = action;
+            showLoader("SYNCING...");
+            fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
+            .then(r => r.json()).then(res => {
+                hideLoader();
+                cb(res);
+            }).catch(e => { hideLoader(); console.error(e); });
+        }
+
+        // 刪除功能
+        function doDel(id) { 
+            if(confirm("確認刪除此過期物品？")) {
+                // 先從畫面移除
+                allData = allData.filter(item => item.rowId !== id);
+                renderExpiredList(); 
+                
+                // 再呼叫 API
+                var code = localStorage.getItem("pass_code");
+                callApi("delete", { id: id, code: code }, function(res) { 
+                    if(res.data) {
+                        allData = res.data;
+                        localStorage.setItem("cached_fridge_data", JSON.stringify(allData));
+                    }
+                });
+            }
+        }
+
+        // 核心：只渲染過期物品
+        function renderExpiredList() {
+            var listDiv = document.getElementById("list");
+            var today = new Date(); 
+            today.setHours(0,0,0,0); // 設定為今天的 00:00
+
+            // 篩選邏輯：日期 < 今天
+            var expiredItems = allData.filter(i => {
+                var iDate = new Date(i.date);
+                return iDate < today; 
+            });
+
+            if (expiredItems.length === 0) {
+                listDiv.innerHTML = "<div style='text-align:center; padding:40px; color:#aaa; font-weight:bold;'>[ NO EXPIRED ITEMS ]<br>沒有過期物品</div>";
+                return;
+            }
+
+            // 依日期排序 (越早過期的在越上面)
+            expiredItems.sort((a,b) => new Date(a.date) - new Date(b.date));
+
+            var html = "";
+            // 這裡不分群組，直接列出所有過期品，視覺更強烈
+            html += `<div class="group-container"><div class="group-header"><div class="group-title">ALL EXPIRED (${expiredItems.length})</div></div>`;
+            
+            expiredItems.forEach(item => {
+                var d = new Date(item.date);
+                var diff = Math.ceil((d - today)/86400000); // 負數天數
+
+                html += `
+                    <div class="card">
+                        <img src="${item.imgUrl || ''}">
+                        <div class="info-box">
+                            <div style="font-weight:bold; font-size:18px;">${item.name}</div>
+                            <div style="font-size:13px; color:#666;">📍 ${item.location} | 👤 ${item.creator}</div>
+                            <div class="date-tag">過期 ${Math.abs(diff)} 天 (${item.date})</div>
+                        </div>
+                        <button class="del-btn" onclick="doDel(${item.rowId})">✕</button>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+
+            listDiv.innerHTML = html;
+        }
+
+        window.onload = function() {
+            var code = localStorage.getItem("pass_code");
+            if(!code) return window.location.href = "index.html";
+            
+            // 先讀取快取
+            var cached = localStorage.getItem("cached_fridge_data");
+            if(cached) {
+                try { 
+                    allData = JSON.parse(cached); 
+                    renderExpiredList(); 
+                } catch(e){}
+            }
+            
+            // 呼叫 API 更新資料
+            callApi("getList", {code: code}, function(res) {
+                if(res.data) {
+                    allData = res.data;
+                    localStorage.setItem("cached_fridge_data", JSON.stringify(allData));
+                    renderExpiredList();
+                }
+            });
+        };
+    </script>
 </body>
 </html>
