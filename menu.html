@@ -24,8 +24,6 @@
         justify-content: center;
         align-items: center;
         overflow: hidden;
-        /* 為了讓白色狗狗更明顯，背景可以稍微暗一點點 (隨意，可自行調整) */
-        /* background-color: #f0f0f0; */
       }
 
       /* 主容器 */
@@ -39,20 +37,24 @@
         align-items: center;
       }
 
-      /* --- 狗狗圖片處理核心 (變成白色) --- */
+      /* --- 狗狗圖片處理核心 (黑線手繪風) --- */
       .dog-img {
         width: 320px;
         height: auto;
         
-        /* 1. 移除 invert，保留原本的白色線條 */
-        /* 2. 增加亮度和對比，讓白色更純淨、更亮 */
-        filter: contrast(1.1) brightness(1.2) drop-shadow(0 0 5px rgba(255,255,255,0.5)); /* 加一點白色發光讓它跳脫背景 */
+        /* 步驟 1: 反轉顏色 (Invert) */
+        /* 把原本的「黑底白線」變成「白底黑線」 */
+        /* contrast(1.2) 加強對比，讓線條更黑更清楚 */
+        filter: invert(1) contrast(1.5);
         
-        /* 3. screen (濾色): 關鍵！讓黑色背景變透明，保留白色線條 */
-        mix-blend-mode: screen;
+        /* 步驟 2: 去除背景 (Multiply) */
+        /* 色彩增值：會把白色變透明，只保留黑色線條 */
+        /* 這樣狗狗就會像直接畫在網格紙上一樣 */
+        mix-blend-mode: multiply;
         
         position: relative;
         z-index: 1;
+        opacity: 0.9; /* 稍微透明一點點，讓質感更像墨水 */
       }
 
       /* --- CSS 手繪風對話框按鈕 --- */
@@ -104,7 +106,7 @@
       }
       #btn-all:hover { transform: rotate(3deg) scale(1.05) translate(-2px, -2px); }
 
-      /* 連接線 (保持黑色，形成對比) */
+      /* 連接線 (黑色) */
       .line-connector {
         position: absolute;
         width: 60px;
