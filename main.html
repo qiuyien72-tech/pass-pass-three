@@ -58,7 +58,6 @@
         letter-spacing: -1px;
       }
       
-      /* 標題按鈕群組 */
       .header-actions {
           display: flex;
           gap: 10px;
@@ -74,15 +73,8 @@
           margin-bottom: 0;
           cursor: pointer;
       }
-      .header-actions button:hover {
-          background: #eee;
-      }
-      /* 過期按鈕特別樣式 */
-      .btn-expired-link {
-          color: #e74c3c !important;
-          border-color: #e74c3c !important;
-          font-weight: bold;
-      }
+      .header-actions button:hover { background: #eee; }
+      .btn-expired-link { color: #e74c3c !important; border-color: #e74c3c !important; font-weight: bold; }
 
       input, button { 
         width: 100%; 
@@ -98,7 +90,7 @@
         background: transparent;
         border: none;
         border-bottom: 2px solid #aaa;
-        transition: border-color 0.3s;
+        transition: border-color 0.2s; /* 輸入框反應也調快 */
       }
       input:focus {
         outline: none;
@@ -112,7 +104,7 @@
         border: 2px solid var(--ink);
         font-weight: bold; 
         cursor: pointer; 
-        transition: all 0.2s; 
+        transition: all 0.1s; /* 按鈕反應調快 */
         text-transform: uppercase;
         letter-spacing: 1px;
       }
@@ -140,6 +132,7 @@
       #list { margin-top: 20px; }
 
       .group-container { background: transparent; border: none; margin-bottom: 30px; overflow: visible; }
+      
       .group-header {
           padding: 12px 10px;
           background: rgba(255,255,255,0.7); 
@@ -149,8 +142,9 @@
           justify-content: space-between;
           align-items: center;
           border-bottom: 3px solid #000; 
-          transition: all 0.2s;
           margin-bottom: 15px;
+          /* --- 修改：背景反應速度變快 --- */
+          transition: background 0.1s;
       }
       .group-header:hover { opacity: 0.8; }
       .group-header.active { background: rgba(255,255,255,0.9); }
@@ -158,7 +152,14 @@
       .group-title { font-weight: 700; font-size: 20px; display: flex; align-items: center; color: #000; }
       .group-title b { background: var(--highlight-yellow); padding: 0 5px; color: #000; box-shadow: 3px 3px 0 rgba(0,0,0,0.1); }
       .group-info { font-size: 14px; text-align: right; color: #666; font-family: monospace; font-weight: bold; }
-      .arrow-icon { margin-right: 10px; font-size: 14px; color: #000; }
+      
+      /* --- 修改：箭頭旋轉速度變快 (0.1s) --- */
+      .arrow-icon { 
+          margin-right: 10px; 
+          font-size: 14px; 
+          color: #000; 
+          transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1); 
+      }
       
       .card { 
         border: none; 
@@ -170,7 +171,8 @@
         align-items: center; 
         background: transparent; 
         position: relative; 
-        transition: background 0.2s;
+        /* --- 修改：卡片反應變快 --- */
+        transition: background 0.1s;
       }
       .card:hover { background: rgba(0,0,0,0.05); }
       .card.temp-item { background: #fffdf5; border-left: 5px solid #f39c12; }
@@ -189,17 +191,24 @@
       
       #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
       #imageModal img { max-width: 90%; max-height: 80vh; border: 5px solid #000; box-shadow: 10px 10px 0 rgba(0,0,0,0.1); }
+      
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 9999; }
-      .spinner { width: 50px; height: 50px; background: transparent; border: 4px solid #000; margin-bottom: 20px; animation: simpleSpin 1s linear infinite; }
+      
+      /* --- 修改：讀取圈圈轉速變快 (0.5s) --- */
+      .spinner { width: 50px; height: 50px; background: transparent; border: 4px solid #000; margin-bottom: 20px; animation: simpleSpin 0.5s linear infinite; }
+      
       @keyframes simpleSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
       #scanOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10001; display: none; flex-direction: column; justify-content: center; align-items: center; }
       .scan-box { width: 250px; height: 250px; border: 2px solid #0f0; border-radius: 0; position: relative; overflow: hidden; background: rgba(0, 255, 0, 0.05); }
-      .scan-line { width: 100%; height: 5px; background: #0f0; box-shadow: 0 0 15px #0f0, 0 0 30px #0f0; position: absolute; top: 0; left: 0; animation: scanDown 1.5s linear infinite; }
+      
+      /* 掃描線也稍微加速 */
+      .scan-line { width: 100%; height: 5px; background: #0f0; box-shadow: 0 0 15px #0f0, 0 0 30px #0f0; position: absolute; top: 0; left: 0; animation: scanDown 1.2s linear infinite; }
+      
       @keyframes scanDown { 0% { transform: translateY(-10px); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(260px); opacity: 0; } }
       .scan-text { color: #0f0; margin-top: 20px; font-family: monospace; letter-spacing: 2px; text-shadow: 0 0 10px #0f0; }
 
-      .float-btn { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 15px 30px; border-radius: 0; font-size: 16px; font-weight: bold; border: 2px solid #000; box-shadow: 5px 5px 0 #000; display: none; z-index: 5000; width: auto; cursor: pointer; color: white; transition: transform 0.2s; }
+      .float-btn { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 15px 30px; border-radius: 0; font-size: 16px; font-weight: bold; border: 2px solid #000; box-shadow: 5px 5px 0 #000; display: none; z-index: 5000; width: auto; cursor: pointer; color: white; transition: transform 0.1s; }
       .float-btn:active { transform: translateX(-50%) translate(2px, 2px); box-shadow: 3px 3px 0 #000; }
       #bulkDelBtn { background: #e74c3c; color: white; }
       #bulkAddBtn { background: #2ecc71; color: #000; }
@@ -467,17 +476,13 @@
             if (idsToDelete.length === 0) return;
             if (!confirm("DELETE " + idsToDelete.length + " ITEMS?")) return;
             
-            // 1. 本地先刪除
             allData = allData.filter(item => !idsToDelete.includes(item.rowId));
             renderList();
             
-            // 2. 背景呼叫 API
             var code = localStorage.getItem("pass_code");
             callApi("deleteMulti", { ids: idsToDelete, code: code }, function(res) { 
                 if(res.status === "success" && Array.isArray(res.data)) {
                     updateLocalData(res.data);
-                } else {
-                    console.log("Sync skipped to preserve local state");
                 }
             }, true);
         }
