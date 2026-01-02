@@ -9,9 +9,8 @@
       :root {
          --ink: #333;
          --paper-white: #ffffff;
-         --tape-color: rgba(255, 255, 255, 0.6); /* 半透明膠帶 */
-         --highlight-red: rgba(255, 69, 58, 0.1);
-         --highlight-yellow: rgba(255, 241, 0, 0.1);
+         --highlight-gray: #f4f4f4;
+         --border-thick: 3px solid var(--ink);
       }
       
       body { 
@@ -30,196 +29,175 @@
         justify-content: center;
         align-items: center;
         box-sizing: border-box;
-        overflow: hidden;
       }
 
-      /* 標題區塊 */
-      .board-header {
-        margin-bottom: 50px;
-        text-align: center;
-        background: #000;
-        color: #fff;
-        padding: 10px 30px;
-        transform: rotate(-1deg);
-        box-shadow: 5px 5px 0 rgba(0,0,0,0.2);
+      /* 中央大方框 (Container) */
+      .menu-box {
+        background: var(--paper-white);
+        width: 100%;
+        max-width: 650px;
+        border: var(--border-thick);
+        padding: 40px;
+        box-shadow: 15px 15px 0 rgba(0,0,0,0.1); /* 硬陰影，增加立體感 */
+        position: relative;
       }
-      .board-header h1 {
+
+      /* 標題裝飾 */
+      .box-header {
+        border-bottom: var(--border-thick);
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+      }
+      .box-title {
+        font-size: 2rem;
+        font-weight: 900;
+        letter-spacing: -1px;
         margin: 0;
-        font-size: 1.8rem;
-        letter-spacing: 2px;
         text-transform: uppercase;
       }
-
-      /* 公佈欄容器 */
-      .board-container {
-        display: flex;
-        gap: 40px;
-        flex-wrap: wrap;
-        justify-content: center;
-        width: 100%;
-        max-width: 800px;
-      }
-
-      /* --- 便條紙按鈕 (Note Card) --- */
-      .note-card {
-        position: relative;
-        background: var(--paper-white);
-        width: 260px;
-        height: 200px;
-        border: 2px solid var(--ink);
-        padding: 30px 20px;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-decoration: none;
-        color: var(--ink);
-        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.27);
-        cursor: pointer;
-        
-        /* 讓紙張有點陰影，像浮在牆上 */
-        box-shadow: 10px 10px 0 rgba(0,0,0,0.1); 
-      }
-
-      /* 膠帶效果 (CSS 畫出來的) */
-      .note-card::before {
-        content: '';
-        position: absolute;
-        top: -15px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 100px;
-        height: 30px;
-        background: rgba(220, 220, 220, 0.5); /* 霧面膠帶色 */
-        border-left: 2px dotted rgba(0,0,0,0.1); /* 兩邊撕痕 */
-        border-right: 2px dotted rgba(0,0,0,0.1);
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        z-index: 10;
-      }
-
-      /* 左邊的紙條 (稍微往左歪) */
-      .card-left {
-        transform: rotate(-3deg);
-      }
-      .card-left:hover {
-        transform: rotate(0deg) scale(1.05); /* 滑鼠移上去轉正並放大 */
-        z-index: 5;
-        box-shadow: 15px 15px 0 rgba(0,0,0,0.15);
-      }
-      /* 給左邊紙條一點紅色螢光筆背景 */
-      .card-left {
-        background-image: repeating-linear-gradient(
-          45deg,
-          var(--paper-white),
-          var(--paper-white) 10px,
-          var(--highlight-red) 10px,
-          var(--highlight-red) 20px
-        );
-      }
-
-      /* 右邊的紙條 (稍微往右歪) */
-      .card-right {
-        transform: rotate(2deg);
-      }
-      .card-right:hover {
-        transform: rotate(0deg) scale(1.05);
-        z-index: 5;
-        box-shadow: 15px 15px 0 rgba(0,0,0,0.15);
-      }
-      /* 給右邊紙條一點黃色螢光筆背景 */
-      .card-right {
-        background-image: repeating-linear-gradient(
-          -45deg,
-          var(--paper-white),
-          var(--paper-white) 10px,
-          var(--highlight-yellow) 10px,
-          var(--highlight-yellow) 20px
-        );
-      }
-
-      /* 卡片內的文字 */
-      .icon {
-        font-size: 3rem;
-        margin-bottom: 15px;
-        display: block;
-      }
-      .title {
-        font-size: 1.4rem;
-        font-weight: 700;
-        border-bottom: 3px solid var(--ink); /* 粗底線 */
-        padding-bottom: 5px;
-      }
-      .desc {
-        margin-top: 10px;
-        font-size: 0.85rem;
+      .box-subtitle {
+        font-size: 0.9rem;
         color: #666;
         font-family: monospace;
       }
 
-      /* 登出按鈕 (右下角貼紙) */
-      .logout-btn {
-        position: fixed;
-        bottom: 30px;
-        right: 30px;
-        background: var(--ink);
-        color: white;
-        border: 2px solid var(--ink);
-        padding: 10px 20px;
-        font-family: inherit;
-        font-weight: bold;
-        font-size: 1rem;
-        cursor: pointer;
-        transition: all 0.2s;
-        box-shadow: 5px 5px 0 rgba(0,0,0,0.2);
-      }
-      .logout-btn:hover {
-        transform: translate(-3px, -3px);
-        box-shadow: 8px 8px 0 rgba(0,0,0,0.3);
-      }
-      .logout-btn:active {
-        transform: translate(0, 0);
-        box-shadow: none;
+      /* 選項列表 (List) */
+      .option-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
       }
 
-      /* 手機版適配 */
+      /* 單個選項按鈕 (Item) */
+      .option-item {
+        display: flex;
+        align-items: stretch;
+        text-decoration: none;
+        color: var(--ink);
+        border: 2px solid #ccc; /* 預設淺灰框 */
+        transition: all 0.2s ease;
+        background: #fff;
+        cursor: pointer;
+      }
+
+      /* 滑鼠移過去的效果 */
+      .option-item:hover {
+        border-color: var(--ink); /* 變黑框 */
+        transform: translate(-4px, -4px); /* 浮起 */
+        box-shadow: 6px 6px 0 rgba(0,0,0,0.1);
+        background: var(--highlight-gray);
+      }
+
+      /* 左側標籤 (Label) */
+      .opt-label {
+        background: var(--ink);
+        color: #fff;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        writing-mode: vertical-lr; /* 直書文字，增加設計感 */
+        text-orientation: upright;
+        letter-spacing: 3px;
+        min-width: 50px;
+        font-size: 14px;
+      }
+      
+      /* 手機版改回橫書 */
       @media (max-width: 600px) {
-        .board-container {
-          flex-direction: column;
-          align-items: center;
-          gap: 30px;
+        .opt-label {
+            writing-mode: horizontal-tb;
+            padding: 10px;
+            min-width: auto;
+            width: 80px;
         }
-        .note-card {
-          width: 80%; /* 手機上寬一點 */
-          height: 160px;
-        }
-        .board-header h1 {
-            font-size: 1.4rem;
+        .option-item {
+            flex-direction: row; /* 保持左右排列 */
         }
       }
+
+      /* 右側文字內容 (Content) */
+      .opt-content {
+        padding: 20px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .opt-title {
+        font-weight: 900;
+        font-size: 1.2rem;
+        margin-bottom: 5px;
+        text-decoration: underline;
+        text-decoration-thickness: 3px;
+      }
+      .opt-desc {
+        font-size: 1rem;
+        line-height: 1.6;
+        color: #444;
+      }
+
+      /* 針對不同按鈕的顏色微調 (Hover時) */
+      .item-expired:hover .opt-title { text-decoration-color: #e74c3c; }
+      .item-soon:hover .opt-title { text-decoration-color: #f1c40f; }
+      .item-all:hover .opt-title { text-decoration-color: #2ecc71; }
+
+      /* 登出按鈕 */
+      .logout-link {
+        display: block;
+        text-align: right;
+        margin-top: 30px;
+        font-size: 0.9rem;
+        color: #666;
+        text-decoration: none;
+        font-weight: bold;
+      }
+      .logout-link:hover { text-decoration: underline; color: #000; }
+
     </style>
 </head>
 <body>
 
-    <div class="board-header">
-        <h1>DASHBOARD</h1>
+    <div class="menu-box">
+        <div class="box-header">
+            <h1 class="box-title">DASHBOARD</h1>
+            <span class="box-subtitle">v2.0 // SELECT VIEW</span>
+        </div>
+
+        <div class="option-list">
+            
+            <a href="main.html?filter=expired" class="option-item item-expired">
+                <div class="opt-label">已過期</div>
+                <div class="opt-content">
+                    <div class="opt-title">EXPIRED LIST</div>
+                    <div class="opt-desc">左側已過期清單<br>可篩選只有已過期物品</div>
+                </div>
+            </a>
+
+            <a href="main.html?filter=soon" class="option-item item-soon">
+                <div class="opt-label">快過期</div>
+                <div class="opt-content">
+                    <div class="opt-title">EXPIRING SOON</div>
+                    <div class="opt-desc">左側快過期清單<br>可篩選只有快過期物品</div>
+                </div>
+            </a>
+
+            <a href="main.html" class="option-item item-all">
+                <div class="opt-label">主畫面</div>
+                <div class="opt-content">
+                    <div class="opt-title">MAIN VIEW</div>
+                    <div class="opt-desc">主畫面顯示<br>已過期、快過期、未過期物品</div>
+                </div>
+            </a>
+
+        </div>
+
+        <a href="javascript:localStorage.clear();location.href='index.html'" class="logout-link">[ LOGOUT SYSTEM ]</a>
     </div>
-
-    <div class="board-container">
-        <a href="main.html?filter=expired" class="note-card card-left">
-            <span class="icon">⚠️</span>
-            <span class="title">EXPIRED</span>
-            <span class="desc">查看已過期清單</span>
-        </a>
-
-        <a href="main.html" class="note-card card-right">
-            <span class="icon">📦</span>
-            <span class="title">INVENTORY</span>
-            <span class="desc">管理所有物品</span>
-        </a>
-    </div>
-
-    <button class="logout-btn" onclick="localStorage.clear(); location.href='index.html'">EXIT</button>
 
 </body>
 </html>
