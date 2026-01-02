@@ -18,7 +18,6 @@
       
       body { 
         font-family: 'Courier Prime', 'Noto Sans TC', monospace;
-        /* 背景改成網格紙效果 */
         background-color: #fff;
         background-image: 
             linear-gradient(#e5e5e5 1px, transparent 1px),
@@ -30,13 +29,11 @@
         padding-bottom: 120px; 
       }
 
-      /* 讓 App 區域背景透明，融入網格 */
       #appSection { 
         max-width: 600px;
         margin: 0 auto; 
         background: rgba(255,255,255,0.9); 
         padding: 25px; 
-        /* 移除圓角和陰影，改成粗框線 */
         border: 2px solid var(--ink);
         box-shadow: 8px 8px 0 rgba(0,0,0,0.1);
         min-height: 400px;
@@ -47,14 +44,13 @@
         justify-content: space-between; 
         align-items: center; 
         margin-bottom: 25px; 
-        border-bottom: 4px solid var(--ink); /* 標題下方加粗線 */
+        border-bottom: 4px solid var(--ink); 
         padding-bottom: 15px; 
         font-weight: 700;
         font-size: 1.2rem;
         letter-spacing: -1px;
       }
 
-      /* 輸入框樣式：去框，改底線 */
       input, button { 
         width: 100%; 
         padding: 12px; 
@@ -93,24 +89,20 @@
 
       .btn-row { display: flex; gap: 8px; }
       
-      /* --- 核心修改：去卡片化 (List Item Styles) --- */
       .card { 
-        border: none; /* 移除邊框 */
-        border-bottom: 1px dashed #bbb; /* 改成虛線分隔 */
+        border: none; 
+        border-bottom: 1px dashed #bbb; 
         padding: 15px 5px; 
         margin-bottom: 0; 
-        border-radius: 0; /* 移除圓角 */
+        border-radius: 0; 
         display: flex; 
         align-items: center; 
         background: transparent; 
         position: relative; 
         transition: background 0.2s;
       }
-      .card:hover {
-        background: rgba(0,0,0,0.03); /* 滑鼠經過淡淡的灰色 */
-      }
+      .card:hover { background: rgba(0,0,0,0.03); }
       
-      /* 暫存項目改成用「標籤貼紙」的感覺 */
       .card.temp-item { 
         border: none;
         background: #fffdf5;
@@ -128,14 +120,13 @@
       .card img { 
         width: 45px; height: 45px; 
         object-fit: cover; 
-        border: 2px solid #000; /* 照片加黑框 */
+        border: 2px solid #000; 
         margin-right: 15px; 
         cursor: pointer; 
         background: #eee; 
-        filter: grayscale(20%); /* 讓照片有點復古感 */
+        filter: grayscale(20%); 
       }
       
-      /* 標籤樣式調整 */
       .creator-tag { 
         font-size: 12px; 
         color: #000; 
@@ -145,7 +136,6 @@
         text-decoration: underline;
       }
       
-      /* 狀態標籤：改成文字顏色，不使用圓角背景 */
       .tag { 
         font-size: 12px; 
         padding: 2px 0; 
@@ -155,12 +145,10 @@
         display: inline-block; 
         font-weight: bold;
       }
-      /* 使用螢光筆效果 */
       .bg-green { background: linear-gradient(to top, var(--highlight-green) 50%, transparent 50%); } 
       .bg-yellow { background: linear-gradient(to top, var(--highlight-yellow) 50%, transparent 50%); } 
       .bg-red { background: linear-gradient(to top, var(--highlight-red) 50%, transparent 50%); color: #d63031; }
 
-      /* --- 群組樣式：改成大標題 --- */
       .group-container {
           background: transparent;
           border-radius: 0;
@@ -169,7 +157,6 @@
           border: none;
           overflow: visible;
       }
-      /* 群組標題：螢光筆劃記效果 */
       .group-header {
           padding: 10px 5px;
           background: transparent;
@@ -177,69 +164,74 @@
           display: flex;
           justify-content: space-between;
           align-items: center;
-          border-bottom: 2px solid #000; /* 強烈的黑線分隔 */
+          border-bottom: 2px solid #000; 
           transition: all 0.2s;
       }
       .group-header:hover { opacity: 0.8; }
+      .group-header.active { background: transparent; border-bottom: 2px solid #000; }
       
-      .group-header.active {
-          background: transparent;
-          border-bottom: 2px solid #000;
-      }
-      
-      .group-title { 
-          font-weight: 700; 
-          font-size: 18px; 
-          display: flex; 
-          align-items: center;
-          color: #000; /* 修正：直接設定黑色，確保可見 */
-      }
-      /* 給群組文字加一個 marker 效果 */
-      .group-title b {
-          background: var(--highlight-yellow);
-          padding: 0 5px;
-          color: #000; /* 確保 b 標籤內的文字也是黑色 */
-      }
+      .group-title { font-weight: 700; font-size: 18px; display: flex; align-items: center; color: #000; }
+      .group-title b { background: var(--highlight-yellow); padding: 0 5px; color: #000; }
 
       .group-info { font-size: 13px; text-align: right; color: #666; font-family: monospace; }
       .arrow-icon { margin-right: 8px; font-size: 12px; color: #000; }
       
-      /* 群組內容 */
       .group-body {
           display: none;
           background: transparent;
           padding: 0;
-          padding-left: 10px; /* 稍微縮排 */
-          border-left: 2px dotted #ccc; /* 左側加虛線導引 */
+          padding-left: 10px; 
+          border-left: 2px dotted #ccc; 
       }
-      .group-body .card {
-          margin-bottom: 0;
-          box-shadow: none;
-          background: transparent;
-      }
+      .group-body .card { margin-bottom: 0; box-shadow: none; background: transparent; }
       
-      /* 圖片燈箱 */
       #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
       #imageModal img { max-width: 90%; max-height: 80vh; border: 5px solid #000; box-shadow: 10px 10px 0 rgba(0,0,0,0.1); }
       
-      /* Loader - 酷炫翻轉 */
+      /* --- 修正動畫：Loader --- */
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 9999; }
-      .spinner { width: 50px; height: 50px; background: #000; animation: rotateplane 1.2s infinite ease-in-out; margin-bottom: 20px; border:none; border-radius: 0; }
-      @keyframes rotateplane { 0% { transform: perspective(120px) rotateX(0deg) rotateY(0deg); } 50% { transform: perspective(120px) rotateX(-180.1deg) rotateY(0deg); background: #666; } 100% { transform: perspective(120px) rotateX(-180deg) rotateY(-179.9deg); } }
+      .spinner { 
+          width: 50px; 
+          height: 50px; 
+          background: transparent;
+          border: 4px solid #000; /* 改回黑色邊框方塊 */
+          margin-bottom: 20px; 
+          animation: simpleSpin 1s linear infinite; /* 使用簡單穩定的旋轉 */
+      }
+      @keyframes simpleSpin { 
+          0% { transform: rotate(0deg); } 
+          100% { transform: rotate(360deg); } 
+      }
 
-      /* 掃描特效 - 改成雷達綠 */
+      /* --- 修正動畫：Scanner (使用 transform 確保移動) --- */
       #scanOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10001; display: none; flex-direction: column; justify-content: center; align-items: center; }
-      .scan-box { width: 250px; height: 250px; border: 2px solid #0f0; border-radius: 0; position: relative; overflow: hidden; background: rgba(0, 255, 0, 0.1); }
-      .scan-line { width: 100%; height: 2px; background: #0f0; box-shadow: 0 0 15px #0f0; position: absolute; top: 0; animation: scanMove 2s ease-in-out infinite; }
-      .scan-text { color: #0f0; margin-top: 20px; font-family: monospace; letter-spacing: 2px; }
+      .scan-box { width: 250px; height: 250px; border: 2px solid #0f0; border-radius: 0; position: relative; overflow: hidden; background: rgba(0, 255, 0, 0.05); }
+      
+      .scan-line { 
+          width: 100%; 
+          height: 5px; /* 線條加粗 */
+          background: #0f0; 
+          box-shadow: 0 0 15px #0f0, 0 0 30px #0f0; /* 強力發光 */
+          position: absolute; 
+          top: 0; 
+          left: 0;
+          animation: scanDown 1.5s linear infinite; /* 速度加快一點 */
+      }
+      
+      @keyframes scanDown {
+          0% { transform: translateY(-10px); opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { transform: translateY(260px); opacity: 0; }
+      }
+      
+      .scan-text { color: #0f0; margin-top: 20px; font-family: monospace; letter-spacing: 2px; text-shadow: 0 0 10px #0f0; }
 
-      /* 浮動按鈕 - 改成方形 */
       .float-btn { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 15px 30px; border-radius: 0; font-size: 16px; font-weight: bold; border: 2px solid #000; box-shadow: 5px 5px 0 #000; display: none; z-index: 5000; width: auto; cursor: pointer; color: white; transition: transform 0.2s; }
       .float-btn:active { transform: translateX(-50%) translate(2px, 2px); box-shadow: 3px 3px 0 #000; }
       #bulkDelBtn { background: #e74c3c; color: white; }
       #bulkAddBtn { background: #2ecc71; color: #000; }
 
-      /* 模式切換 */
       .mode-switch { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 10px; font-size: 14px; color: #555; font-family: monospace; }
       .active-mode { color: #000; font-weight: bold; text-decoration: underline; text-decoration-thickness: 3px; text-decoration-color: var(--highlight-green); }
     </style>
@@ -301,14 +293,14 @@
     <script>
         var API_URL = "https://script.google.com/macros/s/AKfycby_sDF8GC1jTH1yUN_UM1s_AdIvr0CHgtwiQ-GYMCMj__De6OQAm-NtUQWDn3f8avbD/exec";
         var allData = [];
-        var pendingData = []; // 用來存暫存資料
+        var pendingData = []; 
         var isBatchMode = false;
+
         function showLoader(text) {
             document.getElementById("loaderText").innerText = text;
             document.getElementById("loader").style.display = "flex";
         }
-        function hideLoader() { document.getElementById("loader").style.display = "none";
-        }
+        function hideLoader() { document.getElementById("loader").style.display = "none"; }
 
         function openModal(src) {
             document.getElementById("largeImgDisplay").src = src;
@@ -320,21 +312,17 @@
                 var reader = new FileReader();
                 reader.readAsDataURL(file);
                 reader.onload = function(event) {
-                
                     var img = new Image();
                     img.src = event.target.result;
                     img.onload = function() {
                         var canvas = document.createElement('canvas');
-                    
                         var MAX_WIDTH = 800; 
                         var scaleSize = MAX_WIDTH / img.width;
                         if (scaleSize > 1) scaleSize = 1;
                         canvas.width = img.width * scaleSize;
-     
                         canvas.height = img.height * scaleSize;
                         var ctx = canvas.getContext("2d");
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                      
                         resolve(canvas.toDataURL("image/jpeg", 0.7).split(",")[1]); 
                     }
                 }
@@ -344,11 +332,11 @@
         function callApi(action, payload, cb, silent) {
             payload.action = action;
             if(!silent) {
-                let msg = "處理中...";
-                if(action === "delete") msg = "正在同步...";
-                if(action === "deleteMulti") msg = "正在批量刪除...";
-                if(action === "addMulti") msg = "正在批量上傳...請稍候";
-                if(action === "getList") msg = "同步中...";
+                let msg = "PROCESSING...";
+                if(action === "delete") msg = "SYNCING...";
+                if(action === "deleteMulti") msg = "DELETING...";
+                if(action === "addMulti") msg = "UPLOADING...";
+                if(action === "getList") msg = "SYNCING...";
                 showLoader(msg);
             }
             fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
@@ -358,8 +346,7 @@
             }).catch(e => { hideLoader(); console.error(e); });
         }
 
-        function doLogout() { localStorage.clear(); window.location.href = "index.html";
-        }
+        function doLogout() { localStorage.clear(); window.location.href = "index.html"; }
 
         function toggleBatchMode() {
             var checkbox = document.getElementById("batchModeToggle");
@@ -368,13 +355,15 @@
             var txt = document.getElementById("modeText");
             var pArea = document.getElementById("pendingArea");
             if(isBatchMode) {
-                btn.innerText = "➕ 加入暫存";
-                btn.style.background = "#2ecc71"; // 綠色
+                btn.innerText = "➕ ADD TO STAGE";
+                btn.style.background = "#2ecc71";
+                btn.style.color = "#000";
                 txt.classList.add("active-mode");
                 pArea.style.display = "block";
             } else {
-                btn.innerText = "🚀 加入清單";
-                btn.style.background = "#3498db"; // 藍色
+                btn.innerText = ">>> COMMIT";
+                btn.style.background = "#333";
+                btn.style.color = "#fff";
                 txt.classList.remove("active-mode");
                 if(pendingData.length === 0) pArea.style.display = "none";
             }
@@ -387,12 +376,11 @@
             var loc = document.getElementById("inLoc").value;
             var creator = document.getElementById("inCreator").value;
             var file = document.getElementById("fileIn").files[0];
-            if(!name || !date) return alert("必填項目未輸入");
+            if(!name || !date) return alert("REQUIRED FIELDS MISSING");
 
             var processData = (base64Img) => {
                 var newItem = {
-                    name: name, loc: loc, date: date, creator: creator, image: base64Img ||
-                    ""
+                    name: name, loc: loc, date: date, creator: creator, image: base64Img || ""
                 };
                 if (isBatchMode) {
                     pendingData.push(newItem);
@@ -407,30 +395,22 @@
                     
                     setTimeout(() => {
                         scanOverlay.style.display = 'none';
-                        
                         var tempId = Date.now();
-                  
                         var tempItem = {
                             rowId: tempId, name: name, location: loc, date: date, creator: creator, 
                             imgUrl: base64Img ? "data:image/jpeg;base64," + base64Img : "",
-                  
-                           isTemp: true
+                            isTemp: true
                         };
                         allData.unshift(tempItem);
                         renderList(); 
-                
-                        
                         document.getElementById("inName").value = "";
                         document.getElementById("pText").innerText = "";
                         document.getElementById("fileIn").value = "";
-
-              
-                         var pl = { code: localStorage.getItem("pass_code"), ...newItem };
+                        var pl = { code: localStorage.getItem("pass_code"), ...newItem };
                         callApi("add", pl, (res) => { updateLocalData(res.data); }, true);
                     }, 2500);
                 }
             };
-
             if(file) compressImage(file).then(base64 => processData(base64));
             else processData("");
         }
@@ -438,26 +418,23 @@
         function renderPendingList() {
             var div = document.getElementById("pendingList");
             var btn = document.getElementById("bulkAddBtn");
-            
             if(pendingData.length > 0) {
                 btn.style.display = "block";
-                btn.innerText = "📤 確認上傳 (" + pendingData.length + ")";
+                btn.innerText = "[ UPLOAD ALL (" + pendingData.length + ") ]";
                 
                 var html = pendingData.map((item, idx) => `
                     <div class="card pending-item">
                         <div style="flex:1">
                             <div><b>${item.name}</b> <span style="font-size:12px;color:#666">(${item.date})</span></div>
-        
-                             <div style="font-size:12px; color:#666">📍 ${item.location}</div>
+                            <div style="font-size:12px; color:#666">@ ${item.location}</div>
                         </div>
                         <button style="width:auto; background:none; color:#e74c3c; border:none; font-size:20px;" onclick="removePending(${idx})">✕</button>
                     </div>
-   
-                 `).join("");
+                `).join("");
                 div.innerHTML = html;
             } else {
                 btn.style.display = "none";
-                div.innerHTML = "<div style='text-align:center;color:#aaa;font-size:12px;padding:10px;'>暫存區是空的</div>";
+                div.innerHTML = "<div style='text-align:center;color:#aaa;font-size:12px;padding:10px;'>[ EMPTY ]</div>";
             }
         }
 
@@ -468,41 +445,36 @@
 
         function doMultiAddUpload() {
             if(pendingData.length === 0) return;
-            if(!confirm("確定要一次上傳這 " + pendingData.length + " 筆資料嗎？")) return;
+            if(!confirm("CONFIRM UPLOAD " + pendingData.length + " ITEMS?")) return;
 
             var scanOverlay = document.getElementById("scanOverlay");
             scanOverlay.style.display = 'flex';
-            document.querySelector(".scan-text").innerText = "正在批量建檔...";
+            document.querySelector(".scan-text").innerText = "BATCH PROCESSING...";
             setTimeout(() => {
                 var code = localStorage.getItem("pass_code");
                 pendingData.forEach(item => {
                     var tempItem = {
                         rowId: Date.now() + Math.random(), 
-          
                         name: item.name, location: item.loc, date: item.date, creator: item.creator, 
                         imgUrl: item.image ? "data:image/jpeg;base64," + item.image : "",
                         isTemp: true
                     };
-  
-                   allData.unshift(tempItem);
+                    allData.unshift(tempItem);
                 });
                 renderList();
-                
                 callApi("addMulti", { items: pendingData, code: code }, function(res) {
-          
                     scanOverlay.style.display = 'none';
                     pendingData = [];
                     renderPendingList();
                     updateLocalData(res.data);
-                    alert("全部上傳成功！");
-      
-                   document.querySelector(".scan-text").innerText = "正在掃描食品...";
+                    alert("UPLOAD COMPLETE");
+                    document.querySelector(".scan-text").innerText = "SCANNING TARGET...";
                 }, true);
             }, 2500);
         }
 
         function doDel(id) { 
-            if(confirm("確定要刪除嗎？")) {
+            if(confirm("DELETE ITEM?")) {
                 allData = allData.filter(item => item.rowId !== id);
                 renderList(); 
                 var code = localStorage.getItem("pass_code");
@@ -514,7 +486,7 @@
             var checkboxes = document.querySelectorAll('.del-checkbox:checked');
             var idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value));
             if (idsToDelete.length === 0) return;
-            if (!confirm("確定要刪除選取的 " + idsToDelete.length + " 項資料嗎？")) return;
+            if (!confirm("DELETE " + idsToDelete.length + " ITEMS?")) return;
             allData = allData.filter(item => !idsToDelete.includes(item.rowId));
             renderList();
             var code = localStorage.getItem("pass_code");
@@ -525,25 +497,21 @@
             var count = document.querySelectorAll('.del-checkbox:checked').length;
             var btn = document.getElementById("bulkDelBtn");
             if (count > 0) { btn.style.display = "block";
-            btn.innerText = "🗑️ 刪除選取項目 (" + count + ")"; } 
-            else { btn.style.display = "none";
-            }
+            btn.innerText = "[ DELETE SELECTED (" + count + ") ]"; } 
+            else { btn.style.display = "none"; }
         }
 
         function updateLocalData(newData) {
-            allData = newData ||
-            [];
+            allData = newData || [];
             localStorage.setItem("cached_fridge_data", JSON.stringify(allData));
             renderList();
             var hist = [...new Set(allData.map(i => i.creator))].filter(c => c);
             document.getElementById("cHistory").innerHTML = hist.map(c => `<option value="${c}">`).join("");
         }
 
-        // --- ✨ 新增：切換群組展開/收合 ---
         function toggleGroup(groupId) {
             var body = document.getElementById('group-body-' + groupId);
             var header = document.getElementById('group-header-' + groupId);
-            
             if (body.style.display === "none" || body.style.display === "") {
                 body.style.display = "block";
                 header.classList.add("active");
@@ -553,116 +521,85 @@
             }
         }
 
-        // --- ✨ 核心修改：分組渲染列表 ---
         function renderList() {
             var listDiv = document.getElementById("list");
             var key = document.getElementById("search").value.toLowerCase();
             var today = new Date(); today.setHours(0,0,0,0);
-            // 1. 先過濾資料
             var filtered = allData.filter(i => {
                 var s = String(i.name||"") + String(i.location||"") + String(i.creator||"");
                 return s.toLowerCase().includes(key);
             });
             if (filtered.length === 0) {
-                listDiv.innerHTML = "<p style='text-align:center;color:#999'>沒有找到相符的食品</p>";
+                listDiv.innerHTML = "<p style='text-align:center;color:#999;font-family:monospace'>[ NO DATA FOUND ]</p>";
                 checkSelection();
                 return;
             }
 
-            // 2. 將資料依名稱分組
             var groups = {};
             filtered.forEach(item => {
-                var nameKey = item.name || "未命名";
+                var nameKey = item.name || "UNKNOWN";
                 if(!groups[nameKey]) groups[nameKey] = [];
                 groups[nameKey].push(item);
             });
             var html = "";
 
-            // 3. 遍歷群組
-            // 先將群組依照「最快過期日」排序
             var sortedGroupKeys = Object.keys(groups).sort((keyA, keyB) => {
                 var datesA = groups[keyA].map(i => new Date(i.date).getTime());
                 var datesB = groups[keyB].map(i => new Date(i.date).getTime());
-                return Math.min(...datesA) - 
-                Math.min(...datesB);
+                return Math.min(...datesA) - Math.min(...datesB);
             });
             sortedGroupKeys.forEach((groupName, groupIndex) => {
                 var items = groups[groupName];
-                
-                // 該組內的項目也依日期排序
                 items.sort((a,b) => new Date(a.date) - new Date(b.date));
-
-                // 計算匯總資訊
-      
                 var count = items.length;
                 var earliestDate = items[0].date;
-                
-                // 計算顏色標籤 (依照最早那筆)
                 var d = new Date(earliestDate);
-              
                 var diff = Math.ceil((d - today)/86400000);
-                var statusColor = diff < 0 ? "#e74c3c" : (diff <= 7 ? "#f1c40f" : "#2ecc71");
-                var statusText = diff < 0 ? '已過期' : (diff <= 7 ? '快過期' : '正常');
+                
+                var statusText = diff < 0 ? '[EXPIRED]' : (diff <= 7 ? '[SOON]' : '[OK]');
+                var statusStyle = diff < 0 ? 'color:red' : (diff <= 7 ? 'color:#f39c12' : 'color:green');
 
-                // --- 產生 HTML ---
-           
-     
-                // A. 子卡片列表 (預設隱藏在下拉區塊)
                 var subCardsHtml = items.map(item => {
                     var iDate = new Date(item.date);
                     var iDiff = Math.ceil((iDate - today)/86400000);
-      
-                    var cls = iDiff < 0 ?
-                    "bg-red" : (iDiff <= 7 ? "bg-yellow" : "bg-green");
+                    var cls = iDiff < 0 ? "bg-red" : (iDiff <= 7 ? "bg-yellow" : "bg-green");
                     
-                    var checkHTML = item.isTemp ?
-                    "" : 
+                    var checkHTML = item.isTemp ? "" : 
                         `<div class="chk-wrapper"><input type="checkbox" class="del-checkbox" value="${item.rowId}" onchange="checkSelection()"></div>`;
                     return `
                         <div class="card ${item.isTemp ? 'temp-item' : ''}">
                             ${checkHTML}
                             <img src="${item.imgUrl || ''}" onclick="event.stopPropagation(); openModal(this.src)">
-        
                             <div style="flex:1">
-                                <div><span class="creator-tag">👤 ${item.creator ||
-                                '未知'}</span></div>
-                                <div style="font-size:13px; color:#666">📍 ${item.location}</div>
-                                <div class="tag ${cls}">${item.date} (${iDiff}天)</div>
+                                <div><span class="creator-tag">BY: ${item.creator || 'UNKNOWN'}</span></div>
+                                <div style="font-size:13px; color:#666">LOC: ${item.location}</div>
+                                <div class="tag ${cls}">${item.date} (${iDiff}d)</div>
                             </div>
-  
-                            ${item.isTemp ?
-                            '<span style="font-size:12px;color:#f39c12">同步中...</span>' : 
-                            `<button style="width:auto; background:none; color:#ccc; border:none; font-size:20px;"
-                            onclick="event.stopPropagation(); doDel(${item.rowId})">✕</button>`}
+                            ${item.isTemp ? '<span style="font-size:12px;color:#f39c12">SYNC...</span>' : 
+                            `<button style="width:auto; background:none; color:#ccc; border:none; font-size:20px;" onclick="event.stopPropagation(); doDel(${item.rowId})">✕</button>`}
                         </div>
                     `;
                 }).join("");
 
-                // B. 父層容器 (顯示匯總)
                 html += `
                     <div class="group-container">
                         <div class="group-header" id="group-header-${groupIndex}" onclick="toggleGroup(${groupIndex})">
                             <div class="group-title">
- 
                                 <span class="arrow-icon">▶</span>
                                 <b>${groupName}</b>
-                                <span style="font-size:12px; background:#eee; padding:2px 
-                                6px; border-radius:10px; margin-left:8px; color:#555;">${count}</span>
+                                <span style="font-size:12px; background:#000; color:white; padding:1px 6px; margin-left:8px;">${count}</span>
                             </div>
                             <div class="group-info">
-                                <div style="color:${statusColor}; font-weight:bold;">${earliestDate}</div>
-      
+                                <div style="${statusStyle}; font-weight:bold;">${earliestDate}</div>
                                 <div>${statusText}</div>
                             </div>
                         </div>
-                      
                         <div class="group-body" id="group-body-${groupIndex}">
                             ${subCardsHtml}
                         </div>
                     </div>
                 `;
             });
-            
             listDiv.innerHTML = html;
             checkSelection(); 
         }
@@ -677,8 +614,7 @@
             document.getElementById("displayCode").innerText = code;
             var cached = localStorage.getItem("cached_fridge_data");
             if(cached) {
-                try { allData = JSON.parse(cached);
-                renderList(); } catch(e){}
+                try { allData = JSON.parse(cached); renderList(); } catch(e){}
                 refreshData(code, true);
             } else {
                 refreshData(code, false);
