@@ -8,156 +8,214 @@
     <style>
       :root {
          --ink: #333;
+         --paper-white: #ffffff;
+         --tape-color: rgba(255, 255, 255, 0.6); /* 半透明膠帶 */
+         --highlight-red: rgba(255, 69, 58, 0.1);
+         --highlight-yellow: rgba(255, 241, 0, 0.1);
       }
+      
       body { 
         font-family: 'Courier Prime', 'Noto Sans TC', monospace;
         background-color: #fff;
-        /* 背景網格 (50px) */
+        /* 統一的 50px 網格背景 */
         background-image: 
             linear-gradient(#e5e5e5 1px, transparent 1px),
             linear-gradient(90deg, #e5e5e5 1px, transparent 1px);
         background-size: 50px 50px;
         margin: 0; 
-        padding: 0; 
-        height: 100vh;
+        padding: 20px;
+        min-height: 100vh;
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
+        box-sizing: border-box;
         overflow: hidden;
       }
 
-      /* 主容器 */
-      .menu-container {
-        position: relative;
-        width: 100%;
-        max-width: 600px; 
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-
-      /* --- 狗狗圖片處理核心 (黑線手繪風) --- */
-      .dog-img {
-        width: 320px;
-        height: auto;
-        
-        /* 步驟 1: 反轉顏色 (Invert) */
-        /* 把原本的「黑底白線」變成「白底黑線」 */
-        /* contrast(1.2) 加強對比，讓線條更黑更清楚 */
-        filter: invert(1) contrast(1.5);
-        
-        /* 步驟 2: 去除背景 (Multiply) */
-        /* 色彩增值：會把白色變透明，只保留黑色線條 */
-        /* 這樣狗狗就會像直接畫在網格紙上一樣 */
-        mix-blend-mode: multiply;
-        
-        position: relative;
-        z-index: 1;
-        opacity: 0.9; /* 稍微透明一點點，讓質感更像墨水 */
-      }
-
-      /* --- CSS 手繪風對話框按鈕 --- */
-      .bubble-btn {
-        position: absolute;
-        background: #fff;
-        border: 3px solid var(--ink);
-        padding: 15px 25px;
-        font-size: 1.2rem;
-        font-weight: bold;
-        color: var(--ink);
-        text-decoration: none;
-        cursor: pointer;
-        z-index: 10;
-        box-shadow: 5px 5px 0 rgba(0,0,0,0.1);
-        transition: transform 0.2s, box-shadow 0.2s;
-        border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+      /* 標題區塊 */
+      .board-header {
+        margin-bottom: 50px;
         text-align: center;
-        min-width: 140px;
+        background: #000;
+        color: #fff;
+        padding: 10px 30px;
+        transform: rotate(-1deg);
+        box-shadow: 5px 5px 0 rgba(0,0,0,0.2);
+      }
+      .board-header h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
       }
 
-      .bubble-btn:hover {
-        transform: translate(-2px, -2px) scale(1.05);
-        box-shadow: 8px 8px 0 rgba(0,0,0,0.15);
-        background: #fffdf5;
+      /* 公佈欄容器 */
+      .board-container {
+        display: flex;
+        gap: 40px;
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+        max-width: 800px;
       }
 
-      .bubble-btn:active {
-        transform: translate(2px, 2px);
-        box-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+      /* --- 便條紙按鈕 (Note Card) --- */
+      .note-card {
+        position: relative;
+        background: var(--paper-white);
+        width: 260px;
+        height: 200px;
+        border: 2px solid var(--ink);
+        padding: 30px 20px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        color: var(--ink);
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.27);
+        cursor: pointer;
+        
+        /* 讓紙張有點陰影，像浮在牆上 */
+        box-shadow: 10px 10px 0 rgba(0,0,0,0.1); 
       }
 
-      /* 左邊按鈕：過期清單 */
-      #btn-expired {
-        top: 30%;
-        left: 5%;
-        transform: rotate(-5deg);
-      }
-      #btn-expired:hover { transform: rotate(-5deg) scale(1.05) translate(-2px, -2px); }
-
-      /* 右邊按鈕：全部物品 */
-      #btn-all {
-        bottom: 30%;
-        right: 5%;
-        transform: rotate(3deg);
-      }
-      #btn-all:hover { transform: rotate(3deg) scale(1.05) translate(-2px, -2px); }
-
-      /* 連接線 (黑色) */
-      .line-connector {
+      /* 膠帶效果 (CSS 畫出來的) */
+      .note-card::before {
+        content: '';
         position: absolute;
-        width: 60px;
-        height: 2px;
-        background: var(--ink);
-        z-index: 0;
-      }
-      .line-left { top: 35%; left: 28%; transform: rotate(20deg); }
-      .line-right { bottom: 35%; right: 28%; transform: rotate(-20deg); }
-
-      /* 手機版調整 */
-      @media (max-width: 600px) {
-        .dog-img { width: 250px; }
-        .bubble-btn { padding: 10px 20px; font-size: 1rem; min-width: 110px; }
-        #btn-expired { top: 20%; left: 5%; }
-        #btn-all { bottom: 25%; right: 5%; }
-        .line-connector { display: none; }
+        top: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100px;
+        height: 30px;
+        background: rgba(220, 220, 220, 0.5); /* 霧面膠帶色 */
+        border-left: 2px dotted rgba(0,0,0,0.1); /* 兩邊撕痕 */
+        border-right: 2px dotted rgba(0,0,0,0.1);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        z-index: 10;
       }
 
+      /* 左邊的紙條 (稍微往左歪) */
+      .card-left {
+        transform: rotate(-3deg);
+      }
+      .card-left:hover {
+        transform: rotate(0deg) scale(1.05); /* 滑鼠移上去轉正並放大 */
+        z-index: 5;
+        box-shadow: 15px 15px 0 rgba(0,0,0,0.15);
+      }
+      /* 給左邊紙條一點紅色螢光筆背景 */
+      .card-left {
+        background-image: repeating-linear-gradient(
+          45deg,
+          var(--paper-white),
+          var(--paper-white) 10px,
+          var(--highlight-red) 10px,
+          var(--highlight-red) 20px
+        );
+      }
+
+      /* 右邊的紙條 (稍微往右歪) */
+      .card-right {
+        transform: rotate(2deg);
+      }
+      .card-right:hover {
+        transform: rotate(0deg) scale(1.05);
+        z-index: 5;
+        box-shadow: 15px 15px 0 rgba(0,0,0,0.15);
+      }
+      /* 給右邊紙條一點黃色螢光筆背景 */
+      .card-right {
+        background-image: repeating-linear-gradient(
+          -45deg,
+          var(--paper-white),
+          var(--paper-white) 10px,
+          var(--highlight-yellow) 10px,
+          var(--highlight-yellow) 20px
+        );
+      }
+
+      /* 卡片內的文字 */
+      .icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        display: block;
+      }
+      .title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        border-bottom: 3px solid var(--ink); /* 粗底線 */
+        padding-bottom: 5px;
+      }
+      .desc {
+        margin-top: 10px;
+        font-size: 0.85rem;
+        color: #666;
+        font-family: monospace;
+      }
+
+      /* 登出按鈕 (右下角貼紙) */
       .logout-btn {
         position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: #333;
+        bottom: 30px;
+        right: 30px;
+        background: var(--ink);
         color: white;
-        border: none;
-        padding: 8px 15px;
+        border: 2px solid var(--ink);
+        padding: 10px 20px;
         font-family: inherit;
         font-weight: bold;
+        font-size: 1rem;
         cursor: pointer;
-        opacity: 0.8;
-        z-index: 100;
-        box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+        transition: all 0.2s;
+        box-shadow: 5px 5px 0 rgba(0,0,0,0.2);
+      }
+      .logout-btn:hover {
+        transform: translate(-3px, -3px);
+        box-shadow: 8px 8px 0 rgba(0,0,0,0.3);
+      }
+      .logout-btn:active {
+        transform: translate(0, 0);
+        box-shadow: none;
+      }
+
+      /* 手機版適配 */
+      @media (max-width: 600px) {
+        .board-container {
+          flex-direction: column;
+          align-items: center;
+          gap: 30px;
+        }
+        .note-card {
+          width: 80%; /* 手機上寬一點 */
+          height: 160px;
+        }
+        .board-header h1 {
+            font-size: 1.4rem;
+        }
       }
     </style>
 </head>
 <body>
 
-    <div class="menu-container">
-        <a href="main.html?filter=expired" class="bubble-btn" id="btn-expired">
-            ⚠️<br>已過期
+    <div class="board-header">
+        <h1>DASHBOARD</h1>
+    </div>
+
+    <div class="board-container">
+        <a href="main.html?filter=expired" class="note-card card-left">
+            <span class="icon">⚠️</span>
+            <span class="title">EXPIRED</span>
+            <span class="desc">查看已過期清單</span>
         </a>
-        
-        <div class="line-connector line-left"></div>
 
-        <img src="1518.jpg" alt="Menu Dog" class="dog-img">
-
-        <div class="line-connector line-right"></div>
-
-        <a href="main.html" class="bubble-btn" id="btn-all">
-            📦<br>全部物品
+        <a href="main.html" class="note-card card-right">
+            <span class="icon">📦</span>
+            <span class="title">INVENTORY</span>
+            <span class="desc">管理所有物品</span>
         </a>
     </div>
 
