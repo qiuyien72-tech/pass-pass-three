@@ -9,12 +9,11 @@
     <style>
       :root {
          --bg-grid: #f4f4f4;
-         --line-color: #ccc;
+         --ink: #333;
+         --card-bg: #ffffff;
          --highlight-yellow: rgba(255, 241, 0, 0.4);
          --highlight-green: rgba(0, 255, 127, 0.3);
          --highlight-red: rgba(255, 69, 58, 0.2);
-         --ink: #333;
-         --card-bg: #ffffff;
          
          /* 按鈕顏色變數 */
          --btn-red: #e74c3c;
@@ -35,86 +34,126 @@
         color: var(--ink); 
         padding-bottom: 120px; 
         
-        /* 為了給左側選單留空間 (電腦版) */
-        padding-left: 140px; 
+        /* 關鍵：左側留白給側邊欄 (140px寬度 + 20px間距) */
+        padding-left: 160px; 
       }
 
-      /* --- 新增：左側懸浮選單 (Side Menu) --- */
+      /* --- 側邊導覽列 (Side Menu) --- */
       .side-menu {
           position: fixed;
-          left: 20px;
-          top: 100px; /* 距離頂部一點距離 */
+          top: 0;
+          left: 0;
+          height: 100%; /* 全高度 */
+          width: 140px; /* 固定寬度 */
+          background: #fff; /* 白底 */
+          border-right: 3px solid var(--ink); /* 右側粗黑線分隔 */
           display: flex;
           flex-direction: column;
-          gap: 15px;
+          padding: 20px 15px;
+          box-sizing: border-box;
           z-index: 2000;
+          box-shadow: 5px 0 15px rgba(0,0,0,0.05); /* 微微陰影讓它浮起來 */
+      }
+
+      /* 選單標題 (MENU) */
+      .menu-label {
+          font-size: 1.2rem;
+          font-weight: 900;
+          text-align: center;
+          margin-bottom: 30px;
+          border-bottom: 2px dashed #ccc;
+          padding-bottom: 10px;
+          color: var(--ink);
+          letter-spacing: 2px;
       }
 
       .side-btn {
-          width: 100px;
-          padding: 12px 10px;
+          width: 100%;
+          padding: 15px 10px;
+          margin-bottom: 15px;
           font-family: inherit;
           font-weight: bold;
-          font-size: 14px;
+          font-size: 13px;
           text-transform: uppercase;
           cursor: pointer;
           border: 2px solid;
           background: #fff;
-          box-shadow: 6px 6px 0 rgba(0,0,0,0.1);
-          transition: transform 0.1s, box-shadow 0.1s;
+          box-shadow: 4px 4px 0 rgba(0,0,0,0.1); /* 方塊陰影 */
+          transition: all 0.1s;
           text-align: center;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          line-height: 1.2;
+          gap: 5px;
+          border-radius: 4px;
       }
 
-      /* 按鈕懸停效果 */
-      .side-btn:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0 rgba(0,0,0,0.15); }
-      .side-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 rgba(0,0,0,0.1); }
+      /* 按鈕 Icon 大小 */
+      .side-btn span { font-size: 24px; display: block; }
 
-      /* 個別按鈕顏色 */
+      /* 按鈕懸停效果 */
+      .side-btn:hover { 
+          transform: translate(-2px, -2px); 
+          box-shadow: 6px 6px 0 rgba(0,0,0,0.15); 
+      }
+      .side-btn:active { 
+          transform: translate(2px, 2px); 
+          box-shadow: 2px 2px 0 rgba(0,0,0,0.1); 
+      }
+
+      /* 個別按鈕配色 */
       .btn-expired { color: var(--btn-red); border-color: var(--btn-red); }
-      .btn-expired:hover { background: #fff5f5; }
+      .btn-expired:hover { background: #fff0f0; }
 
       .btn-soon { color: var(--btn-orange); border-color: var(--btn-orange); }
-      .btn-soon:hover { background: #fffcf5; }
+      .btn-soon:hover { background: #fff8e8; }
 
       .btn-valid { color: var(--btn-green); border-color: var(--btn-green); }
-      .btn-valid:hover { background: #f5fff8; }
+      .btn-valid:hover { background: #f0fff4; }
 
-      .btn-exit { color: var(--btn-black); border-color: var(--btn-black); background: #333; color: #fff; }
-      .btn-exit:hover { background: #000; }
+      /* 登出按鈕：推到底部 */
+      .btn-exit { 
+          margin-top: auto; /* 自動推到底 */
+          background: var(--ink); 
+          color: #fff; 
+          border-color: var(--ink); 
+      }
+      .btn-exit:hover { background: #000; border-color: #000; color: #fff; }
 
-      /* --- 手機版調整：變成底部選單 --- */
+
+      /* --- RWD 手機版：變成底部導覽列 --- */
       @media (max-width: 850px) {
           body {
               padding-left: 20px; /* 恢復原本內距 */
               padding-bottom: 100px; /* 底部留空給選單 */
           }
           .side-menu {
-              flex-direction: row;
-              left: 0;
-              top: auto;
-              bottom: 0;
-              width: 100%;
-              background: #fff;
-              border-top: 2px solid #000;
+              width: 100%; 
+              height: auto; /* 高度自動 */
+              top: auto; 
+              bottom: 0; /* 貼底 */
+              border-right: none; 
+              border-top: 3px solid var(--ink); /* 改成上邊框 */
+              flex-direction: row; /* 水平排列 */
               padding: 10px;
-              gap: 10px;
+              gap: 8px;
               justify-content: space-around;
-              box-sizing: border-box;
               box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
           }
+          .menu-label { display: none; /* 手機版隱藏 MENU 標題 */ }
+          
           .side-btn {
-              width: auto;
-              flex: 1;
+              margin-bottom: 0;
+              flex: 1; /* 平均分配寬度 */
               box-shadow: none; /* 手機版移除陰影比較乾淨 */
-              font-size: 12px;
-              padding: 8px 5px;
+              font-size: 11px;
+              padding: 6px 2px;
+              border-width: 1px;
           }
+          .side-btn span { font-size: 18px; }
           .side-btn:hover { transform: none; box-shadow: none; }
+          .btn-exit { margin-top: 0; }
       }
 
       /* --------------------------- */
@@ -289,16 +328,23 @@
     </div>
 
     <div class="side-menu">
+        <div class="menu-label">MENU</div>
+        
         <button class="side-btn btn-expired" onclick="window.location.href='expired.html'">
-            ⚠️<br>EXPIRED
+            <span>⚠️</span>
+            EXPIRED
         </button>
         <button class="side-btn btn-soon" onclick="window.location.href='soon.html'">
-            ⏳<br>SOON
+            <span>⏳</span>
+            SOON
         </button>
         <button class="side-btn btn-valid" onclick="window.location.href='valid.html'">
-            ✅<br>VALID
+            <span>✅</span>
+            VALID
         </button>
+        
         <button class="side-btn btn-exit" onclick="doLogout()">
+            <span>🚪</span>
             EXIT
         </button>
     </div>
