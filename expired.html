@@ -81,16 +81,13 @@
           font-family: monospace;
       }
 
-      input, button { 
+      input {
         width: 100%; 
         padding: 12px; 
         border-radius: 0;
         box-sizing: border-box; 
         font-family: inherit;
         font-size: 16px;
-      }
-      
-      input {
         background: transparent;
         border: none;
         border-bottom: 2px solid #aaa;
@@ -131,18 +128,10 @@
       }
       .card:hover { background: rgba(231, 76, 60, 0.1); }
       
-      /* --- 新增：核取方塊樣式 --- */
-      .chk-wrapper { 
-          display: flex; 
-          align-items: center; 
-          padding-right: 15px; 
-      }
+      .chk-wrapper { display: flex; align-items: center; padding-right: 15px; }
       .del-checkbox { 
-          width: 22px; 
-          height: 22px; 
-          cursor: pointer; 
-          border: 2px solid var(--alert-red); 
-          accent-color: var(--alert-red); /* 讓勾選框變成紅色 */
+          width: 22px; height: 22px; cursor: pointer; 
+          border: 2px solid var(--alert-red); accent-color: var(--alert-red); 
       }
 
       .card img { 
@@ -152,32 +141,19 @@
         margin-right: 20px; 
         background: #eee; 
         filter: grayscale(20%); 
+        cursor: pointer;
       }
       
       .info-box { flex: 1; }
       .date-tag { 
-          color: #fff; 
-          background: var(--alert-red); 
-          padding: 2px 6px; 
-          font-size: 12px; 
-          font-weight: bold; 
-          display: inline-block;
-          margin-top: 5px;
+          color: #fff; background: var(--alert-red); padding: 2px 6px; 
+          font-size: 12px; font-weight: bold; display: inline-block; margin-top: 5px;
       }
 
       .del-btn {
-          background: transparent;
-          border: 2px solid var(--alert-red);
-          color: var(--alert-red);
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          font-weight: bold;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 16px;
+          background: transparent; border: 2px solid var(--alert-red); color: var(--alert-red);
+          width: 30px; height: 30px; border-radius: 50%; font-weight: bold;
+          cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px;
       }
       .del-btn:hover { background: var(--alert-red); color: #fff; }
 
@@ -187,25 +163,33 @@
       @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
       #loaderText { margin-top: 15px; font-weight: bold; }
 
-      /* --- 浮動按鈕 (預設隱藏) --- */
-      .float-btn { 
+      /* 圖片燈箱 (修正置中問題) */
+      #imageModal { 
+          display: none; /* 預設隱藏 */
           position: fixed; 
-          bottom: 30px; 
-          left: 50%; 
-          transform: translateX(-50%); 
-          padding: 15px 30px; 
-          border-radius: 0; 
-          font-size: 16px; 
-          font-weight: bold; 
-          border: 2px solid #000; 
-          box-shadow: 5px 5px 0 #000; 
-          display: none; 
-          z-index: 5000; 
-          width: auto; 
-          cursor: pointer; 
-          color: white; 
-          transition: transform 0.2s; 
-          background: var(--alert-red);
+          top: 0; left: 0; 
+          width: 100%; height: 100%; 
+          background: rgba(255,255,255,0.95); 
+          z-index: 10000; 
+          /* 關鍵：Flexbox 置中 */
+          justify-content: center; 
+          align-items: center; 
+          flex-direction: column; 
+      }
+      #imageModal img { 
+          max-width: 90%; 
+          max-height: 80vh; 
+          border: 5px solid #000; 
+          box-shadow: 10px 10px 0 rgba(0,0,0,0.1); 
+      }
+
+      /* 浮動按鈕 */
+      .float-btn { 
+          position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); 
+          padding: 15px 30px; border-radius: 0; font-size: 16px; font-weight: bold; 
+          border: 2px solid #000; box-shadow: 5px 5px 0 #000; 
+          display: none; z-index: 5000; width: auto; cursor: pointer; color: white; 
+          transition: transform 0.2s; background: var(--alert-red);
       }
       .float-btn:active { transform: translateX(-50%) translate(2px, 2px); box-shadow: 3px 3px 0 #000; }
 
@@ -248,6 +232,7 @@
         }
         function hideLoader() { document.getElementById("loader").style.display = "none"; }
 
+        // --- 修正：開啟圖片時強制使用 flex 以便置中 ---
         function openModal(src) {
             document.getElementById("largeImgDisplay").src = src;
             document.getElementById("imageModal").style.display = "flex";
@@ -255,7 +240,6 @@
 
         function callApi(action, payload, cb) {
             payload.action = action;
-            // 根據動作顯示不同提示
             let msg = "SYNCING...";
             if(action === "deleteMulti") msg = "DELETING...";
             
@@ -278,7 +262,6 @@
             }
         }
 
-        // --- 批量刪除邏輯 ---
         function doMultiDelete() {
             var checkboxes = document.querySelectorAll('.del-checkbox:checked');
             var idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value));
@@ -286,11 +269,9 @@
             
             if (!confirm("DELETE " + idsToDelete.length + " SELECTED ITEMS?")) return;
             
-            // 1. 本地先刪除
             allData = allData.filter(item => !idsToDelete.includes(item.rowId));
             renderExpiredList();
             
-            // 2. 呼叫 API
             var code = localStorage.getItem("pass_code");
             callApi("deleteMulti", { ids: idsToDelete, code: code }, function(res) { 
                 if(res.status === "success" && Array.isArray(res.data)) {
@@ -299,7 +280,6 @@
             });
         }
 
-        // --- 檢查勾選狀態 ---
         function checkSelection() {
             var count = document.querySelectorAll('.del-checkbox:checked').length;
             var btn = document.getElementById("bulkDelBtn");
@@ -319,7 +299,6 @@
             renderExpiredList();
         }
 
-        // --- 渲染清單 (含 Checkbox) ---
         function renderExpiredList() {
             var listDiv = document.getElementById("list");
             var key = document.getElementById("search").value.toLowerCase();
@@ -335,7 +314,7 @@
 
             if (expiredItems.length === 0) {
                 listDiv.innerHTML = "<div style='text-align:center; padding:40px; color:#aaa; font-weight:bold;'>[ NO EXPIRED ITEMS ]<br>沒有過期物品</div>";
-                checkSelection(); // 確保按鈕消失
+                checkSelection();
                 return;
             }
 
@@ -369,7 +348,7 @@
             html += `</div>`;
 
             listDiv.innerHTML = html;
-            checkSelection(); // 重新渲染後檢查按鈕狀態
+            checkSelection(); 
         }
 
         window.onload = function() {
