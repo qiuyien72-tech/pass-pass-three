@@ -304,20 +304,16 @@
     </div>
 
     <script>
-        // *** 重要：請在此處貼上原本 MAIN.txt 內 <script> 到 </script> 之間的所有程式碼 ***
-        // *** 為了確保功能完全不動，我不會修改 JS 內容 ***
-        // 以下是原本 JS 的開頭示意，請確保完整複製你原本的代碼：
-
         var API_URL = "https://script.google.com/macros/s/AKfycby_sDF8GC1jTH1yUN_UM1s_AdIvr0CHgtwiQ-GYMCMj__De6OQAm-NtUQWDn3f8avbD/exec";
         var allData = [];
-        var pendingData = []; 
+        var pendingData = []; // 用來存暫存資料
         var isBatchMode = false;
-
         function showLoader(text) {
             document.getElementById("loaderText").innerText = text;
             document.getElementById("loader").style.display = "flex";
         }
-        function hideLoader() { document.getElementById("loader").style.display = "none"; }
+        function hideLoader() { document.getElementById("loader").style.display = "none";
+        }
 
         function openModal(src) {
             document.getElementById("largeImgDisplay").src = src;
@@ -329,17 +325,21 @@
                 var reader = new FileReader();
                 reader.readAsDataURL(file);
                 reader.onload = function(event) {
+                
                     var img = new Image();
                     img.src = event.target.result;
                     img.onload = function() {
                         var canvas = document.createElement('canvas');
+                    
                         var MAX_WIDTH = 800; 
                         var scaleSize = MAX_WIDTH / img.width;
                         if (scaleSize > 1) scaleSize = 1;
                         canvas.width = img.width * scaleSize;
+     
                         canvas.height = img.height * scaleSize;
                         var ctx = canvas.getContext("2d");
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                      
                         resolve(canvas.toDataURL("image/jpeg", 0.7).split(",")[1]); 
                     }
                 }
@@ -349,11 +349,11 @@
         function callApi(action, payload, cb, silent) {
             payload.action = action;
             if(!silent) {
-                let msg = "PROCESSING...";
-                if(action === "delete") msg = "SYNCING...";
-                if(action === "deleteMulti") msg = "DELETING...";
-                if(action === "addMulti") msg = "UPLOADING...";
-                if(action === "getList") msg = "SYNCING...";
+                let msg = "處理中...";
+                if(action === "delete") msg = "正在同步...";
+                if(action === "deleteMulti") msg = "正在批量刪除...";
+                if(action === "addMulti") msg = "正在批量上傳...請稍候";
+                if(action === "getList") msg = "同步中...";
                 showLoader(msg);
             }
             fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
@@ -363,7 +363,8 @@
             }).catch(e => { hideLoader(); console.error(e); });
         }
 
-        function doLogout() { localStorage.clear(); window.location.href = "index.html"; }
+        function doLogout() { localStorage.clear(); window.location.href = "index.html";
+        }
 
         function toggleBatchMode() {
             var checkbox = document.getElementById("batchModeToggle");
@@ -372,17 +373,13 @@
             var txt = document.getElementById("modeText");
             var pArea = document.getElementById("pendingArea");
             if(isBatchMode) {
-                btn.innerText = "+ ADD TO STAGE";
-                btn.style.background = "#fff"; 
-                btn.style.color = "#2ecc71";
-                btn.style.border = "2px solid #2ecc71";
+                btn.innerText = "➕ 加入暫存";
+                btn.style.background = "#2ecc71"; // 綠色
                 txt.classList.add("active-mode");
                 pArea.style.display = "block";
             } else {
-                btn.innerText = ">>> COMMIT";
-                btn.style.background = "#333"; 
-                btn.style.color = "#fff";
-                btn.style.border = "2px solid #333";
+                btn.innerText = "🚀 加入清單";
+                btn.style.background = "#3498db"; // 藍色
                 txt.classList.remove("active-mode");
                 if(pendingData.length === 0) pArea.style.display = "none";
             }
@@ -395,11 +392,12 @@
             var loc = document.getElementById("inLoc").value;
             var creator = document.getElementById("inCreator").value;
             var file = document.getElementById("fileIn").files[0];
-            if(!name || !date) return alert("REQUIRED FIELDS MISSING");
+            if(!name || !date) return alert("必填項目未輸入");
 
             var processData = (base64Img) => {
                 var newItem = {
-                    name: name, loc: loc, date: date, creator: creator, image: base64Img || ""
+                    name: name, loc: loc, date: date, creator: creator, image: base64Img ||
+                    ""
                 };
                 if (isBatchMode) {
                     pendingData.push(newItem);
@@ -414,22 +412,30 @@
                     
                     setTimeout(() => {
                         scanOverlay.style.display = 'none';
+                        
                         var tempId = Date.now();
+                  
                         var tempItem = {
                             rowId: tempId, name: name, location: loc, date: date, creator: creator, 
                             imgUrl: base64Img ? "data:image/jpeg;base64," + base64Img : "",
-                            isTemp: true
+                  
+                           isTemp: true
                         };
                         allData.unshift(tempItem);
                         renderList(); 
+                
+                        
                         document.getElementById("inName").value = "";
                         document.getElementById("pText").innerText = "";
                         document.getElementById("fileIn").value = "";
-                        var pl = { code: localStorage.getItem("pass_code"), ...newItem };
+
+              
+                         var pl = { code: localStorage.getItem("pass_code"), ...newItem };
                         callApi("add", pl, (res) => { updateLocalData(res.data); }, true);
                     }, 2500);
                 }
             };
+
             if(file) compressImage(file).then(base64 => processData(base64));
             else processData("");
         }
@@ -437,23 +443,26 @@
         function renderPendingList() {
             var div = document.getElementById("pendingList");
             var btn = document.getElementById("bulkAddBtn");
+            
             if(pendingData.length > 0) {
                 btn.style.display = "block";
-                btn.innerText = "[ UPLOAD ALL (" + pendingData.length + ") ]";
+                btn.innerText = "📤 確認上傳 (" + pendingData.length + ")";
                 
                 var html = pendingData.map((item, idx) => `
                     <div class="card pending-item">
                         <div style="flex:1">
                             <div><b>${item.name}</b> <span style="font-size:12px;color:#666">(${item.date})</span></div>
-                            <div style="font-size:12px; color:#666">@ ${item.location}</div>
+        
+                             <div style="font-size:12px; color:#666">📍 ${item.location}</div>
                         </div>
                         <button style="width:auto; background:none; color:#e74c3c; border:none; font-size:20px;" onclick="removePending(${idx})">✕</button>
                     </div>
-                `).join("");
+   
+                 `).join("");
                 div.innerHTML = html;
             } else {
                 btn.style.display = "none";
-                div.innerHTML = "<div style='text-align:center;color:#aaa;font-size:12px;padding:10px;'>[ EMPTY ]</div>";
+                div.innerHTML = "<div style='text-align:center;color:#aaa;font-size:12px;padding:10px;'>暫存區是空的</div>";
             }
         }
 
@@ -464,36 +473,41 @@
 
         function doMultiAddUpload() {
             if(pendingData.length === 0) return;
-            if(!confirm("CONFIRM UPLOAD " + pendingData.length + " ITEMS?")) return;
+            if(!confirm("確定要一次上傳這 " + pendingData.length + " 筆資料嗎？")) return;
 
             var scanOverlay = document.getElementById("scanOverlay");
             scanOverlay.style.display = 'flex';
-            document.querySelector(".scan-text").innerText = "BATCH PROCESSING...";
+            document.querySelector(".scan-text").innerText = "正在批量建檔...";
             setTimeout(() => {
                 var code = localStorage.getItem("pass_code");
                 pendingData.forEach(item => {
                     var tempItem = {
                         rowId: Date.now() + Math.random(), 
+          
                         name: item.name, location: item.loc, date: item.date, creator: item.creator, 
                         imgUrl: item.image ? "data:image/jpeg;base64," + item.image : "",
                         isTemp: true
                     };
-                    allData.unshift(tempItem);
+  
+                   allData.unshift(tempItem);
                 });
                 renderList();
+                
                 callApi("addMulti", { items: pendingData, code: code }, function(res) {
+          
                     scanOverlay.style.display = 'none';
                     pendingData = [];
                     renderPendingList();
                     updateLocalData(res.data);
-                    alert("UPLOAD COMPLETE");
-                    document.querySelector(".scan-text").innerText = "SCANNING TARGET...";
+                    alert("全部上傳成功！");
+      
+                   document.querySelector(".scan-text").innerText = "正在掃描食品...";
                 }, true);
             }, 2500);
         }
 
         function doDel(id) { 
-            if(confirm("DELETE ITEM?")) {
+            if(confirm("確定要刪除嗎？")) {
                 allData = allData.filter(item => item.rowId !== id);
                 renderList(); 
                 var code = localStorage.getItem("pass_code");
@@ -505,7 +519,7 @@
             var checkboxes = document.querySelectorAll('.del-checkbox:checked');
             var idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value));
             if (idsToDelete.length === 0) return;
-            if (!confirm("DELETE " + idsToDelete.length + " ITEMS?")) return;
+            if (!confirm("確定要刪除選取的 " + idsToDelete.length + " 項資料嗎？")) return;
             allData = allData.filter(item => !idsToDelete.includes(item.rowId));
             renderList();
             var code = localStorage.getItem("pass_code");
@@ -516,21 +530,25 @@
             var count = document.querySelectorAll('.del-checkbox:checked').length;
             var btn = document.getElementById("bulkDelBtn");
             if (count > 0) { btn.style.display = "block";
-            btn.innerText = "[ DELETE SELECTED (" + count + ") ]"; } 
-            else { btn.style.display = "none"; }
+            btn.innerText = "🗑️ 刪除選取項目 (" + count + ")"; } 
+            else { btn.style.display = "none";
+            }
         }
 
         function updateLocalData(newData) {
-            allData = newData || [];
+            allData = newData ||
+            [];
             localStorage.setItem("cached_fridge_data", JSON.stringify(allData));
             renderList();
             var hist = [...new Set(allData.map(i => i.creator))].filter(c => c);
             document.getElementById("cHistory").innerHTML = hist.map(c => `<option value="${c}">`).join("");
         }
 
+        // --- ✨ 新增：切換群組展開/收合 ---
         function toggleGroup(groupId) {
             var body = document.getElementById('group-body-' + groupId);
             var header = document.getElementById('group-header-' + groupId);
+            
             if (body.style.display === "none" || body.style.display === "") {
                 body.style.display = "block";
                 header.classList.add("active");
@@ -540,87 +558,116 @@
             }
         }
 
+        // --- ✨ 核心修改：分組渲染列表 ---
         function renderList() {
             var listDiv = document.getElementById("list");
             var key = document.getElementById("search").value.toLowerCase();
             var today = new Date(); today.setHours(0,0,0,0);
+            // 1. 先過濾資料
             var filtered = allData.filter(i => {
                 var s = String(i.name||"") + String(i.location||"") + String(i.creator||"");
                 return s.toLowerCase().includes(key);
             });
             if (filtered.length === 0) {
-                listDiv.innerHTML = "<p style='text-align:center;color:#999;font-family:monospace'>[ NO DATA FOUND ]</p>";
+                listDiv.innerHTML = "<p style='text-align:center;color:#999'>沒有找到相符的食品</p>";
                 checkSelection();
                 return;
             }
 
+            // 2. 將資料依名稱分組
             var groups = {};
             filtered.forEach(item => {
-                var nameKey = item.name || "UNKNOWN";
+                var nameKey = item.name || "未命名";
                 if(!groups[nameKey]) groups[nameKey] = [];
                 groups[nameKey].push(item);
             });
             var html = "";
 
+            // 3. 遍歷群組
+            // 先將群組依照「最快過期日」排序
             var sortedGroupKeys = Object.keys(groups).sort((keyA, keyB) => {
                 var datesA = groups[keyA].map(i => new Date(i.date).getTime());
                 var datesB = groups[keyB].map(i => new Date(i.date).getTime());
-                return Math.min(...datesA) - Math.min(...datesB);
+                return Math.min(...datesA) - 
+                Math.min(...datesB);
             });
             sortedGroupKeys.forEach((groupName, groupIndex) => {
                 var items = groups[groupName];
+                
+                // 該組內的項目也依日期排序
                 items.sort((a,b) => new Date(a.date) - new Date(b.date));
+
+                // 計算匯總資訊
+      
                 var count = items.length;
                 var earliestDate = items[0].date;
-                var d = new Date(earliestDate);
-                var diff = Math.ceil((d - today)/86400000);
                 
-                // 改成文字標示，而非顏色
-                var statusText = diff < 0 ? '[EXPIRED]' : (diff <= 7 ? '[SOON]' : '[OK]');
-                var statusStyle = diff < 0 ? 'color:red' : (diff <= 7 ? 'color:#f39c12' : 'color:green');
+                // 計算顏色標籤 (依照最早那筆)
+                var d = new Date(earliestDate);
+              
+                var diff = Math.ceil((d - today)/86400000);
+                var statusColor = diff < 0 ? "#e74c3c" : (diff <= 7 ? "#f1c40f" : "#2ecc71");
+                var statusText = diff < 0 ? '已過期' : (diff <= 7 ? '快過期' : '正常');
 
+                // --- 產生 HTML ---
+           
+     
+                // A. 子卡片列表 (預設隱藏在下拉區塊)
                 var subCardsHtml = items.map(item => {
                     var iDate = new Date(item.date);
                     var iDiff = Math.ceil((iDate - today)/86400000);
-                    // 螢光筆效果 class 
-                    var cls = iDiff < 0 ? "bg-red" : (iDiff <= 7 ? "bg-yellow" : "bg-green");
+      
+                    var cls = iDiff < 0 ?
+                    "bg-red" : (iDiff <= 7 ? "bg-yellow" : "bg-green");
                     
-                    var checkHTML = item.isTemp ? "" : 
+                    var checkHTML = item.isTemp ?
+                    "" : 
                         `<div class="chk-wrapper"><input type="checkbox" class="del-checkbox" value="${item.rowId}" onchange="checkSelection()"></div>`;
                     return `
                         <div class="card ${item.isTemp ? 'temp-item' : ''}">
                             ${checkHTML}
                             <img src="${item.imgUrl || ''}" onclick="event.stopPropagation(); openModal(this.src)">
+        
                             <div style="flex:1">
-                                <div><span class="creator-tag">BY: ${item.creator || 'UNKNOWN'}</span></div>
-                                <div style="font-size:13px; color:#666">LOC: ${item.location}</div>
-                                <div class="tag ${cls}">${item.date} (${iDiff}d)</div>
+                                <div><span class="creator-tag">👤 ${item.creator ||
+                                '未知'}</span></div>
+                                <div style="font-size:13px; color:#666">📍 ${item.location}</div>
+                                <div class="tag ${cls}">${item.date} (${iDiff}天)</div>
                             </div>
-                            ${item.isTemp ? '<span style="font-size:12px;color:#f39c12">SYNC...</span>' : 
-                            `<button style="width:auto; background:none; color:#ccc; border:none; font-size:20px;" onclick="event.stopPropagation(); doDel(${item.rowId})">✕</button>`}
+  
+                            ${item.isTemp ?
+                            '<span style="font-size:12px;color:#f39c12">同步中...</span>' : 
+                            `<button style="width:auto; background:none; color:#ccc; border:none; font-size:20px;"
+                            onclick="event.stopPropagation(); doDel(${item.rowId})">✕</button>`}
                         </div>
                     `;
                 }).join("");
 
+                // B. 父層容器 (顯示匯總)
                 html += `
                     <div class="group-container">
                         <div class="group-header" id="group-header-${groupIndex}" onclick="toggleGroup(${groupIndex})">
                             <div class="group-title">
+ 
                                 <span class="arrow-icon">▶</span>
                                 <b>${groupName}</b>
-                                <span style="font-size:12px; background:#000; color:white; padding:1px 6px; margin-left:8px;">${count}</span>
+                                <span style="font-size:12px; background:#eee; padding:2px 
+                                6px; border-radius:10px; margin-left:8px; color:#555;">${count}</span>
                             </div>
                             <div class="group-info">
-                                <div style="${statusStyle}; font-weight:bold;">${earliestDate}</div>
+                                <div style="color:${statusColor}; font-weight:bold;">${earliestDate}</div>
+      
                                 <div>${statusText}</div>
                             </div>
                         </div>
+                      
                         <div class="group-body" id="group-body-${groupIndex}">
                             ${subCardsHtml}
                         </div>
                     </div>
                 `;
             });
+            
             listDiv.innerHTML = html;
             checkSelection(); 
         }
@@ -635,7 +682,8 @@
             document.getElementById("displayCode").innerText = code;
             var cached = localStorage.getItem("cached_fridge_data");
             if(cached) {
-                try { allData = JSON.parse(cached); renderList(); } catch(e){}
+                try { allData = JSON.parse(cached);
+                renderList(); } catch(e){}
                 refreshData(code, true);
             } else {
                 refreshData(code, false);
