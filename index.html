@@ -8,114 +8,110 @@
     <title>冰箱小管家 - 登入</title>
     <style>
       :root {
-        --bg-color: #f0f2f5;
-        --paper-color: #fff;
-        --line-color: #a2a9b1;
-        --accent-blue: #007aff;
-        --ink-color: #2c3e50;
+        --bg-grid: #f4f4f4;
+        --ink: #333;
+        --card-bg: #ffffff;
+        --highlight-yellow: rgba(255, 241, 0, 0.4);
       }
+      
       body { 
         font-family: 'Courier Prime', 'Noto Sans TC', monospace;
-        background: radial-gradient(#e0e0e0 15%, transparent 16%) 0 0, radial-gradient(#e0e0e0 15%, transparent 16%) 8px 8px;
-        background-color: #e8e8e8;
-        background-size: 16px 16px;
+        background-color: #fff;
+        /* 統一的網格紙背景 */
+        background-image: 
+            linear-gradient(#e5e5e5 1px, transparent 1px),
+            linear-gradient(90deg, #e5e5e5 1px, transparent 1px);
+        background-size: 20px 20px;
         margin: 0; 
         display: flex; 
         align-items: center; 
         justify-content: center; 
         height: 100vh;
-        color: var(--ink-color);
+        color: var(--ink);
       }
+
       #loginBox { 
         width: 100%;
-        max-width: 320px;
-        background: var(--paper-color);
+        max-width: 360px;
+        background: var(--card-bg);
         padding: 40px 30px; 
         position: relative;
-        /* 筆記本左側孔洞效果 */
-        border-left: 5px solid #333;
-        box-shadow: 10px 10px 0px rgba(0,0,0,0.1);
+        border: 2px solid var(--ink);
+        box-shadow: 10px 10px 0 rgba(0,0,0,0.1); /* 硬陰影風格 */
       }
-      /* 裝飾：彷彿紙張的質感 */
-      #loginBox::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: linear-gradient(transparent 95%, #e1e1e1 95%);
-        background-size: 100% 24px;
-        pointer-events: none;
-        z-index: 0;
-      }
+
       h2 {
-        position: relative;
-        z-index: 1;
         text-align: center;
-        margin-bottom: 30px;
+        margin-bottom: 40px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 2px;
-        border-bottom: 3px solid var(--ink-color);
-        padding-bottom: 10px;
-        display: inline-block;
-        width: 100%;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      /* 標題螢光筆效果 */
+      h2 span {
+          background: var(--highlight-yellow);
+          padding: 0 10px;
       }
       
       input {
-        position: relative;
-        z-index: 1;
         width: 100%; 
-        padding: 10px 5px; 
-        margin-bottom: 25px; 
+        padding: 12px 5px; 
+        margin-bottom: 30px; 
         background: transparent;
         border: none;
-        border-bottom: 2px solid var(--ink-color);
+        border-bottom: 2px solid #aaa; /* 底線風格 */
         border-radius: 0;
-        font-family: 'Courier Prime', monospace;
+        font-family: inherit;
         font-size: 18px;
-        color: var(--ink-color);
+        color: var(--ink);
         outline: none;
         transition: border-color 0.3s;
+        text-align: center;
       }
       input:focus {
-        border-bottom-color: var(--accent-blue);
+        border-bottom-color: #000;
+        background: rgba(0,0,0,0.02);
       }
       input::placeholder {
         color: #999;
         font-style: italic;
+        font-size: 14px;
       }
 
       button { 
-        position: relative;
-        z-index: 1;
         width: 100%; 
-        padding: 14px; 
+        padding: 15px; 
         margin-bottom: 15px; 
-        background: var(--ink-color); 
+        background: var(--ink); 
         color: white; 
-        border: none; 
+        border: 2px solid var(--ink); 
         font-weight: bold; 
-        font-family: 'Courier Prime', monospace;
+        font-family: inherit;
         cursor: pointer;
         text-transform: uppercase;
         letter-spacing: 1px;
         transition: transform 0.1s;
       }
       button:active {
-        transform: scale(0.98);
+        transform: translate(2px, 2px);
       }
       
       .secondary { 
         background: transparent; 
-        color: var(--ink-color); 
-        border: 2px solid var(--ink-color);
+        color: var(--ink); 
+        border: 2px solid var(--ink);
       }
 
       /* Loader */
-      #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 1000; }
-      .spinner { width: 40px; height: 40px; background: var(--ink-color); animation: flip 1.2s infinite; margin-bottom: 15px; }
-      #loaderText { color: var(--ink-color); font-weight: bold; font-family: 'Courier Prime', monospace; }
-      
-      @keyframes flip { 0% { transform: perspective(120px) rotateX(0deg) rotateY(0deg); } 50% { transform: perspective(120px) rotateX(-180.1deg) rotateY(0deg); } 100% { transform: perspective(120px) rotateX(-180deg) rotateY(-179.9deg); } }
+      #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 1000; }
+      .spinner { width: 50px; height: 50px; background: transparent; border: 4px solid #000; margin-bottom: 20px; animation: simpleSpin 1s linear infinite; }
+      @keyframes simpleSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      #loaderText { color: var(--ink); font-weight: bold; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -125,15 +121,18 @@
     </div>
 
     <div id="loginBox">
-        <h2>Fridge Log</h2>
-        <input type="text" id="codeIn" placeholder="ENTER ACCESS CODE" style="text-align:center; text-transform:uppercase;">
+        <h2><span>FRIDGE LOG</span></h2>
+        
+        <input type="text" id="codeIn" placeholder="ENTER ACCESS CODE" style="text-transform:uppercase;">
+        
         <button onclick="doLogin()">[ ENTER SYSTEM ]</button>
         <button class="secondary" onclick="doRegister()">GENERATE NEW CODE</button>
     </div>
 
     <script>
-        // --- 這裡保持原本的 JS 功能完全不變 ---
+        // 這是你原本的 API 網址
         var API_URL = "https://script.google.com/macros/s/AKfycby_sDF8GC1jTH1yUN_UM1s_AdIvr0CHgtwiQ-GYMCMj__De6OQAm-NtUQWDn3f8avbD/exec";
+        
         function showLoader(text) {
             document.getElementById("loaderText").innerText = text;
             document.getElementById("loader").style.display = "flex";
@@ -151,7 +150,10 @@
                     showLoader("ACCESS GRANTED");
                     localStorage.setItem("pass_code", code);
                     if(res.data) localStorage.setItem("cached_fridge_data", JSON.stringify(res.data));
-                    window.location.href = "main.html";
+                    
+                    // *** 關鍵修改：登入成功後跳轉到 menu.html ***
+                    window.location.href = "menu.html"; 
+                    
                 } else {
                     hideLoader();
                     alert("❌ INVALID CODE");
@@ -165,10 +167,19 @@
             .then(r => r.json()).then(res => {
                 localStorage.setItem("pass_code", res.code);
                 alert("CODE GENERATED: " + res.code);
-                window.location.href = "main.html";
+                
+                // *** 關鍵修改：註冊成功後也跳轉到 menu.html ***
+                window.location.href = "menu.html";
             });
         }
-        window.onload = function() { if(localStorage.getItem("pass_code")) window.location.href = "main.html"; };
+        
+        // 自動登入檢查
+        window.onload = function() { 
+            if(localStorage.getItem("pass_code")) {
+                // *** 關鍵修改：自動登入也跳轉到 menu.html ***
+                window.location.href = "menu.html";
+            }
+        };
     </script>
 </body>
 </html>
