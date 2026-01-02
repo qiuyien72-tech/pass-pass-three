@@ -37,13 +37,12 @@
         margin: 0 auto;
       }
 
-      /* --- 新增：卡片樣式 (用於上方輸入區與搜尋區) --- */
+      /* 卡片樣式 */
       .panel-card {
         background: var(--card-bg);
         border: 2px solid var(--ink);
         padding: 20px;
         margin-bottom: 20px;
-        /* 增加一點硬陰影，讓它像貼紙或卡片浮起來 */
         box-shadow: 6px 6px 0 rgba(0,0,0,0.1); 
         position: relative;
         z-index: 10;
@@ -100,27 +99,26 @@
 
       .btn-row { display: flex; gap: 8px; }
       
-      /* --- 列表區樣式 (融合背景) --- */
+      /* 列表區樣式 (融合背景) */
       #list {
           margin-top: 10px;
       }
 
-      /* 群組標題：讓它在網格上清楚顯示 */
       .group-container {
-          background: transparent; /* 透明背景 */
+          background: transparent; 
           border: none;
-          margin-bottom: 25px; /* 群組間距拉大 */
+          margin-bottom: 25px; 
           overflow: visible;
       }
       .group-header {
           padding: 10px 5px;
-          background: rgba(255,255,255,0.6); /* 微微的白底，避免文字被網格干擾 */
-          backdrop-filter: blur(2px); /* 毛玻璃效果 */
+          background: rgba(255,255,255,0.6); 
+          backdrop-filter: blur(2px); 
           cursor: pointer;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          border-bottom: 3px solid #000; /* 加粗黑線 */
+          border-bottom: 3px solid #000; 
           transition: all 0.2s;
           margin-bottom: 10px;
       }
@@ -133,23 +131,22 @@
       .group-info { font-size: 13px; text-align: right; color: #666; font-family: monospace; font-weight: bold; }
       .arrow-icon { margin-right: 8px; font-size: 12px; color: #000; }
       
-      /* 列表項目 (Lines) */
       .card { 
         border: none; 
-        border-bottom: 1px dashed #999; /* 虛線分隔，像筆記本 */
+        border-bottom: 1px dashed #999; 
         padding: 15px 5px; 
         margin-bottom: 0; 
         border-radius: 0; 
         display: flex; 
         align-items: center; 
-        background: transparent; /* 透明背景，直接顯示在網格上 */
+        background: transparent; 
         position: relative; 
         transition: background 0.2s;
       }
       .card:hover { background: rgba(0,0,0,0.05); }
       
       .card.temp-item { 
-        background: #fffdf5; /* 暫存項目還是給一點底色區分 */
+        background: #fffdf5; 
         border-left: 4px solid #f39c12;
       }
       .card.pending-item { 
@@ -191,7 +188,6 @@
         display: inline-block; 
         font-weight: bold;
       }
-      /* 螢光筆效果增強 */
       .bg-green { background: linear-gradient(to top, var(--highlight-green) 60%, transparent 60%); } 
       .bg-yellow { background: linear-gradient(to top, var(--highlight-yellow) 60%, transparent 60%); } 
       .bg-red { background: linear-gradient(to top, var(--highlight-red) 60%, transparent 60%); color: #d63031; }
@@ -201,10 +197,9 @@
           background: transparent;
           padding: 0;
           padding-left: 10px; 
-          border-left: 3px double #ccc; /* 雙線導引 */
+          border-left: 3px double #ccc; 
       }
       
-      /* Modal & Loader & Scan */
       #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
       #imageModal img { max-width: 90%; max-height: 80vh; border: 5px solid #000; box-shadow: 10px 10px 0 rgba(0,0,0,0.1); }
       
@@ -258,7 +253,8 @@
             <datalist id="cHistory"></datalist>
             <input type="text" id="inName" placeholder="ITEM NAME">
             <input type="text" id="inLoc" placeholder="LOCATION (SHELF/BIN)">
-            <input type="date" id="inDate">
+            
+            <input type="date" id="inDate" onkeydown="return false" onclick="try{this.showPicker()}catch(e){}">
 
             <div class="btn-row">
                 <input type="file" id="fileIn" accept="image/*" style="display:none" onchange="document.getElementById('pText').innerText='[ PHOTO SELECTED ]'">
