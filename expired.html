@@ -16,7 +16,6 @@
       body { 
         font-family: 'Courier Prime', 'Noto Sans TC', monospace;
         background-color: #fff;
-        /* 統一的 50px 網格背景 */
         background-image: 
             linear-gradient(#e5e5e5 1px, transparent 1px),
             linear-gradient(90deg, #e5e5e5 1px, transparent 1px);
@@ -42,7 +41,6 @@
         box-shadow: 8px 8px 0 rgba(0,0,0,0.1); 
         position: relative;
         z-index: 10;
-        /* 頂部紅線 */
         border-top: 5px solid var(--alert-red);
       }
 
@@ -64,7 +62,6 @@
           color: var(--alert-red);
       }
 
-      /* 返回按鈕 */
       .back-btn {
           padding: 8px 15px; 
           background: var(--ink); 
@@ -84,12 +81,32 @@
           font-family: monospace;
       }
 
+      input, button { 
+        width: 100%; 
+        padding: 12px; 
+        border-radius: 0;
+        box-sizing: border-box; 
+        font-family: inherit;
+        font-size: 16px;
+      }
+      
+      input {
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid #aaa;
+        transition: border-color 0.3s;
+        margin-bottom: 0;
+      }
+      input:focus {
+        outline: none;
+        border-bottom: 2px solid var(--alert-red);
+        background: rgba(231, 76, 60, 0.05);
+      }
+
       /* 列表樣式 */
       #list { margin-top: 20px; }
 
-      .group-container { 
-          margin-bottom: 30px; 
-      }
+      .group-container { margin-bottom: 30px; }
       
       .group-header {
           padding: 10px 0;
@@ -100,11 +117,7 @@
           align-items: flex-end;
       }
       
-      .group-title { 
-          font-weight: 700; 
-          font-size: 20px; 
-          color: var(--alert-red);
-      }
+      .group-title { font-weight: 700; font-size: 20px; color: var(--alert-red); }
       
       .card { 
         border: none; 
@@ -113,11 +126,25 @@
         margin-bottom: 0; 
         display: flex; 
         align-items: center; 
-        background: rgba(231, 76, 60, 0.05); /* 淡淡紅底 */
+        background: rgba(231, 76, 60, 0.05);
         transition: background 0.2s;
       }
       .card:hover { background: rgba(231, 76, 60, 0.1); }
       
+      /* --- 新增：核取方塊樣式 --- */
+      .chk-wrapper { 
+          display: flex; 
+          align-items: center; 
+          padding-right: 15px; 
+      }
+      .del-checkbox { 
+          width: 22px; 
+          height: 22px; 
+          cursor: pointer; 
+          border: 2px solid var(--alert-red); 
+          accent-color: var(--alert-red); /* 讓勾選框變成紅色 */
+      }
+
       .card img { 
         width: 55px; height: 55px; 
         object-fit: cover; 
@@ -138,7 +165,6 @@
           margin-top: 5px;
       }
 
-      /* 刪除按鈕 */
       .del-btn {
           background: transparent;
           border: 2px solid var(--alert-red);
@@ -153,16 +179,35 @@
           justify-content: center;
           font-size: 16px;
       }
-      .del-btn:hover {
-          background: var(--alert-red);
-          color: #fff;
-      }
+      .del-btn:hover { background: var(--alert-red); color: #fff; }
 
       /* Loader */
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 9999; }
       .spinner { width: 50px; height: 50px; border: 4px solid var(--ink); animation: spin 1s linear infinite; }
       @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
       #loaderText { margin-top: 15px; font-weight: bold; }
+
+      /* --- 浮動按鈕 (預設隱藏) --- */
+      .float-btn { 
+          position: fixed; 
+          bottom: 30px; 
+          left: 50%; 
+          transform: translateX(-50%); 
+          padding: 15px 30px; 
+          border-radius: 0; 
+          font-size: 16px; 
+          font-weight: bold; 
+          border: 2px solid #000; 
+          box-shadow: 5px 5px 0 #000; 
+          display: none; 
+          z-index: 5000; 
+          width: auto; 
+          cursor: pointer; 
+          color: white; 
+          transition: transform 0.2s; 
+          background: var(--alert-red);
+      }
+      .float-btn:active { transform: translateX(-50%) translate(2px, 2px); box-shadow: 3px 3px 0 #000; }
 
     </style>
 </head>
@@ -173,6 +218,13 @@
         <div id="loaderText">LOADING DATA...</div>
     </div>
 
+    <button id="bulkDelBtn" class="float-btn" onclick="doMultiDelete()">[ DELETE SELECTED ]</button>
+
+    <div id="imageModal" onclick="this.style.display='none'">
+        <img id="largeImgDisplay" src="">
+        <p style="color:#000; margin-top:15px; font-family:monospace; background:white; padding:5px;">[ CLICK TO CLOSE ]</p>
+    </div>
+
     <div class="main-wrapper">
         <div class="panel-card">
             <div class="header">
@@ -180,13 +232,13 @@
                 <a href="main.html" class="back-btn">BACK TO MAIN</a>
             </div>
             <div class="subtitle">下列物品已經過期，請儘快處理。</div>
+            <input type="text" id="search" placeholder="> SEARCH EXPIRED ITEMS..." onkeyup="renderExpiredList()" style="margin-top:15px; margin-bottom:0; border-color:#333;">
         </div>
 
         <div id="list"></div>
     </div>
 
     <script>
-        // 設定 API 網址 (與 main.html 相同)
         var API_URL = "https://script.google.com/macros/s/AKfycby_sDF8GC1jTH1yUN_UM1s_AdIvr0CHgtwiQ-GYMCMj__De6OQAm-NtUQWDn3f8avbD/exec";
         var allData = [];
 
@@ -196,9 +248,18 @@
         }
         function hideLoader() { document.getElementById("loader").style.display = "none"; }
 
+        function openModal(src) {
+            document.getElementById("largeImgDisplay").src = src;
+            document.getElementById("imageModal").style.display = "flex";
+        }
+
         function callApi(action, payload, cb) {
             payload.action = action;
-            showLoader("SYNCING...");
+            // 根據動作顯示不同提示
+            let msg = "SYNCING...";
+            if(action === "deleteMulti") msg = "DELETING...";
+            
+            showLoader(msg);
             fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
             .then(r => r.json()).then(res => {
                 hideLoader();
@@ -206,74 +267,115 @@
             }).catch(e => { hideLoader(); console.error(e); });
         }
 
-        // 刪除功能
         function doDel(id) { 
-            if(confirm("確認刪除此過期物品？")) {
-                // 先從畫面移除
+            if(confirm("DELETE THIS ITEM?")) {
                 allData = allData.filter(item => item.rowId !== id);
                 renderExpiredList(); 
-                
-                // 再呼叫 API
                 var code = localStorage.getItem("pass_code");
                 callApi("delete", { id: id, code: code }, function(res) { 
-                    if(res.data) {
-                        allData = res.data;
-                        localStorage.setItem("cached_fridge_data", JSON.stringify(allData));
-                    }
+                    updateLocalData(res.data);
                 });
             }
         }
 
-        // 核心：只渲染過期物品
+        // --- 批量刪除邏輯 ---
+        function doMultiDelete() {
+            var checkboxes = document.querySelectorAll('.del-checkbox:checked');
+            var idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            if (idsToDelete.length === 0) return;
+            
+            if (!confirm("DELETE " + idsToDelete.length + " SELECTED ITEMS?")) return;
+            
+            // 1. 本地先刪除
+            allData = allData.filter(item => !idsToDelete.includes(item.rowId));
+            renderExpiredList();
+            
+            // 2. 呼叫 API
+            var code = localStorage.getItem("pass_code");
+            callApi("deleteMulti", { ids: idsToDelete, code: code }, function(res) { 
+                if(res.status === "success" && Array.isArray(res.data)) {
+                    updateLocalData(res.data);
+                }
+            });
+        }
+
+        // --- 檢查勾選狀態 ---
+        function checkSelection() {
+            var count = document.querySelectorAll('.del-checkbox:checked').length;
+            var btn = document.getElementById("bulkDelBtn");
+            if (count > 0) { 
+                btn.style.display = "block";
+                btn.innerText = "[ DELETE SELECTED (" + count + ") ]"; 
+            } else { 
+                btn.style.display = "none"; 
+            }
+        }
+
+        function updateLocalData(newData) {
+            if (newData && Array.isArray(newData)) {
+                allData = newData;
+            }
+            localStorage.setItem("cached_fridge_data", JSON.stringify(allData));
+            renderExpiredList();
+        }
+
+        // --- 渲染清單 (含 Checkbox) ---
         function renderExpiredList() {
             var listDiv = document.getElementById("list");
+            var key = document.getElementById("search").value.toLowerCase();
             var today = new Date(); 
-            today.setHours(0,0,0,0); // 設定為今天的 00:00
+            today.setHours(0,0,0,0);
 
-            // 篩選邏輯：日期 < 今天
             var expiredItems = allData.filter(i => {
+                var s = String(i.name||"") + String(i.location||"") + String(i.creator||"");
                 var iDate = new Date(i.date);
-                return iDate < today; 
+                var diff = Math.ceil((iDate - today)/86400000);
+                return s.toLowerCase().includes(key) && diff < 0;
             });
 
             if (expiredItems.length === 0) {
                 listDiv.innerHTML = "<div style='text-align:center; padding:40px; color:#aaa; font-weight:bold;'>[ NO EXPIRED ITEMS ]<br>沒有過期物品</div>";
+                checkSelection(); // 確保按鈕消失
                 return;
             }
 
-            // 依日期排序 (越早過期的在越上面)
             expiredItems.sort((a,b) => new Date(a.date) - new Date(b.date));
 
             var html = "";
-            // 這裡不分群組，直接列出所有過期品，視覺更強烈
             html += `<div class="group-container"><div class="group-header"><div class="group-title">ALL EXPIRED (${expiredItems.length})</div></div>`;
             
             expiredItems.forEach(item => {
                 var d = new Date(item.date);
-                var diff = Math.ceil((d - today)/86400000); // 負數天數
+                var diff = Math.ceil((d - today)/86400000);
 
                 html += `
                     <div class="card">
-                        <img src="${item.imgUrl || ''}">
+                        <div class="chk-wrapper">
+                            <input type="checkbox" class="del-checkbox" value="${item.rowId}" onchange="checkSelection()">
+                        </div>
+                        
+                        <img src="${item.imgUrl || ''}" onclick="event.stopPropagation(); openModal(this.src)">
+                        
                         <div class="info-box">
                             <div style="font-weight:bold; font-size:18px;">${item.name}</div>
                             <div style="font-size:13px; color:#666;">📍 ${item.location} | 👤 ${item.creator}</div>
                             <div class="date-tag">過期 ${Math.abs(diff)} 天 (${item.date})</div>
                         </div>
-                        <button class="del-btn" onclick="doDel(${item.rowId})">✕</button>
+                        
+                        <button class="del-btn" onclick="event.stopPropagation(); doDel(${item.rowId})">✕</button>
                     </div>
                 `;
             });
             html += `</div>`;
 
             listDiv.innerHTML = html;
+            checkSelection(); // 重新渲染後檢查按鈕狀態
         }
 
         window.onload = function() {
             var code = localStorage.getItem("pass_code");
             if(!code) return window.location.href = "index.html";
             
-            // 先讀取快取
             var cached = localStorage.getItem("cached_fridge_data");
             if(cached) {
                 try { 
@@ -282,13 +384,8 @@
                 } catch(e){}
             }
             
-            // 呼叫 API 更新資料
             callApi("getList", {code: code}, function(res) {
-                if(res.data) {
-                    allData = res.data;
-                    localStorage.setItem("cached_fridge_data", JSON.stringify(allData));
-                    renderExpiredList();
-                }
+                updateLocalData(res.data);
             });
         };
     </script>
