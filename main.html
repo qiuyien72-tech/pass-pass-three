@@ -188,43 +188,16 @@
       #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
       #imageModal img { max-width: 90%; max-height: 80vh; border: 5px solid #000; box-shadow: 10px 10px 0 rgba(0,0,0,0.1); }
       
-      /* --- 修正動畫：Loader --- */
+      /* Loader */
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 9999; }
-      .spinner { 
-          width: 50px; 
-          height: 50px; 
-          background: transparent;
-          border: 4px solid #000; /* 改回黑色邊框方塊 */
-          margin-bottom: 20px; 
-          animation: simpleSpin 1s linear infinite; /* 使用簡單穩定的旋轉 */
-      }
-      @keyframes simpleSpin { 
-          0% { transform: rotate(0deg); } 
-          100% { transform: rotate(360deg); } 
-      }
+      .spinner { width: 50px; height: 50px; background: transparent; border: 4px solid #000; margin-bottom: 20px; animation: simpleSpin 1s linear infinite; }
+      @keyframes simpleSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-      /* --- 修正動畫：Scanner (使用 transform 確保移動) --- */
+      /* Scanner */
       #scanOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10001; display: none; flex-direction: column; justify-content: center; align-items: center; }
       .scan-box { width: 250px; height: 250px; border: 2px solid #0f0; border-radius: 0; position: relative; overflow: hidden; background: rgba(0, 255, 0, 0.05); }
-      
-      .scan-line { 
-          width: 100%; 
-          height: 5px; /* 線條加粗 */
-          background: #0f0; 
-          box-shadow: 0 0 15px #0f0, 0 0 30px #0f0; /* 強力發光 */
-          position: absolute; 
-          top: 0; 
-          left: 0;
-          animation: scanDown 1.5s linear infinite; /* 速度加快一點 */
-      }
-      
-      @keyframes scanDown {
-          0% { transform: translateY(-10px); opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { transform: translateY(260px); opacity: 0; }
-      }
-      
+      .scan-line { width: 100%; height: 5px; background: #0f0; box-shadow: 0 0 15px #0f0, 0 0 30px #0f0; position: absolute; top: 0; left: 0; animation: scanDown 1.5s linear infinite; }
+      @keyframes scanDown { 0% { transform: translateY(-10px); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(260px); opacity: 0; } }
       .scan-text { color: #0f0; margin-top: 20px; font-family: monospace; letter-spacing: 2px; text-shadow: 0 0 10px #0f0; }
 
       .float-btn { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 15px 30px; border-radius: 0; font-size: 16px; font-weight: bold; border: 2px solid #000; box-shadow: 5px 5px 0 #000; display: none; z-index: 5000; width: auto; cursor: pointer; color: white; transition: transform 0.2s; }
@@ -482,15 +455,27 @@
             }
         }
 
+        // --- 修正：更安全的批量刪除功能 ---
         function doMultiDelete() {
             var checkboxes = document.querySelectorAll('.del-checkbox:checked');
             var idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value));
             if (idsToDelete.length === 0) return;
             if (!confirm("DELETE " + idsToDelete.length + " ITEMS?")) return;
+            
+            // 1. 本地先刪除 (讓畫面立刻更新，不需等待伺服器)
             allData = allData.filter(item => !idsToDelete.includes(item.rowId));
             renderList();
+            
+            // 2. 背景呼叫 API 同步
             var code = localStorage.getItem("pass_code");
-            callApi("deleteMulti", { ids: idsToDelete, code: code }, function(res) { updateLocalData(res.data); }, true);
+            callApi("deleteMulti", { ids: idsToDelete, code: code }, function(res) { 
+                // 3. 安全更新：只有當回傳資料有效時才更新，否則保持本地狀態
+                if(res.status === "success" && Array.isArray(res.data)) {
+                    updateLocalData(res.data);
+                } else {
+                    console.log("Sync skipped to preserve local state");
+                }
+            }, true);
         }
 
         function checkSelection() {
@@ -501,10 +486,16 @@
             else { btn.style.display = "none"; }
         }
 
+        // --- 修正：更安全的資料更新功能 ---
         function updateLocalData(newData) {
-            allData = newData || [];
+            // 如果後端傳回來的資料有問題 (null 或 undefined)，就忽略它，避免畫面變白
+            if (newData && Array.isArray(newData)) {
+                allData = newData;
+            }
             localStorage.setItem("cached_fridge_data", JSON.stringify(allData));
             renderList();
+            
+            // 更新購買人選單
             var hist = [...new Set(allData.map(i => i.creator))].filter(c => c);
             document.getElementById("cHistory").innerHTML = hist.map(c => `<option value="${c}">`).join("");
         }
