@@ -12,11 +12,11 @@
       body { 
         font-family: 'Courier Prime', 'Noto Sans TC', monospace;
         background-color: #fff;
-        /* --- 修改：將網格大小統一調整為 50px --- */
+        /* 背景網格設定 (50px) */
         background-image: 
             linear-gradient(#e5e5e5 1px, transparent 1px),
             linear-gradient(90deg, #e5e5e5 1px, transparent 1px);
-        background-size: 50px 50px; /* 這裡改成 50px */
+        background-size: 50px 50px;
         margin: 0; 
         padding: 20px;
         min-height: 100vh;
@@ -31,26 +31,27 @@
         width: 100%;
         max-width: 800px; 
         margin: 0 auto;
-        /* 稍微加一點白色底襯，讓圖片更突出 */
-        background: rgba(255,255,255,0.2);
-        box-shadow: 0 0 50px 30px rgba(255,255,255,0.2);
+        /* 移除底色塊，讓去背圖直接浮在網格上 */
+        background: transparent;
+        box-shadow: none;
       }
 
       .bg-img {
         width: 100%;
         height: auto;
         display: block;
-        /* 讓圖片白底變透明，線條與背景融合 */
-        mix-blend-mode: multiply;
-        filter: contrast(1.1);
+        /* --- 核心修改 --- */
+        /* 因為是去背圖，不需要 mix-blend-mode 了 */
+        /* 加一點白色邊緣光暈和陰影，讓它像剪下來的貼紙 */
+        filter: drop-shadow(0 5px 15px rgba(0,0,0,0.15));
       }
 
       .nav-btn {
         position: absolute;
         width: 28%; 
         height: 12%; 
-        background: rgba(255, 255, 255, 0.0); 
-        border: 2px dashed transparent; 
+        background: rgba(255, 255, 255, 0.0); /* 平常透明 */
+        border: 2px dashed transparent; /* 平常無框 */
         cursor: pointer;
         transition: all 0.2s;
         display: flex;
@@ -59,25 +60,32 @@
         font-weight: bold;
         font-size: 1.2rem;
         color: transparent; 
-        border-radius: 10px;
+        border-radius: 15px; /* 圓角大一點 */
         z-index: 10;
       }
 
+      /* 滑鼠移過去時 */
       .nav-btn:hover {
-        background: rgba(255, 255, 255, 0.8);
-        border-color: var(--ink);
-        color: var(--ink);
-        box-shadow: 5px 5px 0 rgba(0,0,0,0.1);
+        background: rgba(255, 255, 255, 0.9); /* 變成半透明白紙 */
+        border: 2px dashed var(--ink); /* 出現虛線框 */
+        color: var(--ink); /* 出現文字 */
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transform: translateY(-2px); /* 微微浮起 */
       }
       
       @media (max-width: 768px) {
         .nav-btn {
-          background: rgba(255, 255, 255, 0.3);
-          border: 2px dashed #888;
+          /* 手機版為了好按，給一點微微的提示框 */
+          border: 2px dashed rgba(0,0,0,0.1);
+        }
+        .nav-btn:active {
+           background: rgba(255, 255, 255, 0.8);
+           border-color: var(--ink);
+           color: var(--ink);
         }
       }
 
-      /* 按鈕定位 */
+      /* 按鈕定位 (根據去背圖的位置，可能需要微調) */
       #btn-expired { bottom: 36%; left: 6%; }
       #btn-all { bottom: 21%; left: 6%; }
 
@@ -94,13 +102,15 @@
         cursor: pointer;
         opacity: 0.8;
         z-index: 20;
+        box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
       }
     </style>
 </head>
 <body>
 
     <div class="menu-container">
-        <img src="1518.jpg" alt="Menu" class="bg-img">
+        <img src="1518.png" alt="Menu" class="bg-img">
+
         <a href="main.html" class="nav-btn" id="btn-expired">⚠️ 已過期清單</a>
         <a href="main.html" class="nav-btn" id="btn-all">📦 全部物品</a>
     </div>
