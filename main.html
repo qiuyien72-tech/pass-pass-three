@@ -192,18 +192,13 @@
           font-size: 18px; 
           display: flex; 
           align-items: center;
-          /* 文字背景螢光黃 */
-          background: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent; 
-          /* 上面這行如果瀏覽器不支援會看不到字，改用下列 */
-          background: none;
-          color: #000;
+          color: #000; /* 修正：直接設定黑色，確保可見 */
       }
       /* 給群組文字加一個 marker 效果 */
       .group-title b {
           background: var(--highlight-yellow);
           padding: 0 5px;
+          color: #000; /* 確保 b 標籤內的文字也是黑色 */
       }
 
       .group-info { font-size: 13px; text-align: right; color: #666; font-family: monospace; }
@@ -304,7 +299,7 @@
     </div>
 
     <script>
-        var API_URL = "https://script.google.com/macros/s/AKfycby_sDF8GC1jTH1yUN_UM1s_AdIvr0CHgtwiQ-GYMCMj__De6OQAm-NtUQWDn3f8avbD/exec";
+        var API_URL = "https://script.google.com/macros/s/AKfycbzzDNndrlyR0OYg-cCTT0ZrNtaUuEX6q65PL6hZ9GqhCBx0WfM03UeIQfIWXX7k_SxW/exec";
         var allData = [];
         var pendingData = []; // 用來存暫存資料
         var isBatchMode = false;
