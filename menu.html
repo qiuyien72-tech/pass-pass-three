@@ -18,20 +18,23 @@
             linear-gradient(90deg, #e5e5e5 1px, transparent 1px);
         background-size: 20px 20px;
         margin: 0; 
-        padding: 0; 
-        height: 100vh;
+        padding: 20px; /* 增加一點內距，避免圖片貼邊 */
+        min-height: 100vh;
         display: flex;
         justify-content: center;
         align-items: center;
-        overflow: hidden;
+        box-sizing: border-box;
       }
 
       /* 圖片容器 */
       .menu-container {
         position: relative;
         width: 100%;
-        max-width: 800px; /* 限制最大寬度，避免圖片過大 */
+        max-width: 800px; 
         margin: 0 auto;
+        /* 為了讓融合效果更好，可以在圖片下方墊一層微微的白色，避免網格太干擾文字 */
+        background: rgba(255,255,255,0.4);
+        box-shadow: 0 0 30px 20px rgba(255,255,255,0.4); /* 邊緣羽化效果 */
       }
 
       /* 背景圖 */
@@ -39,8 +42,15 @@
         width: 100%;
         height: auto;
         display: block;
-        /* 稍微加一點陰影讓紙張浮起來 */
-        filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
+        /* --- 核心修改 --- */
+        /* 1. 移除陰影，讓紙張貼平背景 */
+        /* filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1)); */
+        
+        /* 2. 使用色彩增值 (multiply)，讓白底變透明，線條與背景融合 */
+        mix-blend-mode: multiply;
+        
+        /* 3. 稍微調整對比度，讓線條更清晰 */
+        filter: contrast(1.1);
       }
 
       /* 按鈕共用樣式 */
@@ -59,6 +69,7 @@
         font-size: 1.2rem;
         color: transparent; /* 文字預設透明，滑鼠移過去才顯示 */
         border-radius: 10px;
+        z-index: 10; /* 確保在圖片上方 */
       }
 
       /* 滑鼠經過時的效果：顯示虛線框與文字 */
@@ -72,32 +83,34 @@
       /* 手機版直接顯示框線，方便點擊 */
       @media (max-width: 768px) {
         .nav-btn {
-          background: rgba(255, 255, 255, 0.5);
-          border: 2px dashed #999;
-          color: #333;
-          font-size: 1rem;
+          background: rgba(255, 255, 255, 0.3);
+          border: 2px dashed #666;
+          color: transparent; /* 手機版依然隱藏文字，只顯示框，保持畫面乾淨 */
+        }
+        .nav-btn:active {
+           background: rgba(255, 255, 255, 0.8);
+           color: var(--ink);
         }
       }
 
       /* --- 定位按鈕 (根據 1518.jpg 的方框位置推算) --- */
-      
-      /* 按鈕 1：已過期 (對應左上文字泡泡的描述) */
-      /* 假設放在方框的上半部 */
+      /* 注意：如果圖片因為融合而位置稍微改變，可能需要微調這裡的數值 */
+
+      /* 按鈕 1：已過期 (左上) */
       #btn-expired {
-        bottom: 35%; 
+        bottom: 36%; 
         left: 6%;
       }
 
-      /* 按鈕 2：主選單/全部 (對應右邊文字泡泡的描述) */
-      /* 假設放在方框的下半部 */
+      /* 按鈕 2：主選單/全部 (左下) */
       #btn-all {
-        bottom: 20%; 
+        bottom: 21%; 
         left: 6%;
       }
 
       /* 登出按鈕 (右下角) */
       .logout-btn {
-        position: absolute;
+        position: fixed;
         bottom: 20px;
         right: 20px;
         background: #333;
@@ -108,6 +121,7 @@
         font-weight: bold;
         cursor: pointer;
         opacity: 0.8;
+        z-index: 20;
       }
 
     </style>
