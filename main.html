@@ -14,11 +14,13 @@
          --highlight-green: rgba(0, 255, 127, 0.3);
          --highlight-red: rgba(255, 69, 58, 0.2);
          --ink: #333;
+         --card-bg: #ffffff;
       }
       
       body { 
         font-family: 'Courier Prime', 'Noto Sans TC', monospace;
         background-color: #fff;
+        /* 網格紙背景 */
         background-image: 
             linear-gradient(#e5e5e5 1px, transparent 1px),
             linear-gradient(90deg, #e5e5e5 1px, transparent 1px);
@@ -29,21 +31,29 @@
         padding-bottom: 120px; 
       }
 
-      #appSection { 
+      /* 外層容器限制寬度 */
+      .main-wrapper {
         max-width: 600px;
-        margin: 0 auto; 
-        background: rgba(255,255,255,0.9); 
-        padding: 25px; 
+        margin: 0 auto;
+      }
+
+      /* --- 新增：卡片樣式 (用於上方輸入區與搜尋區) --- */
+      .panel-card {
+        background: var(--card-bg);
         border: 2px solid var(--ink);
-        box-shadow: 8px 8px 0 rgba(0,0,0,0.1);
-        min-height: 400px;
+        padding: 20px;
+        margin-bottom: 20px;
+        /* 增加一點硬陰影，讓它像貼紙或卡片浮起來 */
+        box-shadow: 6px 6px 0 rgba(0,0,0,0.1); 
+        position: relative;
+        z-index: 10;
       }
 
       .header { 
         display: flex; 
         justify-content: space-between; 
         align-items: center; 
-        margin-bottom: 25px; 
+        margin-bottom: 20px; 
         border-bottom: 4px solid var(--ink); 
         padding-bottom: 15px; 
         font-weight: 700;
@@ -51,6 +61,7 @@
         letter-spacing: -1px;
       }
 
+      /* 輸入框與按鈕樣式 */
       input, button { 
         width: 100%; 
         padding: 12px; 
@@ -89,33 +100,67 @@
 
       .btn-row { display: flex; gap: 8px; }
       
+      /* --- 列表區樣式 (融合背景) --- */
+      #list {
+          margin-top: 10px;
+      }
+
+      /* 群組標題：讓它在網格上清楚顯示 */
+      .group-container {
+          background: transparent; /* 透明背景 */
+          border: none;
+          margin-bottom: 25px; /* 群組間距拉大 */
+          overflow: visible;
+      }
+      .group-header {
+          padding: 10px 5px;
+          background: rgba(255,255,255,0.6); /* 微微的白底，避免文字被網格干擾 */
+          backdrop-filter: blur(2px); /* 毛玻璃效果 */
+          cursor: pointer;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-bottom: 3px solid #000; /* 加粗黑線 */
+          transition: all 0.2s;
+          margin-bottom: 10px;
+      }
+      .group-header:hover { opacity: 0.8; }
+      .group-header.active { background: rgba(255,255,255,0.8); }
+      
+      .group-title { font-weight: 700; font-size: 18px; display: flex; align-items: center; color: #000; }
+      .group-title b { background: var(--highlight-yellow); padding: 0 5px; color: #000; box-shadow: 2px 2px 0 rgba(0,0,0,0.1); }
+
+      .group-info { font-size: 13px; text-align: right; color: #666; font-family: monospace; font-weight: bold; }
+      .arrow-icon { margin-right: 8px; font-size: 12px; color: #000; }
+      
+      /* 列表項目 (Lines) */
       .card { 
         border: none; 
-        border-bottom: 1px dashed #bbb; 
+        border-bottom: 1px dashed #999; /* 虛線分隔，像筆記本 */
         padding: 15px 5px; 
         margin-bottom: 0; 
         border-radius: 0; 
         display: flex; 
         align-items: center; 
-        background: transparent; 
+        background: transparent; /* 透明背景，直接顯示在網格上 */
         position: relative; 
         transition: background 0.2s;
       }
-      .card:hover { background: rgba(0,0,0,0.03); }
+      .card:hover { background: rgba(0,0,0,0.05); }
       
       .card.temp-item { 
-        border: none;
-        background: #fffdf5;
+        background: #fffdf5; /* 暫存項目還是給一點底色區分 */
         border-left: 4px solid #f39c12;
       }
       .card.pending-item { 
-        border: 1px solid #3498db; 
+        border: 2px solid #3498db; 
         background: #f0f8ff; 
         margin-bottom: 10px;
+        box-shadow: 4px 4px 0 rgba(52, 152, 219, 0.2);
       }
       
       .chk-wrapper { display: flex; align-items: center; padding-right: 15px; }
-      .del-checkbox { width: 20px; height: 20px; cursor: pointer; border: 2px solid #000; }
+      .del-checkbox { width: 20px; height: 20px; cursor: pointer; border: 2px solid #000; accent-color: #000; }
 
       .card img { 
         width: 45px; height: 45px; 
@@ -125,6 +170,7 @@
         cursor: pointer; 
         background: #eee; 
         filter: grayscale(20%); 
+        box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
       }
       
       .creator-tag { 
@@ -138,62 +184,34 @@
       
       .tag { 
         font-size: 12px; 
-        padding: 2px 0; 
+        padding: 2px 4px; 
         border-radius: 0; 
         color: #000; 
         margin-top: 4px; 
         display: inline-block; 
         font-weight: bold;
       }
-      .bg-green { background: linear-gradient(to top, var(--highlight-green) 50%, transparent 50%); } 
-      .bg-yellow { background: linear-gradient(to top, var(--highlight-yellow) 50%, transparent 50%); } 
-      .bg-red { background: linear-gradient(to top, var(--highlight-red) 50%, transparent 50%); color: #d63031; }
-
-      .group-container {
-          background: transparent;
-          border-radius: 0;
-          margin-bottom: 20px;
-          box-shadow: none;
-          border: none;
-          overflow: visible;
-      }
-      .group-header {
-          padding: 10px 5px;
-          background: transparent;
-          cursor: pointer;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          border-bottom: 2px solid #000; 
-          transition: all 0.2s;
-      }
-      .group-header:hover { opacity: 0.8; }
-      .group-header.active { background: transparent; border-bottom: 2px solid #000; }
-      
-      .group-title { font-weight: 700; font-size: 18px; display: flex; align-items: center; color: #000; }
-      .group-title b { background: var(--highlight-yellow); padding: 0 5px; color: #000; }
-
-      .group-info { font-size: 13px; text-align: right; color: #666; font-family: monospace; }
-      .arrow-icon { margin-right: 8px; font-size: 12px; color: #000; }
+      /* 螢光筆效果增強 */
+      .bg-green { background: linear-gradient(to top, var(--highlight-green) 60%, transparent 60%); } 
+      .bg-yellow { background: linear-gradient(to top, var(--highlight-yellow) 60%, transparent 60%); } 
+      .bg-red { background: linear-gradient(to top, var(--highlight-red) 60%, transparent 60%); color: #d63031; }
       
       .group-body {
           display: none;
           background: transparent;
           padding: 0;
           padding-left: 10px; 
-          border-left: 2px dotted #ccc; 
+          border-left: 3px double #ccc; /* 雙線導引 */
       }
-      .group-body .card { margin-bottom: 0; box-shadow: none; background: transparent; }
       
+      /* Modal & Loader & Scan */
       #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
       #imageModal img { max-width: 90%; max-height: 80vh; border: 5px solid #000; box-shadow: 10px 10px 0 rgba(0,0,0,0.1); }
       
-      /* Loader */
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 9999; }
       .spinner { width: 50px; height: 50px; background: transparent; border: 4px solid #000; margin-bottom: 20px; animation: simpleSpin 1s linear infinite; }
       @keyframes simpleSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-      /* Scanner */
       #scanOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10001; display: none; flex-direction: column; justify-content: center; align-items: center; }
       .scan-box { width: 250px; height: 250px; border: 2px solid #0f0; border-radius: 0; position: relative; overflow: hidden; background: rgba(0, 255, 0, 0.05); }
       .scan-line { width: 100%; height: 5px; background: #0f0; box-shadow: 0 0 15px #0f0, 0 0 30px #0f0; position: absolute; top: 0; left: 0; animation: scanDown 1.5s linear infinite; }
@@ -205,7 +223,7 @@
       #bulkDelBtn { background: #e74c3c; color: white; }
       #bulkAddBtn { background: #2ecc71; color: #000; }
 
-      .mode-switch { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 10px; font-size: 14px; color: #555; font-family: monospace; }
+      .mode-switch { display: flex; align-items: center; justify-content: space-between; font-size: 14px; color: #555; font-family: monospace; width: 100%; }
       .active-mode { color: #000; font-weight: bold; text-decoration: underline; text-decoration-thickness: 3px; text-decoration-color: var(--highlight-green); }
     </style>
 </head>
@@ -228,39 +246,45 @@
         <p style="color:#000; margin-top:15px; font-family:monospace; background:white; padding:5px;">[ CLICK TO CLOSE ]</p>
     </div>
 
-    <div id="appSection">
-        <div class="header">
-            <div>FRIDGE LOG <span id="displayCode" style="background:#000; color:#fff; padding:2px 6px; font-size:14px;">...</span></div>
-            <button onclick="doLogout()" style="width:auto; padding:4px 10px; background:transparent; color:#000; border:1px solid #000; font-size:12px;">EXIT</button>
-        </div>
-
-        <div class="mode-switch">
-            <label style="display:flex;align-items:center;cursor:pointer">
-                <input type="checkbox" id="batchModeToggle" onchange="toggleBatchMode()" style="width:auto; margin-right:5px;">
-                <span id="modeText">BATCH MODE</span>
-            </label>
-        </div>
-
-        <input type="text" id="inCreator" list="cHistory" placeholder="USER (NAME)">
-        <datalist id="cHistory"></datalist>
-        <input type="text" id="inName" placeholder="ITEM NAME">
-        <input type="text" id="inLoc" placeholder="LOCATION (SHELF/BIN)">
-        <input type="date" id="inDate">
-
-        <div class="btn-row">
-            <input type="file" id="fileIn" accept="image/*" style="display:none" onchange="document.getElementById('pText').innerText='[ PHOTO SELECTED ]'">
-            <button style="background:transparent; color:#000; border:2px dashed #000;" onclick="document.getElementById('fileIn').click()">[ PHOTO ]</button>
-            <button id="mainActionBtn" onclick="doAdd()">>>> COMMIT</button>
-        </div>
-        <div id="pText" style="font-family:monospace; font-size:12px; color:#000; text-align:center; margin-bottom:10px;"></div>
+    <div class="main-wrapper">
         
-        <div id="pendingArea" style="display:none; margin-bottom:20px; border: 2px dashed #000; padding:10px; background:#f9f9f9;">
-            <div style="font-size:14px; color:#000; margin-bottom:10px; font-weight:bold; border-bottom:1px solid #000; display:inline-block;">STAGING AREA (UNSAVED)</div>
-            <div id="pendingList"></div>
+        <div class="panel-card">
+            <div class="header">
+                <div>FRIDGE LOG <span id="displayCode" style="background:#000; color:#fff; padding:2px 6px; font-size:14px;">...</span></div>
+                <button onclick="doLogout()" style="width:auto; padding:4px 10px; background:transparent; color:#000; border:1px solid #000; font-size:12px; margin-bottom:0;">EXIT</button>
+            </div>
+
+            <input type="text" id="inCreator" list="cHistory" placeholder="USER (NAME)">
+            <datalist id="cHistory"></datalist>
+            <input type="text" id="inName" placeholder="ITEM NAME">
+            <input type="text" id="inLoc" placeholder="LOCATION (SHELF/BIN)">
+            <input type="date" id="inDate">
+
+            <div class="btn-row">
+                <input type="file" id="fileIn" accept="image/*" style="display:none" onchange="document.getElementById('pText').innerText='[ PHOTO SELECTED ]'">
+                <button style="background:transparent; color:#000; border:2px dashed #000;" onclick="document.getElementById('fileIn').click()">[ PHOTO ]</button>
+                <button id="mainActionBtn" onclick="doAdd()">>>> COMMIT</button>
+            </div>
+            <div id="pText" style="font-family:monospace; font-size:12px; color:#000; text-align:center;"></div>
+            
+            <div id="pendingArea" style="display:none; margin-top:15px; border-top: 2px dashed #000; padding-top:15px;">
+                <div style="font-size:14px; color:#000; margin-bottom:10px; font-weight:bold;">STAGING AREA (UNSAVED)</div>
+                <div id="pendingList"></div>
+            </div>
         </div>
 
-        <input type="text" id="search" placeholder="> SEARCH LOGS..." onkeyup="renderList()" style="margin-top:20px; border-bottom: 2px solid #000;">
-        <div id="list" style="margin-top:10px;"></div>
+        <div class="panel-card" style="padding: 15px;">
+            <div class="mode-switch">
+                <span style="font-weight:bold;">TOOLS</span>
+                <label style="display:flex;align-items:center;cursor:pointer">
+                    <input type="checkbox" id="batchModeToggle" onchange="toggleBatchMode()" style="width:auto; margin:0 5px 0 0;">
+                    <span id="modeText">BATCH MODE</span>
+                </label>
+            </div>
+            <input type="text" id="search" placeholder="> SEARCH LOGS..." onkeyup="renderList()" style="margin-bottom:0; border-color:#333;">
+        </div>
+
+        <div id="list"></div>
     </div>
 
     <script>
@@ -455,21 +479,19 @@
             }
         }
 
-        // --- 修正：更安全的批量刪除功能 ---
         function doMultiDelete() {
             var checkboxes = document.querySelectorAll('.del-checkbox:checked');
             var idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value));
             if (idsToDelete.length === 0) return;
             if (!confirm("DELETE " + idsToDelete.length + " ITEMS?")) return;
             
-            // 1. 本地先刪除 (讓畫面立刻更新，不需等待伺服器)
+            // 1. 本地先刪除
             allData = allData.filter(item => !idsToDelete.includes(item.rowId));
             renderList();
             
-            // 2. 背景呼叫 API 同步
+            // 2. 背景呼叫 API
             var code = localStorage.getItem("pass_code");
             callApi("deleteMulti", { ids: idsToDelete, code: code }, function(res) { 
-                // 3. 安全更新：只有當回傳資料有效時才更新，否則保持本地狀態
                 if(res.status === "success" && Array.isArray(res.data)) {
                     updateLocalData(res.data);
                 } else {
@@ -486,16 +508,13 @@
             else { btn.style.display = "none"; }
         }
 
-        // --- 修正：更安全的資料更新功能 ---
         function updateLocalData(newData) {
-            // 如果後端傳回來的資料有問題 (null 或 undefined)，就忽略它，避免畫面變白
             if (newData && Array.isArray(newData)) {
                 allData = newData;
             }
             localStorage.setItem("cached_fridge_data", JSON.stringify(allData));
             renderList();
             
-            // 更新購買人選單
             var hist = [...new Set(allData.map(i => i.creator))].filter(c => c);
             document.getElementById("cHistory").innerHTML = hist.map(c => `<option value="${c}">`).join("");
         }
@@ -521,7 +540,7 @@
                 return s.toLowerCase().includes(key);
             });
             if (filtered.length === 0) {
-                listDiv.innerHTML = "<p style='text-align:center;color:#999;font-family:monospace'>[ NO DATA FOUND ]</p>";
+                listDiv.innerHTML = "<p style='text-align:center;color:#999;font-family:monospace; margin-top:30px;'>[ NO DATA FOUND ]</p>";
                 checkSelection();
                 return;
             }
