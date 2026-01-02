@@ -31,19 +31,20 @@
         padding-bottom: 120px; 
       }
 
-      /* 外層容器限制寬度 */
+      /* --- 修改：版面加寬 --- */
       .main-wrapper {
-        max-width: 600px;
+        max-width: 850px; /* 從 600px 改為 850px */
         margin: 0 auto;
+        width: 100%;
       }
 
       /* 卡片樣式 */
       .panel-card {
         background: var(--card-bg);
         border: 2px solid var(--ink);
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 6px 6px 0 rgba(0,0,0,0.1); 
+        padding: 25px; /* 內距稍微加大 */
+        margin-bottom: 25px;
+        box-shadow: 8px 8px 0 rgba(0,0,0,0.1); 
         position: relative;
         z-index: 10;
       }
@@ -52,22 +53,23 @@
         display: flex; 
         justify-content: space-between; 
         align-items: center; 
-        margin-bottom: 20px; 
+        margin-bottom: 25px; 
         border-bottom: 4px solid var(--ink); 
         padding-bottom: 15px; 
         font-weight: 700;
-        font-size: 1.2rem;
+        font-size: 1.4rem; /* 標題字體稍微加大 */
         letter-spacing: -1px;
       }
 
       /* 輸入框與按鈕樣式 */
       input, button { 
         width: 100%; 
-        padding: 12px; 
-        margin-bottom: 12px; 
+        padding: 14px; /* 輸入框高度稍微加大 */
+        margin-bottom: 15px; 
         border-radius: 0;
         box-sizing: border-box; 
         font-family: inherit;
+        font-size: 16px;
       }
       
       input {
@@ -97,22 +99,46 @@
         box-shadow: none;
       }
 
-      .btn-row { display: flex; gap: 8px; }
+      .btn-row { display: flex; gap: 15px; } /* 按鈕間距加大 */
       
-      /* 列表區樣式 (融合背景) */
-      #list {
-          margin-top: 10px;
+      /* --- 新增：搜尋列容器 (Flexbox) --- */
+      .search-toolbar {
+          display: flex;
+          align-items: center;
+          gap: 20px;
       }
+      .search-toolbar input {
+          margin-bottom: 0;
+          flex: 1; /* 讓搜尋框佔滿剩餘空間 */
+      }
+      .search-toolbar label {
+          white-space: nowrap; /* 防止文字換行 */
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+          font-weight: bold;
+          font-size: 14px;
+          user-select: none;
+      }
+      .search-toolbar input[type="checkbox"] {
+          width: auto;
+          margin: 0 8px 0 0;
+          transform: scale(1.2); /* 讓勾選框大一點 */
+      }
+      .active-mode { color: #000; text-decoration: underline; text-decoration-thickness: 3px; text-decoration-color: var(--highlight-green); }
+
+      /* 列表區樣式 */
+      #list { margin-top: 20px; }
 
       .group-container {
           background: transparent; 
           border: none;
-          margin-bottom: 25px; 
+          margin-bottom: 30px; 
           overflow: visible;
       }
       .group-header {
-          padding: 10px 5px;
-          background: rgba(255,255,255,0.6); 
+          padding: 12px 10px;
+          background: rgba(255,255,255,0.7); 
           backdrop-filter: blur(2px); 
           cursor: pointer;
           display: flex;
@@ -120,21 +146,21 @@
           align-items: center;
           border-bottom: 3px solid #000; 
           transition: all 0.2s;
-          margin-bottom: 10px;
+          margin-bottom: 15px;
       }
       .group-header:hover { opacity: 0.8; }
-      .group-header.active { background: rgba(255,255,255,0.8); }
+      .group-header.active { background: rgba(255,255,255,0.9); }
       
-      .group-title { font-weight: 700; font-size: 18px; display: flex; align-items: center; color: #000; }
-      .group-title b { background: var(--highlight-yellow); padding: 0 5px; color: #000; box-shadow: 2px 2px 0 rgba(0,0,0,0.1); }
+      .group-title { font-weight: 700; font-size: 20px; display: flex; align-items: center; color: #000; }
+      .group-title b { background: var(--highlight-yellow); padding: 0 5px; color: #000; box-shadow: 3px 3px 0 rgba(0,0,0,0.1); }
 
-      .group-info { font-size: 13px; text-align: right; color: #666; font-family: monospace; font-weight: bold; }
-      .arrow-icon { margin-right: 8px; font-size: 12px; color: #000; }
+      .group-info { font-size: 14px; text-align: right; color: #666; font-family: monospace; font-weight: bold; }
+      .arrow-icon { margin-right: 10px; font-size: 14px; color: #000; }
       
       .card { 
         border: none; 
         border-bottom: 1px dashed #999; 
-        padding: 15px 5px; 
+        padding: 18px 10px; 
         margin-bottom: 0; 
         border-radius: 0; 
         display: flex; 
@@ -147,7 +173,7 @@
       
       .card.temp-item { 
         background: #fffdf5; 
-        border-left: 4px solid #f39c12;
+        border-left: 5px solid #f39c12;
       }
       .card.pending-item { 
         border: 2px solid #3498db; 
@@ -156,22 +182,22 @@
         box-shadow: 4px 4px 0 rgba(52, 152, 219, 0.2);
       }
       
-      .chk-wrapper { display: flex; align-items: center; padding-right: 15px; }
-      .del-checkbox { width: 20px; height: 20px; cursor: pointer; border: 2px solid #000; accent-color: #000; }
+      .chk-wrapper { display: flex; align-items: center; padding-right: 20px; }
+      .del-checkbox { width: 22px; height: 22px; cursor: pointer; border: 2px solid #000; accent-color: #000; }
 
       .card img { 
-        width: 45px; height: 45px; 
+        width: 55px; height: 55px; 
         object-fit: cover; 
         border: 2px solid #000; 
-        margin-right: 15px; 
+        margin-right: 20px; 
         cursor: pointer; 
         background: #eee; 
         filter: grayscale(20%); 
-        box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+        box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
       }
       
       .creator-tag { 
-        font-size: 12px; 
+        font-size: 13px; 
         color: #000; 
         background: transparent; 
         padding: 0; 
@@ -180,11 +206,11 @@
       }
       
       .tag { 
-        font-size: 12px; 
-        padding: 2px 4px; 
+        font-size: 13px; 
+        padding: 2px 6px; 
         border-radius: 0; 
         color: #000; 
-        margin-top: 4px; 
+        margin-top: 5px; 
         display: inline-block; 
         font-weight: bold;
       }
@@ -196,7 +222,7 @@
           display: none;
           background: transparent;
           padding: 0;
-          padding-left: 10px; 
+          padding-left: 15px; 
           border-left: 3px double #ccc; 
       }
       
@@ -217,9 +243,6 @@
       .float-btn:active { transform: translateX(-50%) translate(2px, 2px); box-shadow: 3px 3px 0 #000; }
       #bulkDelBtn { background: #e74c3c; color: white; }
       #bulkAddBtn { background: #2ecc71; color: #000; }
-
-      .mode-switch { display: flex; align-items: center; justify-content: space-between; font-size: 14px; color: #555; font-family: monospace; width: 100%; }
-      .active-mode { color: #000; font-weight: bold; text-decoration: underline; text-decoration-thickness: 3px; text-decoration-color: var(--highlight-green); }
     </style>
 </head>
 <body>
@@ -269,22 +292,21 @@
             </div>
         </div>
 
-        <div class="panel-card" style="padding: 15px;">
-            <div class="mode-switch">
-                <span style="font-weight:bold;">TOOLS</span>
-                <label style="display:flex;align-items:center;cursor:pointer">
-                    <input type="checkbox" id="batchModeToggle" onchange="toggleBatchMode()" style="width:auto; margin:0 5px 0 0;">
+        <div class="panel-card" style="padding: 20px;">
+            <div class="search-toolbar">
+                <input type="text" id="search" placeholder="> SEARCH LOGS..." onkeyup="renderList()" style="border-color:#333;">
+                <label>
+                    <input type="checkbox" id="batchModeToggle" onchange="toggleBatchMode()">
                     <span id="modeText">BATCH MODE</span>
                 </label>
             </div>
-            <input type="text" id="search" placeholder="> SEARCH LOGS..." onkeyup="renderList()" style="margin-bottom:0; border-color:#333;">
         </div>
 
         <div id="list"></div>
     </div>
 
     <script>
-        var API_URL = "https://script.google.com/macros/s/AKfycby_sDF8GC1jTH1yUN_UM1s_AdIvr0CHgtwiQ-GYMCMj__De6OQAm-NtUQWDn3f8avbD/exec";
+        var API_URL = "https://script.google.com/macros/s/AKfycbzzDNndrlyR0OYg-cCTT0ZrNtaUuEX6q65PL6hZ9GqhCBx0WfM03UeIQfIWXX7k_SxW/exec";
         var allData = [];
         var pendingData = []; 
         var isBatchMode = false;
