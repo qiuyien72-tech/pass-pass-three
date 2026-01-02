@@ -108,48 +108,66 @@
     </div>
 
     <script>
-        var API_URL = t"https://script.google.com/macros/s/AKfycby_sDF8GC1jTH1yUN_UM1s_AdIvr0CHgtwiQ-GYMCMj__De6OQAm-NtUQWDn3f8avbD/exec";
+        // 請確保這一行網址完整，不要斷行
+        var API_URL = "https://script.google.com/macros/s/AKfycby_sDF8GC1jTH1yUN_UM1s_AdIvr0CHgtwiQ-GYMCMj__De6OQAm-NtUQWDn3f8avbD/exec";
         
-        function showLoader(text) { document.getElementById("loaderText").innerText = text; document.getElementById("loader").style.display = "flex"; }
-        function hideLoader() { document.getElementById("loader").style.display = "none"; }
+        function showLoader(text) { 
+            document.getElementById("loaderText").innerText = text; 
+            document.getElementById("loader").style.display = "flex"; 
+        }
+        
+        function hideLoader() { 
+            document.getElementById("loader").style.display = "none"; 
+        }
 
         function doLogin() {
-            var code = document.getElementById("codeIn").value.toUpperCase().trim();
+            var codeIn = document.getElementById("codeIn");
+            if (!codeIn) return;
+            var code = codeIn.value.toUpperCase().trim();
             if(!code) return alert("請輸入代碼");
             
             showLoader("VERIFYING...");
             fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "checkCode", code: code }) })
-            .then(r => r.json()).then(res => {
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
                 if(res.valid) {
                     showLoader("ACCESS GRANTED");
                     localStorage.setItem("pass_code", code);
-                    if(res.data) localStorage.setItem("cached_fridge_data", JSON.stringify(res.data));
-                    
-                    // --- 修改：跳回主畫面 ---
+                    if(res.data) {
+                        localStorage.setItem("cached_fridge_data", JSON.stringify(res.data));
+                    }
+                    // 登入成功，直接跳轉主畫面
                     window.location.href = "main.html"; 
-                    
                 } else {
                     hideLoader();
                     alert("❌ INVALID CODE");
                 }
-            }).catch(e => { hideLoader(); alert("CONNECTION FAILED"); });
+            })
+            .catch(function(e) { 
+                hideLoader(); 
+                alert("CONNECTION FAILED"); 
+                console.error(e);
+            });
         }
 
         function doRegister() {
             showLoader("GENERATING...");
             fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "register" }) })
-            .then(r => r.json()).then(res => {
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
                 localStorage.setItem("pass_code", res.code);
                 alert("CODE GENERATED: " + res.code);
-                
-                // --- 修改：跳回主畫面 ---
+                // 註冊成功，直接跳轉主畫面
                 window.location.href = "main.html";
+            })
+            .catch(function(e) {
+                hideLoader();
+                console.error(e);
             });
         }
         
         window.onload = function() { 
             if(localStorage.getItem("pass_code")) {
-                // --- 修改：跳回主畫面 ---
                 window.location.href = "main.html";
             }
         };
