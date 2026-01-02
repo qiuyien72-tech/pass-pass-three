@@ -31,9 +31,9 @@
         padding-bottom: 120px; 
       }
 
-      /* --- 修改：版面加寬 --- */
+      /* 保持寬版設計 */
       .main-wrapper {
-        max-width: 850px; /* 從 600px 改為 850px */
+        max-width: 850px;
         margin: 0 auto;
         width: 100%;
       }
@@ -42,7 +42,7 @@
       .panel-card {
         background: var(--card-bg);
         border: 2px solid var(--ink);
-        padding: 25px; /* 內距稍微加大 */
+        padding: 25px;
         margin-bottom: 25px;
         box-shadow: 8px 8px 0 rgba(0,0,0,0.1); 
         position: relative;
@@ -57,14 +57,14 @@
         border-bottom: 4px solid var(--ink); 
         padding-bottom: 15px; 
         font-weight: 700;
-        font-size: 1.4rem; /* 標題字體稍微加大 */
+        font-size: 1.4rem;
         letter-spacing: -1px;
       }
 
       /* 輸入框與按鈕樣式 */
       input, button { 
         width: 100%; 
-        padding: 14px; /* 輸入框高度稍微加大 */
+        padding: 14px; 
         margin-bottom: 15px; 
         border-radius: 0;
         box-sizing: border-box; 
@@ -99,33 +99,29 @@
         box-shadow: none;
       }
 
-      .btn-row { display: flex; gap: 15px; } /* 按鈕間距加大 */
-      
-      /* --- 新增：搜尋列容器 (Flexbox) --- */
-      .search-toolbar {
-          display: flex;
-          align-items: center;
-          gap: 20px;
+      .btn-row { display: flex; gap: 15px; }
+
+      /* --- 批量模式開關樣式 (位於資料新增欄) --- */
+      .mode-switch { 
+          display: flex; 
+          justify-content: flex-end; /* 靠右對齊 */
+          margin-bottom: 15px; /* 與下方輸入框保持距離 */
+          font-size: 14px; 
+          color: #555; 
+          font-family: monospace; 
       }
-      .search-toolbar input {
-          margin-bottom: 0;
-          flex: 1; /* 讓搜尋框佔滿剩餘空間 */
-      }
-      .search-toolbar label {
-          white-space: nowrap; /* 防止文字換行 */
+      .mode-switch label {
           display: flex;
           align-items: center;
           cursor: pointer;
-          font-weight: bold;
-          font-size: 14px;
           user-select: none;
       }
-      .search-toolbar input[type="checkbox"] {
-          width: auto;
-          margin: 0 8px 0 0;
-          transform: scale(1.2); /* 讓勾選框大一點 */
+      .mode-switch input { 
+          width: auto; 
+          margin: 0 8px 0 0; 
+          transform: scale(1.2);
       }
-      .active-mode { color: #000; text-decoration: underline; text-decoration-thickness: 3px; text-decoration-color: var(--highlight-green); }
+      .active-mode { color: #000; font-weight: bold; text-decoration: underline; text-decoration-thickness: 3px; text-decoration-color: var(--highlight-green); }
 
       /* 列表區樣式 */
       #list { margin-top: 20px; }
@@ -272,6 +268,13 @@
                 <button onclick="doLogout()" style="width:auto; padding:4px 10px; background:transparent; color:#000; border:1px solid #000; font-size:12px; margin-bottom:0;">EXIT</button>
             </div>
 
+            <div class="mode-switch">
+                <label>
+                    <input type="checkbox" id="batchModeToggle" onchange="toggleBatchMode()">
+                    <span id="modeText">BATCH MODE</span>
+                </label>
+            </div>
+
             <input type="text" id="inCreator" list="cHistory" placeholder="USER (NAME)">
             <datalist id="cHistory"></datalist>
             <input type="text" id="inName" placeholder="ITEM NAME">
@@ -293,13 +296,7 @@
         </div>
 
         <div class="panel-card" style="padding: 20px;">
-            <div class="search-toolbar">
-                <input type="text" id="search" placeholder="> SEARCH LOGS..." onkeyup="renderList()" style="border-color:#333;">
-                <label>
-                    <input type="checkbox" id="batchModeToggle" onchange="toggleBatchMode()">
-                    <span id="modeText">BATCH MODE</span>
-                </label>
-            </div>
+            <input type="text" id="search" placeholder="> SEARCH LOGS..." onkeyup="renderList()" style="margin-bottom:0; border-color:#333;">
         </div>
 
         <div id="list"></div>
@@ -651,4 +648,3 @@
     </script>
 </body>
 </html>
-
