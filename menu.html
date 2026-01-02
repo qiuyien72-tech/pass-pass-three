@@ -12,13 +12,13 @@
       body { 
         font-family: 'Courier Prime', 'Noto Sans TC', monospace;
         background-color: #fff;
-        /* 維持一致的網格紙背景 */
+        /* --- 修改：將網格大小統一調整為 50px --- */
         background-image: 
             linear-gradient(#e5e5e5 1px, transparent 1px),
             linear-gradient(90deg, #e5e5e5 1px, transparent 1px);
-        background-size: 20px 20px;
+        background-size: 50px 50px; /* 這裡改成 50px */
         margin: 0; 
-        padding: 20px; /* 增加一點內距，避免圖片貼邊 */
+        padding: 20px;
         min-height: 100vh;
         display: flex;
         justify-content: center;
@@ -26,39 +26,30 @@
         box-sizing: border-box;
       }
 
-      /* 圖片容器 */
       .menu-container {
         position: relative;
         width: 100%;
         max-width: 800px; 
         margin: 0 auto;
-        /* 為了讓融合效果更好，可以在圖片下方墊一層微微的白色，避免網格太干擾文字 */
-        background: rgba(255,255,255,0.4);
-        box-shadow: 0 0 30px 20px rgba(255,255,255,0.4); /* 邊緣羽化效果 */
+        /* 稍微加一點白色底襯，讓圖片更突出 */
+        background: rgba(255,255,255,0.2);
+        box-shadow: 0 0 50px 30px rgba(255,255,255,0.2);
       }
 
-      /* 背景圖 */
       .bg-img {
         width: 100%;
         height: auto;
         display: block;
-        /* --- 核心修改 --- */
-        /* 1. 移除陰影，讓紙張貼平背景 */
-        /* filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1)); */
-        
-        /* 2. 使用色彩增值 (multiply)，讓白底變透明，線條與背景融合 */
+        /* 讓圖片白底變透明，線條與背景融合 */
         mix-blend-mode: multiply;
-        
-        /* 3. 稍微調整對比度，讓線條更清晰 */
         filter: contrast(1.1);
       }
 
-      /* 按鈕共用樣式 */
       .nav-btn {
         position: absolute;
-        width: 28%; /* 根據圖片比例調整 */
-        height: 12%; /* 根據圖片比例調整 */
-        background: rgba(255, 255, 255, 0.0); /* 預設透明 */
+        width: 28%; 
+        height: 12%; 
+        background: rgba(255, 255, 255, 0.0); 
         border: 2px dashed transparent; 
         cursor: pointer;
         transition: all 0.2s;
@@ -67,12 +58,11 @@
         align-items: center;
         font-weight: bold;
         font-size: 1.2rem;
-        color: transparent; /* 文字預設透明，滑鼠移過去才顯示 */
+        color: transparent; 
         border-radius: 10px;
-        z-index: 10; /* 確保在圖片上方 */
+        z-index: 10;
       }
 
-      /* 滑鼠經過時的效果：顯示虛線框與文字 */
       .nav-btn:hover {
         background: rgba(255, 255, 255, 0.8);
         border-color: var(--ink);
@@ -80,35 +70,17 @@
         box-shadow: 5px 5px 0 rgba(0,0,0,0.1);
       }
       
-      /* 手機版直接顯示框線，方便點擊 */
       @media (max-width: 768px) {
         .nav-btn {
           background: rgba(255, 255, 255, 0.3);
-          border: 2px dashed #666;
-          color: transparent; /* 手機版依然隱藏文字，只顯示框，保持畫面乾淨 */
-        }
-        .nav-btn:active {
-           background: rgba(255, 255, 255, 0.8);
-           color: var(--ink);
+          border: 2px dashed #888;
         }
       }
 
-      /* --- 定位按鈕 (根據 1518.jpg 的方框位置推算) --- */
-      /* 注意：如果圖片因為融合而位置稍微改變，可能需要微調這裡的數值 */
+      /* 按鈕定位 */
+      #btn-expired { bottom: 36%; left: 6%; }
+      #btn-all { bottom: 21%; left: 6%; }
 
-      /* 按鈕 1：已過期 (左上) */
-      #btn-expired {
-        bottom: 36%; 
-        left: 6%;
-      }
-
-      /* 按鈕 2：主選單/全部 (左下) */
-      #btn-all {
-        bottom: 21%; 
-        left: 6%;
-      }
-
-      /* 登出按鈕 (右下角) */
       .logout-btn {
         position: fixed;
         bottom: 20px;
@@ -123,14 +95,12 @@
         opacity: 0.8;
         z-index: 20;
       }
-
     </style>
 </head>
 <body>
 
     <div class="menu-container">
         <img src="1518.jpg" alt="Menu" class="bg-img">
-
         <a href="main.html" class="nav-btn" id="btn-expired">⚠️ 已過期清單</a>
         <a href="main.html" class="nav-btn" id="btn-all">📦 全部物品</a>
     </div>
