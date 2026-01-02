@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <title>冰箱小管家 - 即將過期</title>
+    <style>
+      :root {
+         --bg-grid: #f4f4f4;
+         --ink: #333;
+         --card-bg: #ffffff;
+         /* 主題色改為橘色 */
+         --alert-orange: #f39c12; 
+      }
+      
+      body { 
+        font-family: 'Courier Prime', 'Noto Sans TC', monospace;
+        background-color: #fff;
+        background-image: 
+            linear-gradient(#e5e5e5 1px, transparent 1px),
+            linear-gradient(90deg, #e5e5e5 1px, transparent 1px);
+        background-size: 50px 50px;
+        margin: 0; 
+        padding: 20px; 
+        color: var(--ink); 
+        padding-bottom: 120px; 
+      }
+
+      .main-wrapper {
+        max-width: 850px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      /* 橘色警示風格卡片 */
+      .panel-card {
+        background: var(--card-bg);
+        border: 2px solid var(--ink);
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 8px 8px 0 rgba(0,0,0,0.1); 
+        position: relative;
+        z-index: 10;
+        border-top: 5px solid var(--alert-orange);
+      }
+
+      .header { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 15px;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 15px; 
+      }
+      
+      .page-title {
+          font-weight: 700;
+          font-size: 1.4rem;
+          letter-spacing: -1px;
+          display: flex;
+          align-items: center;
+          color: var(--alert-orange);
+      }
+
+      .back-btn {
+          padding: 8px 15px; 
+          background: var(--ink); 
+          color: #fff; 
+          border: 2px solid var(--ink); 
+          font-size: 14px; 
+          font-weight: bold;
+          cursor: pointer;
+          text-decoration: none;
+      }
+      .back-btn:active { transform: translate(2px, 2px); }
+
+      .subtitle {
+          font-size: 14px;
+          color: #666;
+          margin-bottom: 0;
+          font-family: monospace;
+      }
+
+      input {
+        width: 100%; 
+        padding: 12px; 
+        border-radius: 0;
+        box-sizing: border-box; 
+        font-family: inherit;
+        font-size: 16px;
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid #aaa;
+        transition: border-color 0.3s;
+        margin-bottom: 0;
+      }
+      input:focus {
+        outline: none;
+        border-bottom: 2px solid var(--alert-orange);
+        background: rgba(243, 156, 18, 0.05);
+      }
+
+      /* 列表樣式 */
+      #list { margin-top: 20px; }
+
+      .group-container { margin-bottom: 30px; }
+      
+      .group-header {
+          padding: 10px 0;
+          border-bottom: 3px solid var(--alert-orange);
+          margin-bottom: 10px;
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+      }
+      
+      .group-title { font-weight: 700; font-size: 20px; color: var(--alert-orange); }
+      
+      .card { 
+        border: none; 
+        border-bottom: 1px dashed #999; 
+        padding: 15px 10px; 
+        margin-bottom: 0; 
+        display: flex; 
+        align-items: center; 
+        background: rgba(243, 156, 18, 0.05); /* 淡淡橘底 */
+        transition: background 0.2s;
+      }
+      .card:hover { background: rgba(243, 156, 18, 0.1); }
+      
+      .chk-wrapper { display: flex; align-items: center; padding-right: 15px; }
+      .del-checkbox { 
+          width: 22px; height: 22px; cursor: pointer; 
+          border: 2px solid var(--alert-orange); accent-color: var(--alert-orange); 
+      }
+
+      .card img { 
+        width: 55px; height: 55px; 
+        object-fit: cover; 
+        border: 2px solid var(--alert-orange); 
+        margin-right: 20px; 
+        background: #eee; 
+        filter: grayscale(20%); 
+        cursor: pointer;
+      }
+      
+      .info-box { flex: 1; }
+      .date-tag { 
+          color: #fff; background: var(--alert-orange); padding: 2px 6px; 
+          font-size: 12px; font-weight: bold; display: inline-block; margin-top: 5px;
+      }
+
+      .del-btn {
+          background: transparent; border: 2px solid var(--alert-orange); color: var(--alert-orange);
+          width: 30px; height: 30px; border-radius: 50%; font-weight: bold;
+          cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px;
+      }
+      .del-btn:hover { background: var(--alert-orange); color: #fff; }
+
+      /* Loader */
+      #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 9999; }
+      .spinner { width: 50px; height: 50px; border: 4px solid var(--ink); animation: spin 0.5s linear infinite; }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      #loaderText { margin-top: 15px; font-weight: bold; }
+
+      /* 圖片燈箱 (置中) */
+      #imageModal { 
+          display: none; 
+          position: fixed; 
+          top: 0; left: 0; 
+          width: 100%; height: 100%; 
+          background: rgba(255,255,255,0.95); 
+          z-index: 10000; 
+          justify-content: center; 
+          align-items: center; 
+          flex-direction: column; 
+      }
+      #imageModal img { 
+          max-width: 90%; 
+          max-height: 80vh; 
+          border: 5px solid #000; 
+          box-shadow: 10px 10px 0 rgba(0,0,0,0.1); 
+      }
+
+      /* 浮動按鈕 */
+      .float-btn { 
+          position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); 
+          padding: 15px 30px; border-radius: 0; font-size: 16px; font-weight: bold; 
+          border: 2px solid #000; box-shadow: 5px 5px 0 #000; 
+          display: none; z-index: 5000; width: auto; cursor: pointer; color: white; 
+          transition: transform 0.2s; background: var(--alert-orange);
+      }
+      .float-btn:active { transform: translateX(-50%) translate(2px, 2px); box-shadow: 3px 3px 0 #000; }
+
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <div id="loaderText">LOADING DATA...</div>
+    </div>
+
+    <button id="bulkDelBtn" class="float-btn" onclick="doMultiDelete()">[ DELETE SELECTED ]</button>
+
+    <div id="imageModal" onclick="this.style.display='none'">
+        <img id="largeImgDisplay" src="">
+        <p style="color:#000; margin-top:15px; font-family:monospace; background:white; padding:5px;">[ CLICK TO CLOSE ]</p>
+    </div>
+
+    <div class="main-wrapper">
+        <div class="panel-card">
+            <div class="header">
+                <div class="page-title">⏳ EXPIRING SOON</div>
+                <a href="main.html" class="back-btn">BACK TO MAIN</a>
+            </div>
+            <div class="subtitle">下列物品將在 7 天內過期。</div>
+            <input type="text" id="search" placeholder="> SEARCH..." onkeyup="renderSoonList()" style="margin-top:15px; margin-bottom:0; border-color:#333;">
+        </div>
+
+        <div id="list"></div>
+    </div>
+
+    <script>
+        var API_URL = "https://script.google.com/macros/s/AKfycbzzDNndrlyR0OYg-cCTT0ZrNtaUuEX6q65PL6hZ9GqhCBx0WfM03UeIQfIWXX7k_SxW/exec";
+        var allData = [];
+
+        function showLoader(text) {
+            document.getElementById("loaderText").innerText = text;
+            document.getElementById("loader").style.display = "flex";
+        }
+        function hideLoader() { document.getElementById("loader").style.display = "none"; }
+
+        function openModal(src) {
+            document.getElementById("largeImgDisplay").src = src;
+            document.getElementById("imageModal").style.display = "flex";
+        }
+
+        function callApi(action, payload, cb) {
+            payload.action = action;
+            let msg = "SYNCING...";
+            if(action === "deleteMulti") msg = "DELETING...";
+            
+            showLoader(msg);
+            fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
+            .then(r => r.json()).then(res => {
+                hideLoader();
+                cb(res);
+            }).catch(e => { hideLoader(); console.error(e); });
+        }
+
+        function doDel(id) { 
+            if(confirm("DELETE THIS ITEM?")) {
+                allData = allData.filter(item => item.rowId !== id);
+                renderSoonList(); 
+                var code = localStorage.getItem("pass_code");
+                callApi("delete", { id: id, code: code }, function(res) { 
+                    updateLocalData(res.data);
+                });
+            }
+        }
+
+        function doMultiDelete() {
+            var checkboxes = document.querySelectorAll('.del-checkbox:checked');
+            var idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            if (idsToDelete.length === 0) return;
+            
+            if (!confirm("DELETE " + idsToDelete.length + " SELECTED ITEMS?")) return;
+            
+            allData = allData.filter(item => !idsToDelete.includes(item.rowId));
+            renderSoonList();
+            
+            var code = localStorage.getItem("pass_code");
+            callApi("deleteMulti", { ids: idsToDelete, code: code }, function(res) { 
+                if(res.status === "success" && Array.isArray(res.data)) {
+                    updateLocalData(res.data);
+                }
+            });
+        }
+
+        function checkSelection() {
+            var count = document.querySelectorAll('.del-checkbox:checked').length;
+            var btn = document.getElementById("bulkDelBtn");
+            if (count > 0) { 
+                btn.style.display = "block";
+                btn.innerText = "[ DELETE SELECTED (" + count + ") ]"; 
+            } else { 
+                btn.style.display = "none"; 
+            }
+        }
+
+        function updateLocalData(newData) {
+            if (newData && Array.isArray(newData)) {
+                allData = newData;
+            }
+            localStorage.setItem("cached_fridge_data", JSON.stringify(allData));
+            renderSoonList();
+        }
+
+        // --- 核心：篩選快過期 (0~7天) ---
+        function renderSoonList() {
+            var listDiv = document.getElementById("list");
+            var key = document.getElementById("search").value.toLowerCase();
+            var today = new Date(); 
+            today.setHours(0,0,0,0);
+
+            var soonItems = allData.filter(i => {
+                var s = String(i.name||"") + String(i.location||"") + String(i.creator||"");
+                var iDate = new Date(i.date);
+                // 計算差距天數
+                var diff = Math.ceil((iDate - today)/86400000);
+                
+                // 條件：0 <= diff <= 7 (代表今天到未來7天內)
+                var isSoon = diff >= 0 && diff <= 7;
+                
+                return s.toLowerCase().includes(key) && isSoon;
+            });
+
+            if (soonItems.length === 0) {
+                listDiv.innerHTML = "<div style='text-align:center; padding:40px; color:#aaa; font-weight:bold;'>[ NO ITEMS EXPIRING SOON ]<br>沒有即將過期的物品</div>";
+                checkSelection();
+                return;
+            }
+
+            // 排序：越接近過期的排越前面
+            soonItems.sort((a,b) => new Date(a.date) - new Date(b.date));
+
+            var html = "";
+            html += `<div class="group-container"><div class="group-header"><div class="group-title">EXPIRING IN 7 DAYS (${soonItems.length})</div></div>`;
+            
+            soonItems.forEach(item => {
+                var d = new Date(item.date);
+                var diff = Math.ceil((d - today)/86400000);
+                
+                // 顯示文字調整
+                var dayText = diff === 0 ? "今天到期" : "還有 " + diff + " 天";
+
+                html += `
+                    <div class="card">
+                        <div class="chk-wrapper">
+                            <input type="checkbox" class="del-checkbox" value="${item.rowId}" onchange="checkSelection()">
+                        </div>
+                        
+                        <img src="${item.imgUrl || ''}" onclick="event.stopPropagation(); openModal(this.src)">
+                        
+                        <div class="info-box">
+                            <div style="font-weight:bold; font-size:18px;">${item.name}</div>
+                            <div style="font-size:13px; color:#666;">📍 ${item.location} | 👤 ${item.creator}</div>
+                            <div class="date-tag">${dayText} (${item.date})</div>
+                        </div>
+                        
+                        <button class="del-btn" onclick="event.stopPropagation(); doDel(${item.rowId})">✕</button>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+
+            listDiv.innerHTML = html;
+            checkSelection(); 
+        }
+
+        window.onload = function() {
+            var code = localStorage.getItem("pass_code");
+            if(!code) return window.location.href = "index.html";
+            
+            var cached = localStorage.getItem("cached_fridge_data");
+            if(cached) {
+                try { 
+                    allData = JSON.parse(cached); 
+                    renderSoonList(); 
+                } catch(e){}
+            }
+            
+            callApi("getList", {code: code}, function(res) {
+                updateLocalData(res.data);
+            });
+        };
+    </script>
+</body>
+</html>
