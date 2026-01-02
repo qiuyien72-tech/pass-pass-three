@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
     <title>冰箱小管家 - 登入</title>
     <style>
@@ -17,7 +16,7 @@
       body { 
         font-family: 'Courier Prime', 'Noto Sans TC', monospace;
         background-color: #fff;
-        /* 統一的網格紙背景 */
+        /* 統一的 50px 網格背景 */
         background-image: 
             linear-gradient(#e5e5e5 1px, transparent 1px),
             linear-gradient(90deg, #e5e5e5 1px, transparent 1px);
@@ -37,7 +36,7 @@
         padding: 40px 30px; 
         position: relative;
         border: 2px solid var(--ink);
-        box-shadow: 10px 10px 0 rgba(0,0,0,0.1); /* 硬陰影風格 */
+        box-shadow: 10px 10px 0 rgba(0,0,0,0.1); 
       }
 
       h2 {
@@ -52,11 +51,7 @@
         justify-content: center;
       }
       
-      /* 標題螢光筆效果 */
-      h2 span {
-          background: var(--highlight-yellow);
-          padding: 0 10px;
-      }
+      h2 span { background: var(--highlight-yellow); padding: 0 10px; }
       
       input {
         width: 100%; 
@@ -64,7 +59,7 @@
         margin-bottom: 30px; 
         background: transparent;
         border: none;
-        border-bottom: 2px solid #aaa; /* 底線風格 */
+        border-bottom: 2px solid #aaa; 
         border-radius: 0;
         font-family: inherit;
         font-size: 18px;
@@ -73,15 +68,8 @@
         transition: border-color 0.3s;
         text-align: center;
       }
-      input:focus {
-        border-bottom-color: #000;
-        background: rgba(0,0,0,0.02);
-      }
-      input::placeholder {
-        color: #999;
-        font-style: italic;
-        font-size: 14px;
-      }
+      input:focus { border-bottom-color: #000; background: rgba(0,0,0,0.02); }
+      input::placeholder { color: #999; font-style: italic; font-size: 14px; }
 
       button { 
         width: 100%; 
@@ -97,17 +85,10 @@
         letter-spacing: 1px;
         transition: transform 0.1s;
       }
-      button:active {
-        transform: translate(2px, 2px);
-      }
+      button:active { transform: translate(2px, 2px); }
       
-      .secondary { 
-        background: transparent; 
-        color: var(--ink); 
-        border: 2px solid var(--ink);
-      }
+      .secondary { background: transparent; color: var(--ink); border: 2px solid var(--ink); }
 
-      /* Loader */
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 1000; }
       .spinner { width: 50px; height: 50px; background: transparent; border: 4px solid #000; margin-bottom: 20px; animation: simpleSpin 1s linear infinite; }
       @keyframes simpleSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -122,21 +103,15 @@
 
     <div id="loginBox">
         <h2><span>FRIDGE LOG</span></h2>
-        
         <input type="text" id="codeIn" placeholder="ENTER ACCESS CODE" style="text-transform:uppercase;">
-        
         <button onclick="doLogin()">[ ENTER SYSTEM ]</button>
         <button class="secondary" onclick="doRegister()">GENERATE NEW CODE</button>
     </div>
 
     <script>
-        // 這是你原本的 API 網址
         var API_URL = "https://script.google.com/macros/s/AKfycby_sDF8GC1jTH1yUN_UM1s_AdIvr0CHgtwiQ-GYMCMj__De6OQAm-NtUQWDn3f8avbD/exec";
         
-        function showLoader(text) {
-            document.getElementById("loaderText").innerText = text;
-            document.getElementById("loader").style.display = "flex";
-        }
+        function showLoader(text) { document.getElementById("loaderText").innerText = text; document.getElementById("loader").style.display = "flex"; }
         function hideLoader() { document.getElementById("loader").style.display = "none"; }
 
         function doLogin() {
@@ -151,8 +126,8 @@
                     localStorage.setItem("pass_code", code);
                     if(res.data) localStorage.setItem("cached_fridge_data", JSON.stringify(res.data));
                     
-                    // *** 關鍵修改：登入成功後跳轉到 menu.html ***
-                    window.location.href = "menu.html"; 
+                    // --- 修改：直接進入主畫面 ---
+                    window.location.href = "main.html"; 
                     
                 } else {
                     hideLoader();
@@ -168,19 +143,17 @@
                 localStorage.setItem("pass_code", res.code);
                 alert("CODE GENERATED: " + res.code);
                 
-                // *** 關鍵修改：註冊成功後也跳轉到 menu.html ***
-                window.location.href = "menu.html";
+                // --- 修改：直接進入主畫面 ---
+                window.location.href = "main.html";
             });
         }
         
-        // 自動登入檢查
         window.onload = function() { 
             if(localStorage.getItem("pass_code")) {
-                // *** 關鍵修改：自動登入也跳轉到 menu.html ***
-                window.location.href = "menu.html";
+                // --- 修改：直接進入主畫面 ---
+                window.location.href = "main.html";
             }
         };
     </script>
 </body>
 </html>
-
