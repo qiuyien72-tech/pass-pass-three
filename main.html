@@ -58,6 +58,7 @@
         letter-spacing: -1px;
       }
       
+      /* 按鈕群組 */
       .header-actions {
           display: flex;
           gap: 10px;
@@ -74,7 +75,10 @@
           cursor: pointer;
       }
       .header-actions button:hover { background: #eee; }
+      
+      /* 按鈕特別樣式 */
       .btn-expired-link { color: #e74c3c !important; border-color: #e74c3c !important; font-weight: bold; }
+      .btn-soon-link { color: #f39c12 !important; border-color: #f39c12 !important; font-weight: bold; }
 
       input, button { 
         width: 100%; 
@@ -90,7 +94,7 @@
         background: transparent;
         border: none;
         border-bottom: 2px solid #aaa;
-        transition: border-color 0.2s; /* 輸入框反應也調快 */
+        transition: border-color 0.2s;
       }
       input:focus {
         outline: none;
@@ -104,7 +108,7 @@
         border: 2px solid var(--ink);
         font-weight: bold; 
         cursor: pointer; 
-        transition: all 0.1s; /* 按鈕反應調快 */
+        transition: all 0.1s;
         text-transform: uppercase;
         letter-spacing: 1px;
       }
@@ -143,7 +147,6 @@
           align-items: center;
           border-bottom: 3px solid #000; 
           margin-bottom: 15px;
-          /* --- 修改：背景反應速度變快 --- */
           transition: background 0.1s;
       }
       .group-header:hover { opacity: 0.8; }
@@ -153,7 +156,6 @@
       .group-title b { background: var(--highlight-yellow); padding: 0 5px; color: #000; box-shadow: 3px 3px 0 rgba(0,0,0,0.1); }
       .group-info { font-size: 14px; text-align: right; color: #666; font-family: monospace; font-weight: bold; }
       
-      /* --- 修改：箭頭旋轉速度變快 (0.1s) --- */
       .arrow-icon { 
           margin-right: 10px; 
           font-size: 14px; 
@@ -171,7 +173,6 @@
         align-items: center; 
         background: transparent; 
         position: relative; 
-        /* --- 修改：卡片反應變快 --- */
         transition: background 0.1s;
       }
       .card:hover { background: rgba(0,0,0,0.05); }
@@ -193,18 +194,12 @@
       #imageModal img { max-width: 90%; max-height: 80vh; border: 5px solid #000; box-shadow: 10px 10px 0 rgba(0,0,0,0.1); }
       
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 9999; }
-      
-      /* --- 修改：讀取圈圈轉速變快 (0.5s) --- */
       .spinner { width: 50px; height: 50px; background: transparent; border: 4px solid #000; margin-bottom: 20px; animation: simpleSpin 0.5s linear infinite; }
-      
       @keyframes simpleSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
       #scanOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10001; display: none; flex-direction: column; justify-content: center; align-items: center; }
       .scan-box { width: 250px; height: 250px; border: 2px solid #0f0; border-radius: 0; position: relative; overflow: hidden; background: rgba(0, 255, 0, 0.05); }
-      
-      /* 掃描線也稍微加速 */
       .scan-line { width: 100%; height: 5px; background: #0f0; box-shadow: 0 0 15px #0f0, 0 0 30px #0f0; position: absolute; top: 0; left: 0; animation: scanDown 1.2s linear infinite; }
-      
       @keyframes scanDown { 0% { transform: translateY(-10px); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(260px); opacity: 0; } }
       .scan-text { color: #0f0; margin-top: 20px; font-family: monospace; letter-spacing: 2px; text-shadow: 0 0 10px #0f0; }
 
@@ -240,6 +235,8 @@
                 
                 <div class="header-actions">
                     <button class="btn-expired-link" onclick="window.location.href='expired.html'">⚠️ EXPIRED</button>
+                    <button class="btn-soon-link" onclick="window.location.href='soon.html'">⏳ SOON</button>
+                    
                     <button onclick="doLogout()">EXIT</button>
                 </div>
             </div>
