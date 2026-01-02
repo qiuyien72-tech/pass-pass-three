@@ -24,33 +24,35 @@
         justify-content: center;
         align-items: center;
         overflow: hidden;
+        /* 為了讓白色狗狗更明顯，背景可以稍微暗一點點 (隨意，可自行調整) */
+        /* background-color: #f0f0f0; */
       }
 
       /* 主容器 */
       .menu-container {
         position: relative;
         width: 100%;
-        max-width: 600px; /* 限制寬度，讓畫面集中 */
+        max-width: 600px; 
         height: 100vh;
         display: flex;
         justify-content: center;
         align-items: center;
       }
 
-      /* --- 狗狗圖片處理核心 --- */
+      /* --- 狗狗圖片處理核心 (變成白色) --- */
       .dog-img {
-        width: 320px; /* 調整狗狗大小 */
+        width: 320px;
         height: auto;
         
-        /* 1. invert(1): 把原本的「黑底白線」變成「白底黑線」 */
-        /* 2. contrast(1.2): 增加對比，讓線條更黑 */
-        filter: invert(1) contrast(1.2);
+        /* 1. 移除 invert，保留原本的白色線條 */
+        /* 2. 增加亮度和對比，讓白色更純淨、更亮 */
+        filter: contrast(1.1) brightness(1.2) drop-shadow(0 0 5px rgba(255,255,255,0.5)); /* 加一點白色發光讓它跳脫背景 */
         
-        /* 3. multiply: 把變白後的背景「變透明」，只留下黑色線條 */
-        mix-blend-mode: multiply;
+        /* 3. screen (濾色): 關鍵！讓黑色背景變透明，保留白色線條 */
+        mix-blend-mode: screen;
         
         position: relative;
-        z-index: 1; /* 在按鈕下方 */
+        z-index: 1;
       }
 
       /* --- CSS 手繪風對話框按鈕 --- */
@@ -67,10 +69,7 @@
         z-index: 10;
         box-shadow: 5px 5px 0 rgba(0,0,0,0.1);
         transition: transform 0.2s, box-shadow 0.2s;
-        
-        /* 讓邊框有點不規則的手繪感 */
         border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-        
         display: flex;
         align-items: center;
         justify-content: center;
@@ -79,9 +78,9 @@
       }
 
       .bubble-btn:hover {
-        transform: translate(-2px, -2px) scale(1.05); /* 滑鼠移上去放大浮起 */
+        transform: translate(-2px, -2px) scale(1.05);
         box-shadow: 8px 8px 0 rgba(0,0,0,0.15);
-        background: #fffdf5; /* 微微變黃，像便條紙 */
+        background: #fffdf5;
       }
 
       .bubble-btn:active {
@@ -93,7 +92,7 @@
       #btn-expired {
         top: 30%;
         left: 5%;
-        transform: rotate(-5deg); /* 微微傾斜，更活潑 */
+        transform: rotate(-5deg);
       }
       #btn-expired:hover { transform: rotate(-5deg) scale(1.05) translate(-2px, -2px); }
 
@@ -105,7 +104,7 @@
       }
       #btn-all:hover { transform: rotate(3deg) scale(1.05) translate(-2px, -2px); }
 
-      /* 連接線 (裝飾用，指向狗狗) */
+      /* 連接線 (保持黑色，形成對比) */
       .line-connector {
         position: absolute;
         width: 60px;
@@ -122,7 +121,7 @@
         .bubble-btn { padding: 10px 20px; font-size: 1rem; min-width: 110px; }
         #btn-expired { top: 20%; left: 5%; }
         #btn-all { bottom: 25%; right: 5%; }
-        .line-connector { display: none; } /* 手機版隱藏連接線，保持乾淨 */
+        .line-connector { display: none; }
       }
 
       .logout-btn {
